@@ -7,3 +7,7 @@ npm-debug.log
 .DS_Store
 coverage/
 .coveralls.yml
+_build
+_opam
+*.install
+.vscode/

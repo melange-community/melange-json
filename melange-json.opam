@@ -1,0 +1,37 @@
+opam-version: "2.0"
+synopsis: "Compositional JSON encode/decode library for Melange"
+description: "Provides encoders and decoders to convert JSON values into typed values. With the possibility to create custom encoders and decoders."
+maintainer: [
+  "Javier Chávarri <javier.chavarri@gmail.com>"
+]
+authors: [
+  "glennsl"
+]
+license: "(LGPL-3.0 OR MPL-2.0)"
+homepage: "https://github.com/melange-community/melange-json/"
+doc: "https://github.com/melange-community/melange-json/"
+bug-reports: "https://github.com/melange-community/melange-json/issues"
+depends: [
+  "dune" {>= "3.8"}
+  "ocaml" {>= "4.14.0"}
+  "melange" {>= "1.0.0"}
+  "melange-jest" {with-test}
+  "reason" {with-test}
+  "ocaml-lsp-server" {with-test}
+  "odoc" {with-doc}
+]
+build: [
+  ["dune" "subst"] {dev}
+  [
+    "dune"
+    "build"
+    "-p"
+    name
+    "-j"
+    jobs
+    "@install"
+    "@runtest" {with-test}
+    "@doc" {with-doc}
+  ]
+]
+dev-repo: "git+https://github.com/melange-community/melange-json.git"
