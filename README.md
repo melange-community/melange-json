@@ -1,4 +1,4 @@
-# bs-json
+# melange-json
 
 Compositional JSON encode/decode library for BuckleScript.
 
