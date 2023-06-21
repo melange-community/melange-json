@@ -2,13 +2,7 @@
 
 Compositional JSON encode/decode library for BuckleScript.
 
-**NOTE: For rescript users, please see the spiritual successor library [rescript-json-combinators](https://github.com/glennsl/rescript-json-combinators)**
-
-[![npm](https://img.shields.io/npm/v/@glennsl/bs-json.svg)](https://npmjs.org/@glennsl/bs-json)
-[![Travis](https://img.shields.io/travis/glennsl/bs-json/master.svg)](https://travis-ci.org/glennsl/bs-json)
-[![Coveralls](https://img.shields.io/coveralls/glennsl/bs-json/master.svg)](https://coveralls.io/github/glennsl/bs-json?branch=master)
-[![Issues](https://img.shields.io/github/issues/glennsl/bs-json.svg)](https://github.com/glennsl/bs-json/issues)
-[![Last Commit](https://img.shields.io/github/last-commit/glennsl/bs-json.svg)](https://github.com/glennsl/bs-json/commits/master)
+Based on [@glennsl/bs-json](https://github.com/glennsl/bs-json).
 
 The Decode module in particular provides a basic set of decoder functions to be composed into more complex decoders. A
 decoder is a function that takes a `Js.Json.t` and either returns a value of the desired type if successful or raises a
@@ -59,20 +53,26 @@ scope delimited by the curly braces, so we don't have to qualify the functions w
 `optional` here. You can also use `Json.Decode.( ... )` to open the module locally within the parentheses, if you're not
 creating a record.
 
-See [examples](https://github.com/glennsl/bs-json/blob/master/examples/) for more.
+See [examples](./examples/) for more.
 
 ## Installation
 
-```sh
-npm install --save @glennsl/bs-json
+Install [opam](https://opam.ocaml.org/) package manager.
+
+Then:
+
+```
+opam pin add melange-json.dev git+https://github.com/melange-community/melange-json.git#main
 ```
 
-Then add `@glennsl/bs-json` to `bs-dependencies` in your `bsconfig.json`:
-```js
-{
-  ...
-  "bs-dependencies": ["@glennsl/bs-json"]
-}
+# Setup
+
+Add `melange-json` to the `libraries` field in your `dune` file:
+
+```dune
+; ...
+  (libraries melange-json)
+; ...
 ```
 
 ## Documentation
@@ -81,9 +81,9 @@ Then add `@glennsl/bs-json` to `bs-dependencies` in your `bsconfig.json`:
 
 For the moment, please see the interface files:
 
-* [Json](https://github.com/glennsl/bs-json/blob/master/src/Json.mli)
-* [Json.Encode](https://github.com/glennsl/bs-json/blob/master/src/Json_encode.mli)
-* [Json.Decode](https://github.com/glennsl/bs-json/blob/master/src/Json_decode.mli)
+* [Json](./src/Json.mli)
+* [Json.Encode](./src/Json_encode.mli)
+* [Json.Decode](./src/Json_decode.mli)
 
 ### Writing custom decoders and encoders
 

@@ -1,42 +1,6 @@
 {
-  "name": "@glennsl/bs-json",
-  "version": "5.0.4",
-  "description": "Compositional JSON encode/decode library for BuckleScript",
-  "main": "index.js",
-  "scripts": {
-    "build": "bsb -make-world",
-    "start": "bsb -make-world -w",
-    "coverage": "nyc report --temp-directory=coverage --reporter=text-lcov | coveralls",
-    "test:coverage": "npm run build && jest --coverage && npm run coverage && npm run test:examples",
-    "test": "npm run build && jest && npm run test:examples",
-    "test:examples": "npm run build && ./run_examples.sh",
-    "watch:bsb": "bsb -make-world -w",
-    "watch:jest": "jest --coverage --watchAll",
-    "watch:screen": "screen -c .screenrc"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/glennsl/bs-json.git"
-  },
-  "keywords": [
-    "bucklescript",
-    "json"
-  ],
-  "author": "glennsl",
-  "license": "(LGPL-3.0 OR MPL-2.0)",
-  "bugs": {
-    "url": "https://github.com/glennsl/bs-json/issues"
-  },
-  "homepage": "https://github.com/glennsl/bs-json#readme",
-  "files": [
-    "src/*.ml*",
-    "bsconfig.json"
-  ],
   "devDependencies": {
-    "@glennsl/bs-jest": "^0.7.0",
-    "bs-platform": "^7.2.2",
-    "coveralls": "^3.1.0",
-    "nyc": "^15.0.1"
+    "jest": "^26.5.2"
   },
   "jest": {
     "testEnvironment": "node"

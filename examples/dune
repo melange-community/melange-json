@@ -1,0 +1,4 @@
+(melange.emit
+ (target examples)
+ (alias examples)
+ (libraries melange-json))
