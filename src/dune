@@ -3,4 +3,6 @@
 (library
  (name json)
  (public_name melange-json)
- (modes melange))
+ (modes melange)
+ (preprocess
+  (pps melange.ppx)))

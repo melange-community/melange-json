@@ -487,7 +487,7 @@ let () =
           |> toEqual (Obj.magic [%obj { a = Js.null; b = Js.null }]));
       test "null -> dict string" (fun () ->
           try
-            let (_ : string Js_dict.t) =
+            let (_ : string Js.Dict.t) =
               (dict string) (parseOrRaise {| { "a": null, "b": null } |})
             in
             fail "should throw"
@@ -495,7 +495,7 @@ let () =
       test "non-DecodeError exceptions in decoder should pass through"
         (fun () ->
           try
-            let (_ : _ Js_dict.t) =
+            let (_ : _ Js.Dict.t) =
               (dict (fun _ -> raise Foo)) (parseOrRaise {| { "a": 0 } |})
             in
             fail "should throw"
@@ -789,7 +789,7 @@ let () =
                     }]));
       test "dict array array int - heterogenous structure" (fun () ->
           try
-            let (_ : int array array Js_dict.t) =
+            let (_ : int array array Js.Dict.t) =
               (dict (array (array int)))
                 (parseOrRaise
                    {| { "a": [[1, 2], [true]], "b": [[4], [5, 6]] } |})
@@ -805,7 +805,7 @@ let () =
             pass);
       test "dict array array int - heterogenous structure 2" (fun () ->
           try
-            let (_ : int array array Js_dict.t) =
+            let (_ : int array array Js.Dict.t) =
               (dict (array (array int)))
                 (parseOrRaise {| { "a": [[1, 2], "foo"], "b": [[4], [5, 6]] } |})
             in
