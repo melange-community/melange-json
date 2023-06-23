@@ -15,7 +15,7 @@ let _ =
 
       test "error" (fun () ->
           try
-            let (_ : Js_json.t) = parseOrRaise "{" in
+            let (_ : Js.Json.t) = parseOrRaise "{" in
             fail "should throw"
           with ParseError "Unexpected end of JSON input" -> pass));
 

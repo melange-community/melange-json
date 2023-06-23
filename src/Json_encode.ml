@@ -22,7 +22,7 @@ let withDefault d encode = function
   | None -> d
   | Some v -> encode v
 
-external jsonDict : Js.Json.t Js_dict.t -> Js.Json.t = "%identity"
+external jsonDict : Js.Json.t Js.Dict.t -> Js.Json.t = "%identity"
 let dict encode d =
   let pairs = Js.Dict.entries d in
   let encodedPairs = Array.map (fun (k, v) -> (k, encode(v))) pairs in
