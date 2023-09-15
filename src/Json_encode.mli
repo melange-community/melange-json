@@ -3,7 +3,8 @@
 type 'a encoder = 'a -> Js.Json.t
 (** The type of a encoder combinator *)
 
-external null : Js.Json.t = "null" [@@bs.val]
+external null : Js.Json.t = "null"
+
 (** [null] is the singleton null JSON value *)
 
 external string : string -> Js.Json.t = "%identity"
@@ -30,16 +31,22 @@ val nullable : 'a encoder -> 'a option -> Js.Json.t
 val withDefault : Js.Json.t -> 'a encoder -> 'a option -> Js.Json.t
 (** [withDefault default encoder option] returns the encoded value if present, oterwise [default] *)
 
-val pair : 'a encoder -> 'b encoder -> ('a * 'b) -> Js.Json.t
+val pair : 'a encoder -> 'b encoder -> 'a * 'b -> Js.Json.t
 (** [pair encoder encoder tuple] creates a JSON array from a tuple of size 2 *)
 
-val tuple2 : 'a encoder -> 'b encoder -> ('a * 'b) -> Js.Json.t
+val tuple2 : 'a encoder -> 'b encoder -> 'a * 'b -> Js.Json.t
 (** [tuple2 encoder encoder tuple] creates a JSON array from a tuple of size 2. Alias of [pair] *)
 
-val tuple3 : 'a encoder -> 'b encoder -> 'c encoder -> ('a * 'b * 'c) -> Js.Json.t
+val tuple3 : 'a encoder -> 'b encoder -> 'c encoder -> 'a * 'b * 'c -> Js.Json.t
 (** [tuple3 enc enc enc tuple] creates a JSON array from a tuple of size 3 *)
 
-val tuple4 : 'a encoder -> 'b encoder -> 'c encoder -> 'd encoder -> ('a * 'b * 'c * 'd) -> Js.Json.t
+val tuple4 :
+  'a encoder ->
+  'b encoder ->
+  'c encoder ->
+  'd encoder ->
+  'a * 'b * 'c * 'd ->
+  Js.Json.t
 (** [tuple4 enc enc enc enc tuple] creates a JSON array from a tuple of size 4 *)
 
 external jsonDict : Js.Json.t Js.Dict.t -> Js.Json.t = "%identity"
