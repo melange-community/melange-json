@@ -61,15 +61,15 @@ Install [opam](https://opam.ocaml.org/) package manager.
 
 Then:
 
-```
-opam pin add melange-json.dev git+https://github.com/melange-community/melange-json.git#main
+```sh
+opam install melange-json
 ```
 
 # Setup
 
 Add `melange-json` to the `libraries` field in your `dune` file:
 
-```dune
+```lisp
 ; ...
   (libraries melange-json)
 ; ...
