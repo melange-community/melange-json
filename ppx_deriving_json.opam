@@ -3,13 +3,13 @@ opam-version: "2.0"
 maintainer: ["Andrey Popp"]
 authors: ["Andrey Popp"]
 license: "LICENSE"
-homepage: "https://github.com/andreypopp/react_of_ocaml"
-bug-reports: "https://github.com/andreypopp/react_of_ocaml/issues"
+homepage: "https://github.com/andreypopp/ppx_deriving_json"
+bug-reports: "https://github.com/andreypopp/ppx_deriving_json/issues"
 depends: [
   "ocaml" {>= "5.1"}
   "dune" {>= "3.11"}
   "ppxlib"
-  "ppx_deriving_schema"
+  "ppx_deriving_tools"
   "containers"
   "odoc" {with-doc}
 ]
@@ -27,4 +27,4 @@ build: [
     "@doc" {with-doc}
   ]
 ]
-dev-repo: "git+https://github.com/andreypopp/react_of_ocaml.git"
+dev-repo: "git+https://github.com/andreypopp/ppx_deriving_json.git"
