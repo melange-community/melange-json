@@ -10,7 +10,7 @@ let _ =
 (* prints ["foo", "bar"] *)
 let _ =
   [| "foo"; "bar" |]
-  |> Js.Array.map Json.Encode.string
+  |> Js.Array.map ~f:Json.Encode.string
   |> Json.Encode.jsonArray
   |> Json.stringify
   |> Js.log

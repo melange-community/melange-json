@@ -164,7 +164,7 @@ let oneOf decoders json =
     match decoders with
     | [] ->
         let formattedErrors =
-          "\n- " ^ Js.Array.joinWith "\n- " (Array.of_list (List.rev errors))
+          "\n- " ^ Js.Array.join ~sep:"\n- " (Array.of_list (List.rev errors))
         in
         raise
         @@ DecodeError
