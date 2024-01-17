@@ -73,9 +73,10 @@ let pair decodeA decodeB json =
           decodeB (Array.unsafe_get source 1) )
       with DecodeError msg -> raise @@ DecodeError (msg ^ "\n\tin pair/tuple2")
     else
+      let length = Js.String.make length in
       raise
-      @@ DecodeError
-           {j|Expected array of length 2, got array of length $length|j}
+        (DecodeError
+           {j|Expected array of length 2, got array of length $length|j})
   else raise @@ DecodeError ("Expected array, got " ^ _stringify json)
 
 let tuple2 = pair
@@ -91,9 +92,10 @@ let tuple3 decodeA decodeB decodeC json =
           decodeC (Array.unsafe_get source 2) )
       with DecodeError msg -> raise @@ DecodeError (msg ^ "\n\tin tuple3")
     else
+      let length = Js.String.make length in
       raise
-      @@ DecodeError
-           {j|Expected array of length 3, got array of length $length|j}
+        (DecodeError
+           {j|Expected array of length 3, got array of length $length|j})
   else raise @@ DecodeError ("Expected array, got " ^ _stringify json)
 
 let tuple4 decodeA decodeB decodeC decodeD json =
@@ -108,9 +110,10 @@ let tuple4 decodeA decodeB decodeC decodeD json =
           decodeD (Array.unsafe_get source 3) )
       with DecodeError msg -> raise @@ DecodeError (msg ^ "\n\tin tuple4")
     else
+      let length = Js.String.make length in
       raise
-      @@ DecodeError
-           {j|Expected array of length 4, got array of length $length|j}
+        (DecodeError
+           {j|Expected array of length 4, got array of length $length|j})
   else raise @@ DecodeError ("Expected array, got " ^ _stringify json)
 
 let dict decode json =
