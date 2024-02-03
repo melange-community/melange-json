@@ -1,8 +1,5 @@
 {
   "devDependencies": {
     "jest": "^26.5.2"
-  },
-  "jest": {
-    "testEnvironment": "node"
   }
 }
