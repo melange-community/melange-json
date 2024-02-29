@@ -27,8 +27,7 @@
  (description
   "Provides encoders and decoders to convert JSON values into typed values. With the possibility to create custom encoders and decoders.")
  (depends
-  (ocaml
-   (>= "5.1"))
+  ocaml
   (melange
    (>= "3.0.0"))
   (melange-jest :with-test)
