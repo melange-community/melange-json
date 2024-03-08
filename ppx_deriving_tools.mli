@@ -7,6 +7,7 @@ module Repr : sig
     params : label loc list;
     shape : type_decl_shape;
     loc : location;
+    attrs: attributes;
   }
 
   and type_decl_shape =
