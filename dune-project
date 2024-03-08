@@ -2,6 +2,8 @@
 
 (generate_opam_files true)
 
+(name ppx_deriving_tools)
+
 (source
  (github andreypopp/ppx_deriving_tools))
 
