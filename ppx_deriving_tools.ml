@@ -24,7 +24,7 @@ module Repr = struct
   }
 
   and type_decl_shape =
-    | Ts_record of (label loc * type_expr) list
+    | Ts_record of (label loc * attributes * type_expr) list
     | Ts_variant of variant_case list
     | Ts_expr of type_expr
 
@@ -37,11 +37,12 @@ module Repr = struct
   and type_expr = core_type * type_expr'
 
   and variant_case =
-    | Vc_tuple of label loc * type_expr list
-    | Vc_record of label loc * (label loc * type_expr) list
+    | Vc_tuple of label loc * attributes * type_expr list
+    | Vc_record of
+        label loc * attributes * (label loc * attributes * type_expr) list
 
   and polyvariant_case =
-    | Pvc_construct of label loc * type_expr list
+    | Pvc_construct of label loc * attributes * type_expr list
     | Pvc_inherit of Longident.t loc * type_expr list
 
   let rec of_core_type (typ : Parsetree.core_type) : type_expr =
@@ -55,7 +56,8 @@ module Repr = struct
           List.map fields ~f:(fun field ->
               match field.prf_desc with
               | Rtag (id, _, ts) ->
-                  Pvc_construct (id, List.map ts ~f:of_core_type)
+                  Pvc_construct
+                    (id, field.prf_attributes, List.map ts ~f:of_core_type)
               | Rinherit { ptyp_desc = Ptyp_constr (id, ts); _ } ->
                   Pvc_inherit (id, List.map ts ~f:of_core_type)
               | Rinherit _ ->
@@ -85,18 +87,24 @@ module Repr = struct
             List.map ctors ~f:(fun ctor ->
                 match ctor.pcd_args with
                 | Pcstr_tuple ts ->
-                    Vc_tuple (ctor.pcd_name, List.map ts ~f:of_core_type)
+                    Vc_tuple
+                      ( ctor.pcd_name,
+                        ctor.pcd_attributes,
+                        List.map ts ~f:of_core_type )
                 | Pcstr_record fs ->
                     let fs =
                       List.map fs ~f:(fun f ->
-                          f.pld_name, of_core_type f.pld_type)
+                          ( f.pld_name,
+                            f.pld_attributes,
+                            of_core_type f.pld_type ))
                     in
-                    Vc_record (ctor.pcd_name, fs))
+                    Vc_record (ctor.pcd_name, ctor.pcd_attributes, fs))
           in
           Ts_variant cs
       | Ptype_record fs, _ ->
           let fs =
-            List.map fs ~f:(fun f -> f.pld_name, of_core_type f.pld_type)
+            List.map fs ~f:(fun f ->
+                f.pld_name, f.pld_attributes, of_core_type f.pld_type)
           in
           Ts_record fs
       | Ptype_open, _ -> not_supported ~loc "open types"
@@ -139,7 +147,7 @@ module Deriving_helper = struct
   let gen_record ~loc prefix fs =
     let ps, es =
       List.split
-        (List.map fs ~f:(fun (n, _t) ->
+        (List.map fs ~f:(fun (n, _attrs, _t) ->
              let id = sprintf "%s_%s" prefix n.txt in
              let patt = ppat_var ~loc { loc = n.loc; txt = id } in
              let expr =
@@ -165,7 +173,7 @@ module Deriving_helper = struct
 
   let gen_pat_record ~loc prefix fs =
     let xs =
-      List.map fs ~f:(fun (n, _t) ->
+      List.map fs ~f:(fun (n, _attrs, _t) ->
           let id = sprintf "%s_%s" prefix n.txt in
           let patt = ppat_var ~loc { loc = n.loc; txt = id } in
           let expr = pexp_ident ~loc { loc = n.loc; txt = lident id } in
@@ -218,7 +226,9 @@ class virtual deriving0 =
       not_supported "tuple types"
 
     method derive_of_record
-        : loc:location -> (label loc * type_expr) list -> expression =
+        : loc:location ->
+          (label loc * attributes * type_expr) list ->
+          expression =
       not_supported "record types"
 
     method derive_of_variant
@@ -311,7 +321,7 @@ class virtual deriving1 =
 
     method derive_of_record
         : loc:location ->
-          (label loc * type_expr) list ->
+          (label loc * attributes * type_expr) list ->
           expression ->
           expression =
       not_supported "record types"
@@ -414,7 +424,9 @@ class virtual deriving_type =
       not_supported "tuple types"
 
     method derive_of_record
-        : loc:location -> (label loc * Repr.type_expr) list -> core_type =
+        : loc:location ->
+          (label loc * attributes * Repr.type_expr) list ->
+          core_type =
       not_supported "record types"
 
     method derive_of_variant
@@ -504,12 +516,12 @@ let deriving_of ~name ~of_t ~error ~derive_of_tuple ~derive_of_record
           List.fold_left (List.rev cs) ~init:[%expr None]
             ~f:(fun next c ->
               match c with
-              | Pvc_construct (n, ts) ->
+              | Pvc_construct (n, attrs, ts) ->
                   let make arg =
                     [%expr Some [%e pexp_variant ~loc:n.loc n.txt arg]]
                   in
-                  derive_of_variant_case ~loc self#derive_of_type_expr
-                    make n ts next
+                  derive_of_variant_case ~loc ~attrs
+                    self#derive_of_type_expr make n ts next
               | Pvc_inherit (n, ts) ->
                   let x = self#derive_type_ref ~loc poly_name n ts x in
                   [%expr
@@ -540,12 +552,12 @@ let deriving_of ~name ~of_t ~error ~derive_of_tuple ~derive_of_record
                  pexp_construct (map_loc lident n) ~loc:n.loc arg
                in
                match c with
-               | Vc_record (n, fs) ->
-                   derive_of_variant_case_record ~loc
+               | Vc_record (n, attrs, fs) ->
+                   derive_of_variant_case_record ~loc ~attrs
                      self#derive_of_type_expr (make n) n fs next
-               | Vc_tuple (n, ts) ->
-                   derive_of_variant_case ~loc self#derive_of_type_expr
-                     (make n) n ts next)
+               | Vc_tuple (n, attrs, ts) ->
+                   derive_of_variant_case ~loc ~attrs
+                     self#derive_of_type_expr (make n) n ts next)
          in
          derive_of_variant ~loc self#derive_of_type_expr cases x
 
@@ -554,10 +566,10 @@ let deriving_of ~name ~of_t ~error ~derive_of_tuple ~derive_of_record
            List.fold_left (List.rev cs) ~init:(error ~loc)
              ~f:(fun next c ->
                match c with
-               | Pvc_construct (n, ts) ->
+               | Pvc_construct (n, attrs, ts) ->
                    let make arg = pexp_variant ~loc:n.loc n.txt arg in
-                   derive_of_variant_case ~loc self#derive_of_type_expr
-                     make n ts next
+                   derive_of_variant_case ~loc ~attrs
+                     self#derive_of_type_expr make n ts next
                | Pvc_inherit (n, ts) ->
                    let maybe_e =
                      poly#derive_type_ref ~loc poly_name n ts x
@@ -630,13 +642,13 @@ let deriving_of_match ~name ~of_t ~error ~derive_of_tuple
       method! derive_of_polyvariant ~loc cs t x =
         let ctors, inherits =
           List.partition_filter_map cs ~f:(function
-            | Pvc_construct (n, ts) -> `Left (n, ts)
-            | Pvc_inherit (n, ts) -> `Right (n, ts))
+            | Pvc_construct (n, attrs, ts) -> `Left (n, attrs, ts)
+            | Pvc_inherit (n, ts) -> `Right (n, [], ts))
         in
         let catch_all =
           [%pat? x]
           --> List.fold_left (List.rev inherits) ~init:[%expr None]
-                ~f:(fun next (n, ts) ->
+                ~f:(fun next (n, _, ts) ->
                   let maybe =
                     self#derive_type_ref ~loc poly_name n ts [%expr x]
                   in
@@ -647,12 +659,12 @@ let deriving_of_match ~name ~of_t ~error ~derive_of_tuple
         in
         let cases =
           List.fold_left (List.rev ctors) ~init:[ catch_all ]
-            ~f:(fun next ((n : label loc), ts) ->
+            ~f:(fun next ((n : label loc), attrs, ts) ->
               let make arg =
                 [%expr Some [%e pexp_variant ~loc:n.loc n.txt arg]]
               in
-              derive_of_variant_case ~loc self#derive_of_type_expr make n
-                ts
+              derive_of_variant_case ~loc ~attrs self#derive_of_type_expr
+                make n ts
               :: next)
         in
         pexp_match ~loc x cases
@@ -679,13 +691,13 @@ let deriving_of_match ~name ~of_t ~error ~derive_of_tuple
                  pexp_construct (map_loc lident n) ~loc:n.loc arg
                in
                match c with
-               | Vc_record (n, fs) ->
-                   derive_of_variant_case_record ~loc
+               | Vc_record (n, attrs, fs) ->
+                   derive_of_variant_case_record ~loc ~attrs
                      self#derive_of_type_expr (make n) n fs
                    :: next
-               | Vc_tuple (n, ts) ->
-                   derive_of_variant_case ~loc self#derive_of_type_expr
-                     (make n) n ts
+               | Vc_tuple (n, attrs, ts) ->
+                   derive_of_variant_case ~loc ~attrs
+                     self#derive_of_type_expr (make n) n ts
                    :: next)
          in
          pexp_match ~loc x cases
@@ -693,13 +705,13 @@ let deriving_of_match ~name ~of_t ~error ~derive_of_tuple
        method! derive_of_polyvariant ~loc cs t x =
          let ctors, inherits =
            List.partition_filter_map cs ~f:(function
-             | Pvc_construct (n, ts) -> `Left (n, ts)
-             | Pvc_inherit (n, ts) -> `Right (n, ts))
+             | Pvc_construct (n, attrs, ts) -> `Left (n, attrs, ts)
+             | Pvc_inherit (n, ts) -> `Right (n, [], ts))
          in
          let catch_all =
            [%pat? x]
            --> List.fold_left (List.rev inherits) ~init:(error ~loc)
-                 ~f:(fun next (n, ts) ->
+                 ~f:(fun next (n, _, ts) ->
                    let maybe =
                      poly#derive_type_ref ~loc poly_name n ts x
                    in
@@ -710,10 +722,10 @@ let deriving_of_match ~name ~of_t ~error ~derive_of_tuple
          in
          let cases =
            List.fold_left (List.rev ctors) ~init:[ catch_all ]
-             ~f:(fun next ((n : label loc), ts) ->
+             ~f:(fun next ((n : label loc), attrs, ts) ->
                let make arg = pexp_variant ~loc:n.loc n.txt arg in
-               derive_of_variant_case ~loc self#derive_of_type_expr make n
-                 ts
+               derive_of_variant_case ~loc ~attrs self#derive_of_type_expr
+                 make n ts
                :: next)
          in
          pexp_match ~loc x cases
@@ -784,30 +796,30 @@ let deriving_to ~name ~t_to ~derive_of_tuple ~derive_of_record
          in
          pexp_match ~loc x
            (List.map cs ~f:(function
-             | Vc_record (n, fs) ->
+             | Vc_record (n, attrs, fs) ->
                  let p, es = gen_pat_record ~loc "x" fs in
                  ctor_pat n (Some p)
-                 --> derive_of_variant_case_record ~loc
+                 --> derive_of_variant_case_record ~loc ~attrs
                        self#derive_of_type_expr n fs es
-             | Vc_tuple (n, ts) ->
+             | Vc_tuple (n, attrs, ts) ->
                  let arity = List.length ts in
                  let p, es = gen_pat_tuple ~loc "x" arity in
                  ctor_pat n (if arity = 0 then None else Some p)
-                 --> derive_of_variant_case ~loc self#derive_of_type_expr
-                       n ts es))
+                 --> derive_of_variant_case ~loc ~attrs
+                       self#derive_of_type_expr n ts es))
 
        method! derive_of_polyvariant ~loc cs _t x =
          let cases =
            List.map cs ~f:(function
-             | Pvc_construct (n, []) ->
+             | Pvc_construct (n, attrs, []) ->
                  ppat_variant ~loc n.txt None
-                 --> derive_of_variant_case ~loc self#derive_of_type_expr
-                       n [] []
-             | Pvc_construct (n, ts) ->
+                 --> derive_of_variant_case ~loc ~attrs
+                       self#derive_of_type_expr n [] []
+             | Pvc_construct (n, attrs, ts) ->
                  let ps, es = gen_pat_tuple ~loc "x" (List.length ts) in
                  ppat_variant ~loc n.txt (Some ps)
-                 --> derive_of_variant_case ~loc self#derive_of_type_expr
-                       n ts es
+                 --> derive_of_variant_case ~loc ~attrs
+                       self#derive_of_type_expr n ts es
              | Pvc_inherit (n, ts) ->
                  [%pat? [%p ppat_type ~loc n] as x]
                  --> self#derive_of_type_expr ~loc (te_opaque n ts)

@@ -10,7 +10,7 @@ module Repr : sig
   }
 
   and type_decl_shape =
-    | Ts_record of (label loc * type_expr) list
+    | Ts_record of (label loc * attributes * type_expr) list
     | Ts_variant of variant_case list
     | Ts_expr of type_expr
 
@@ -23,11 +23,12 @@ module Repr : sig
     | Te_polyvariant of polyvariant_case list
 
   and variant_case =
-    | Vc_tuple of label loc * type_expr list
-    | Vc_record of label loc * (label loc * type_expr) list
+    | Vc_tuple of label loc * attributes * type_expr list
+    | Vc_record of
+        label loc * attributes * (label loc * attributes * type_expr) list
 
   and polyvariant_case =
-    | Pvc_construct of label loc * type_expr list
+    | Pvc_construct of label loc * attributes * type_expr list
     | Pvc_inherit of Longident.t loc * type_expr list
 
   val of_core_type : core_type -> type_expr
@@ -52,11 +53,12 @@ val deriving_to :
   derive_of_record:
     (loc:location ->
     derive_of_type_expr ->
-    (label loc * Repr.type_expr) list ->
+    (label loc * attributes * Repr.type_expr) list ->
     expression list ->
     expression) ->
   derive_of_variant_case:
     (loc:location ->
+    attrs:attributes ->
     derive_of_type_expr ->
     label loc ->
     Repr.type_expr list ->
@@ -64,9 +66,10 @@ val deriving_to :
     expression) ->
   derive_of_variant_case_record:
     (loc:location ->
+    attrs:attributes ->
     derive_of_type_expr ->
     label loc ->
-    (label loc * Repr.type_expr) list ->
+    (label loc * attributes * Repr.type_expr) list ->
     expression list ->
     expression) ->
   unit ->
@@ -86,7 +89,7 @@ val deriving_of :
   derive_of_record:
     (loc:location ->
     derive_of_type_expr ->
-    (label loc * Repr.type_expr) list ->
+    (label loc * attributes * Repr.type_expr) list ->
     expression ->
     expression) ->
   derive_of_variant:
@@ -97,6 +100,7 @@ val deriving_of :
     expression) ->
   derive_of_variant_case:
     (loc:location ->
+    attrs:attributes ->
     derive_of_type_expr ->
     (expression option -> expression) ->
     label loc ->
@@ -105,10 +109,11 @@ val deriving_of :
     expression) ->
   derive_of_variant_case_record:
     (loc:location ->
+    attrs:attributes ->
     derive_of_type_expr ->
     (expression option -> expression) ->
     label loc ->
-    (label loc * Repr.type_expr) list ->
+    (label loc * attributes * Repr.type_expr) list ->
     expression ->
     expression) ->
   unit ->
@@ -128,11 +133,12 @@ val deriving_of_match :
   derive_of_record:
     (loc:location ->
     derive_of_type_expr ->
-    (label loc * Repr.type_expr) list ->
+    (label loc * attributes * Repr.type_expr) list ->
     expression ->
     expression) ->
   derive_of_variant_case:
     (loc:location ->
+    attrs:attributes ->
     derive_of_type_expr ->
     (expression option -> expression) ->
     label loc ->
@@ -140,10 +146,11 @@ val deriving_of_match :
     case) ->
   derive_of_variant_case_record:
     (loc:location ->
+    attrs:attributes ->
     derive_of_type_expr ->
     (expression option -> expression) ->
     label loc ->
-    (label loc * Repr.type_expr) list ->
+    (label loc * attributes * Repr.type_expr) list ->
     case) ->
   unit ->
   deriving
@@ -164,7 +171,7 @@ module Deriving_helper : sig
   val gen_record :
     loc:location ->
     label ->
-    (label loc * 'a) list ->
+    (label loc * attributes * 'a) list ->
     pattern list * expression
   (** [let patts, expr = gen_tuple label n in ...] creates a record expression
       and a corresponding list of patterns. *)
@@ -178,7 +185,7 @@ module Deriving_helper : sig
   val gen_pat_record :
     loc:location ->
     string ->
-    (label loc * 'a) list ->
+    (label loc * attributes * 'a) list ->
     pattern * expression list
   (** [let patt, exprs = gen_pat_record ~loc prefix fs in ...]
       generates a pattern to match record with fields [fs] and a list of expressions
@@ -221,7 +228,7 @@ class virtual deriving1 : object
 
   method derive_of_record :
     loc:location ->
-    (label loc * Repr.type_expr) list ->
+    (label loc * attributes * Repr.type_expr) list ->
     expression ->
     expression
 
@@ -267,7 +274,9 @@ class virtual deriving0 : object
     loc:location -> Repr.type_expr list -> expression
 
   method derive_of_record :
-    loc:location -> (label loc * Repr.type_expr) list -> expression
+    loc:location ->
+    (label loc * attributes * Repr.type_expr) list ->
+    expression
 
   method derive_of_variant :
     loc:location -> Repr.variant_case list -> expression
@@ -305,7 +314,9 @@ class virtual deriving_type : object
     loc:location -> Repr.polyvariant_case list -> core_type
 
   method derive_of_record :
-    loc:location -> (label loc * Repr.type_expr) list -> core_type
+    loc:location ->
+    (label loc * attributes * Repr.type_expr) list ->
+    core_type
 
   method derive_of_tuple :
     loc:location -> Repr.type_expr list -> core_type
