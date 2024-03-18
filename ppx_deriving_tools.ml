@@ -134,6 +134,20 @@ module Repr = struct
     ptyp_constr ~loc
       { loc; txt = lident decl.name.txt }
       (List.map decl.params ~f:(fun { loc; txt } -> ptyp_var ~loc txt))
+
+  let is_variant_enum cs =
+    List.for_all
+      ~f:(function
+        | Vc_tuple (_, _, ts) -> List.length ts = 0
+        | Vc_record (_, _, fs) -> List.length fs = 0)
+      cs
+
+  let is_polyvar_enum cs =
+    List.for_all
+      ~f:(function
+        | Pvc_construct (_, _, ts) -> List.length ts = 0
+        | Pvc_inherit (_, ts) -> List.length ts = 0)
+      cs
 end
 
 module Deriving_helper = struct
@@ -275,7 +289,8 @@ class virtual deriving0 =
     method derive_type_decl_label name =
       map_loc (derive_of_label self#name) name
 
-    method derive_type_decl ({ name; params; shape; loc; attrs = _ } as decl) =
+    method derive_type_decl
+        ({ name; params; shape; loc; attrs = _ } as decl) =
       let expr = self#derive_type_shape ~loc shape in
       let t = Repr.decl_to_te_expr decl in
       let expr = [%expr ([%e expr] : [%t self#t ~loc name t])] in
@@ -380,7 +395,8 @@ class virtual deriving1 =
     method derive_type_decl_label name =
       map_loc (derive_of_label self#name) name
 
-    method derive_type_decl ({ name; params; shape; loc; attrs = _ } as decl) =
+    method derive_type_decl
+        ({ name; params; shape; loc; attrs = _ } as decl) =
       let expr = self#derive_type_shape ~loc [%expr x] shape in
       let t = Repr.decl_to_te_expr decl in
       let expr = [%expr (fun x -> [%e expr] : [%t self#t ~loc name t])] in
@@ -500,8 +516,8 @@ type derive_of_type_expr =
   loc:location -> Repr.type_expr -> expression -> expression
 
 let deriving_of ~name ~of_t ~error ~derive_of_tuple ~derive_of_record
-    ~derive_of_variant ~derive_of_variant_case
-    ~derive_of_variant_case_record () =
+    ~derive_of_variant ~derive_of_enum_variant ~derive_of_variant_case
+    ~derive_of_enum_variant_case ~derive_of_variant_case_record () =
   let poly_name = sprintf "%s_poly" name in
   let poly =
     object (self)
@@ -519,16 +535,21 @@ let deriving_of ~name ~of_t ~error ~derive_of_tuple ~derive_of_record
       method! derive_of_variant ~loc:_ _ _ = assert false
 
       method! derive_of_polyvariant ~loc cs t x =
+        let is_enum = is_polyvar_enum cs in
         let cases =
           List.fold_left (List.rev cs) ~init:[%expr None]
             ~f:(fun next c ->
               match c with
               | Pvc_construct (n, attrs, ts) ->
+                  let derive_fun =
+                    if is_enum then derive_of_enum_variant_case
+                    else derive_of_variant_case
+                  in
                   let make arg =
                     [%expr Some [%e pexp_variant ~loc:n.loc n.txt arg]]
                   in
-                  derive_of_variant_case ~loc ~attrs
-                    self#derive_of_type_expr make n ts next
+                  derive_fun ~loc ~attrs self#derive_of_type_expr make n
+                    ts next
               | Pvc_inherit (n, ts) ->
                   let x = self#derive_type_ref ~loc poly_name n ts x in
                   [%expr
@@ -536,7 +557,10 @@ let deriving_of ~name ~of_t ~error ~derive_of_tuple ~derive_of_record
                     | Some x -> (Some x :> [%t t] option)
                     | None -> [%e next]])
         in
-        derive_of_variant ~loc self#derive_of_type_expr cases x
+        let derive_fun =
+          if is_enum then derive_of_enum_variant else derive_of_variant
+        in
+        derive_fun ~loc self#derive_of_type_expr cases x
     end
   in
   Deriving1
@@ -552,6 +576,7 @@ let deriving_of ~name ~of_t ~error ~derive_of_tuple ~derive_of_record
          derive_of_record ~loc self#derive_of_type_expr
 
        method! derive_of_variant ~loc cs x =
+         let is_enum = is_variant_enum cs in
          let cases =
            List.fold_left (List.rev cs) ~init:(error ~loc)
              ~f:(fun next c ->
@@ -563,20 +588,32 @@ let deriving_of ~name ~of_t ~error ~derive_of_tuple ~derive_of_record
                    derive_of_variant_case_record ~loc ~attrs
                      self#derive_of_type_expr (make n) n fs next
                | Vc_tuple (n, attrs, ts) ->
-                   derive_of_variant_case ~loc ~attrs
-                     self#derive_of_type_expr (make n) n ts next)
+                   let derive_fun =
+                     if is_enum then derive_of_enum_variant_case
+                     else derive_of_variant_case
+                   in
+                   derive_fun ~loc ~attrs self#derive_of_type_expr
+                     (make n) n ts next)
          in
-         derive_of_variant ~loc self#derive_of_type_expr cases x
+         let derive_fun =
+           if is_enum then derive_of_enum_variant else derive_of_variant
+         in
+         derive_fun ~loc self#derive_of_type_expr cases x
 
        method! derive_of_polyvariant ~loc cs t x =
+         let is_enum = is_polyvar_enum cs in
          let cases =
            List.fold_left (List.rev cs) ~init:(error ~loc)
              ~f:(fun next c ->
                match c with
                | Pvc_construct (n, attrs, ts) ->
                    let make arg = pexp_variant ~loc:n.loc n.txt arg in
-                   derive_of_variant_case ~loc ~attrs
-                     self#derive_of_type_expr make n ts next
+                   let derive_fun =
+                     if is_enum then derive_of_enum_variant_case
+                     else derive_of_variant_case
+                   in
+                   derive_fun ~loc ~attrs self#derive_of_type_expr make n
+                     ts next
                | Pvc_inherit (n, ts) ->
                    let maybe_e =
                      poly#derive_type_ref ~loc poly_name n ts x
@@ -586,13 +623,19 @@ let deriving_of ~name ~of_t ~error ~derive_of_tuple ~derive_of_record
                      | Some e -> (e :> [%t t])
                      | None -> [%e next]])
          in
-         derive_of_variant ~loc self#derive_of_type_expr cases x
+         let derive_fun =
+           if is_enum then derive_of_enum_variant else derive_of_variant
+         in
+         derive_fun ~loc self#derive_of_type_expr cases x
 
        method! derive_type_decl decl =
          match decl.shape with
          | Ts_expr (t, Te_polyvariant _) ->
              let str =
-               let { name = decl_name; params; shape = _; loc; attrs = _ } = decl in
+               let { name = decl_name; params; shape = _; loc; attrs = _ }
+                   =
+                 decl
+               in
                let expr =
                  let x = [%expr x] in
                  let init =
@@ -628,7 +671,7 @@ let deriving_of ~name ~of_t ~error ~derive_of_tuple ~derive_of_record
     end)
 
 let deriving_of_match ~name ~of_t ~error ~derive_of_tuple
-    ~derive_of_record ~derive_of_variant_case
+    ~derive_of_record ~derive_of_variant_case ~derive_of_enum_variant_case
     ~derive_of_variant_case_record () =
   let poly_name = sprintf "%s_poly" name in
   let poly =
@@ -664,14 +707,18 @@ let deriving_of_match ~name ~of_t ~error ~derive_of_tuple
                     | Some x -> (Some x :> [%t t] option)
                     | None -> [%e next]])
         in
+        let is_enum = is_polyvar_enum cs in
         let cases =
           List.fold_left (List.rev ctors) ~init:[ catch_all ]
             ~f:(fun next ((n : label loc), attrs, ts) ->
               let make arg =
                 [%expr Some [%e pexp_variant ~loc:n.loc n.txt arg]]
               in
-              derive_of_variant_case ~loc ~attrs self#derive_of_type_expr
-                make n ts
+              let derive_fun =
+                if is_enum then derive_of_enum_variant_case
+                else derive_of_variant_case
+              in
+              derive_fun ~loc ~attrs self#derive_of_type_expr make n ts
               :: next)
         in
         pexp_match ~loc x cases
@@ -690,6 +737,7 @@ let deriving_of_match ~name ~of_t ~error ~derive_of_tuple
          derive_of_record ~loc self#derive_of_type_expr
 
        method! derive_of_variant ~loc cs x =
+         let is_enum = is_variant_enum cs in
          let cases =
            List.fold_left (List.rev cs)
              ~init:[ [%pat? _] --> error ~loc ]
@@ -703,13 +751,18 @@ let deriving_of_match ~name ~of_t ~error ~derive_of_tuple
                      self#derive_of_type_expr (make n) n fs
                    :: next
                | Vc_tuple (n, attrs, ts) ->
-                   derive_of_variant_case ~loc ~attrs
-                     self#derive_of_type_expr (make n) n ts
+                   let derive_fun =
+                     if is_enum then derive_of_enum_variant_case
+                     else derive_of_variant_case
+                   in
+                   derive_fun ~loc ~attrs self#derive_of_type_expr
+                     (make n) n ts
                    :: next)
          in
          pexp_match ~loc x cases
 
        method! derive_of_polyvariant ~loc cs t x =
+         let is_enum = is_polyvar_enum cs in
          let ctors, inherits =
            List.partition_filter_map cs ~f:(function
              | Pvc_construct (n, attrs, ts) -> `Left (n, attrs, ts)
@@ -731,8 +784,11 @@ let deriving_of_match ~name ~of_t ~error ~derive_of_tuple
            List.fold_left (List.rev ctors) ~init:[ catch_all ]
              ~f:(fun next ((n : label loc), attrs, ts) ->
                let make arg = pexp_variant ~loc:n.loc n.txt arg in
-               derive_of_variant_case ~loc ~attrs self#derive_of_type_expr
-                 make n ts
+               let deriving_fun =
+                 if is_enum then derive_of_enum_variant_case
+                 else derive_of_variant_case
+               in
+               deriving_fun ~loc ~attrs self#derive_of_type_expr make n ts
                :: next)
          in
          pexp_match ~loc x cases
@@ -741,7 +797,10 @@ let deriving_of_match ~name ~of_t ~error ~derive_of_tuple
          match decl.shape with
          | Ts_expr (_t, Te_polyvariant _) ->
              let str =
-               let { name = decl_name; params; shape = _; loc; attrs = _ } = decl in
+               let { name = decl_name; params; shape = _; loc; attrs = _ }
+                   =
+                 decl
+               in
                let expr =
                  let x = [%expr x] in
                  let init =
@@ -779,7 +838,8 @@ let deriving_of_match ~name ~of_t ~error ~derive_of_tuple
     end)
 
 let deriving_to ~name ~t_to ~derive_of_tuple ~derive_of_record
-    ~derive_of_variant_case ~derive_of_variant_case_record () =
+    ~derive_of_variant_case ~derive_of_enum_variant_case
+    ~derive_of_variant_case_record () =
   Deriving1
     (object (self)
        inherit deriving1
@@ -798,6 +858,7 @@ let deriving_to ~name ~t_to ~derive_of_tuple ~derive_of_record
            [ p --> derive_of_record ~loc self#derive_of_type_expr fs es ]
 
        method! derive_of_variant ~loc cs x =
+         let is_enum = is_variant_enum cs in
          let ctor_pat (n : label loc) pat =
            ppat_construct ~loc:n.loc (map_loc lident n) pat
          in
@@ -811,22 +872,31 @@ let deriving_to ~name ~t_to ~derive_of_tuple ~derive_of_record
              | Vc_tuple (n, attrs, ts) ->
                  let arity = List.length ts in
                  let p, es = gen_pat_tuple ~loc "x" arity in
+                 let deriving_fun =
+                   if is_enum then derive_of_enum_variant_case
+                   else derive_of_variant_case
+                 in
                  ctor_pat n (if arity = 0 then None else Some p)
-                 --> derive_of_variant_case ~loc ~attrs
-                       self#derive_of_type_expr n ts es))
+                 --> deriving_fun ~loc ~attrs self#derive_of_type_expr n
+                       ts es))
 
        method! derive_of_polyvariant ~loc cs _t x =
+         let is_enum = is_polyvar_enum cs in
+         let deriving_fun =
+           if is_enum then derive_of_enum_variant_case
+           else derive_of_variant_case
+         in
          let cases =
            List.map cs ~f:(function
              | Pvc_construct (n, attrs, []) ->
                  ppat_variant ~loc n.txt None
-                 --> derive_of_variant_case ~loc ~attrs
-                       self#derive_of_type_expr n [] []
+                 --> deriving_fun ~loc ~attrs self#derive_of_type_expr n
+                       [] []
              | Pvc_construct (n, attrs, ts) ->
                  let ps, es = gen_pat_tuple ~loc "x" (List.length ts) in
                  ppat_variant ~loc n.txt (Some ps)
-                 --> derive_of_variant_case ~loc ~attrs
-                       self#derive_of_type_expr n ts es
+                 --> deriving_fun ~loc ~attrs self#derive_of_type_expr n
+                       ts es
              | Pvc_inherit (n, ts) ->
                  [%pat? [%p ppat_type ~loc n] as x]
                  --> self#derive_of_type_expr ~loc (te_opaque n ts)
