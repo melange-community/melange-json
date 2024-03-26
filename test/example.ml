@@ -3,11 +3,14 @@ type 'a param = 'a [@@deriving json]
 type opt = string option [@@deriving json]
 type tuple = int * string [@@deriving json]
 type record = { name : string; age : int } [@@deriving json]
+type record_aliased = { name : string; [@json.key "my_name"] age : int; [@json.key "my_age"] [@json.default 100] } [@@deriving json]
 type sum = A | B of int | C of { name : string } [@@deriving json]
 type other = [ `C ] [@@deriving json] type poly = [ `A | `B of int | other ] [@@deriving json]
 type 'a c = [ `C of 'a ] [@@deriving json]
 type recur = A | Fix of recur [@@deriving json]
 type polyrecur = [ `A | `Fix of polyrecur ] [@@deriving json]
+type evar = A | B [@json.as "b_aliased"] [@@deriving json]
+type epoly = [ `a [@json.as "A_aliased"] | `b ] [@@deriving json]
 
 module Cases = struct 
   type json = Ppx_deriving_json_runtime.t
@@ -25,6 +28,12 @@ module Cases = struct
     C ({|["B", 42]|}, poly_of_json, poly_to_json, (`B 42 : poly));
     C ({|["Fix",["Fix",["Fix",["A"]]]]|}, recur_of_json, recur_to_json, (Fix (Fix (Fix A))));
     C ({|["Fix",["Fix",["Fix",["A"]]]]|}, polyrecur_of_json, polyrecur_to_json, (`Fix (`Fix (`Fix `A))));
+    C ({|"A"|}, evar_of_json, evar_to_json, (A : evar));
+    C ({|"b_aliased"|}, evar_of_json, evar_to_json, (B : evar)); (* variant B repr as "b_aliased" in JSON *)
+    C ({|"b"|}, epoly_of_json, epoly_to_json, (`b : epoly));
+    C ({|"A_aliased"|}, epoly_of_json, epoly_to_json, (`a : epoly)); (* polyvariant `a aliased to "A_aliased"*)
+    C ({|{"my_name":"N","my_age":1}|}, record_aliased_of_json, record_aliased_to_json, {name="N"; age=1});
+    C ({|{"my_name":"N"}|}, record_aliased_of_json, record_aliased_to_json, {name="N"; age=100});
   ]
   let run' ~json_of_string ~json_to_string (C (data, of_json, to_json, v)) =
     print_endline (Printf.sprintf "JSON    DATA: %s" data);

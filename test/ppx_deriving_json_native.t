@@ -228,8 +228,7 @@
     [@@@ocaml.warning "-39-11-27"]
   
     let rec other_of_json_poly =
-      (fun x ->
-         match x with `List (`String "C" :: []) -> Some `C | x -> None
+      (fun x -> match x with `String "C" -> Some `C | x -> None
         : Yojson.Basic.t -> other option)
   
     and other_of_json =
@@ -245,8 +244,7 @@
     [@@@ocaml.warning "-39-11-27"]
   
     let rec other_to_json =
-      (fun x -> match x with `C -> `List [ `String "C" ]
-        : other -> Yojson.Basic.t)
+      (fun x -> match x with `C -> `String "C" : other -> Yojson.Basic.t)
   
     let _ = other_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]

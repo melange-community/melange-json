@@ -265,29 +265,8 @@
   
     let rec other_of_json_poly =
       (fun x ->
-         if Js.Array.isArray x then
-           let array = (Obj.magic x : Js.Json.t array) in
-           let len = Js.Array.length array in
-           if len > 0 then
-             let tag = Js.Array.unsafe_get array 0 in
-             if Js.typeof tag = "string" then
-               let tag = (Obj.magic tag : string) in
-               if tag = "C" then (
-                 if len <> 1 then
-                   Ppx_deriving_json_runtime.of_json_error
-                     "expected a JSON array of length 1";
-                 Some `C)
-               else None
-             else
-               Ppx_deriving_json_runtime.of_json_error
-                 "expected a non empty JSON array with element being a \
-                  string"
-           else
-             Ppx_deriving_json_runtime.of_json_error
-               "expected a non empty JSON array"
-         else
-           Ppx_deriving_json_runtime.of_json_error
-             "expected a non empty JSON array"
+         let enum = Ppx_deriving_json_runtime.Primitives.string_of_json x in
+         if enum = "C" then Some `C else None
         : Js.Json.t -> other option)
   
     and other_of_json =
@@ -304,8 +283,7 @@
   
     let rec other_to_json =
       (fun x ->
-         match x with
-         | `C -> (Obj.magic [| string_to_json "C" |] : Js.Json.t)
+         match x with `C -> (Obj.magic (string_to_json "C") : Js.Json.t)
         : other -> Js.Json.t)
   
     let _ = other_to_json
