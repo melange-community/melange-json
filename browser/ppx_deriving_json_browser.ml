@@ -3,6 +3,7 @@ open ContainersLabels
 open Ppxlib
 open Ast_builder.Default
 open Ppx_deriving_tools.Deriving_helper
+open Utils
 
 module Of_json = struct
   let build_tuple ~loc derive si ts e =
@@ -12,25 +13,39 @@ module Of_json = struct
              [%expr Js.Array.unsafe_get [%e e] [%e eint ~loc (si + i)]]))
 
   let build_js_type ~loc fs =
-    let f (id, _) =
-      let pof_desc = Otag (id, [%type: Js.Json.t Js.undefined]) in
+    let f (n, attrs, _) =
+      let n_key =
+        get_json_key_string_payload attrs |> Option.get_or ~default:n
+      in
+      let pof_desc = Otag (n_key, [%type: Js.Json.t Js.undefined]) in
       { pof_loc = loc; pof_attributes = []; pof_desc }
     in
     let row = ptyp_object ~loc (List.map fs ~f) Closed in
     [%type: [%t row] Js.t]
 
   let build_record ~loc derive fs x make =
-    let handle_field fs (n, t) =
+    let handle_field fs (n, attrs, t) =
       ( map_loc lident n,
+        let n_key =
+          get_json_key_string_payload attrs |> Option.get_or ~default:n
+        in
+        let n_default = get_json_default_expr_payload attrs in
         [%expr
           match
             Js.Undefined.toOption
-              [%e fs] ## [%e pexp_ident ~loc:n.loc (map_loc lident n)]
+              [%e fs] ## [%e pexp_ident ~loc:n_key.loc (map_loc lident n_key)]
           with
           | Stdlib.Option.Some v -> [%e derive ~loc t [%expr v]]
           | Stdlib.Option.None ->
-              Ppx_deriving_json_runtime.of_json_error
-                [%e estring ~loc (sprintf "missing field %S" n.txt)]] )
+              [%e
+                match n_default with
+                | Some default -> default
+                | None ->
+                    [%expr
+                      Ppx_deriving_json_runtime.of_json_error
+                        [%e
+                          estring ~loc
+                            (sprintf "missing field %S" n_key.txt)]]]] )
     in
     [%expr
       let fs = (Obj.magic [%e x] : [%t build_js_type ~loc fs]) in
@@ -100,20 +115,43 @@ module Of_json = struct
         Ppx_deriving_json_runtime.of_json_error
           "expected a non empty JSON array"]
 
-  let derive_of_variant_case ~loc derive make (n : label loc) ts next =
+  let derive_of_enum_variant ~loc _derive cases x =
+    [%expr
+      let enum =
+        Ppx_deriving_json_runtime.Primitives.string_of_json [%e x]
+      in
+      [%e cases]]
+
+  let derive_of_variant_case ~loc ~attrs derive make (n : label loc) ts
+      next =
+    let n_as =
+      get_json_as_string_payload attrs |> Option.get_or ~default:n
+    in
     let arity = List.length ts in
     [%expr
-      if tag = [%e estring ~loc:n.loc n.txt] then (
+      if tag = [%e estring ~loc:n_as.loc n_as.txt] then (
         [%e ensure_json_array_len ~loc (arity + 1) [%expr len]];
         [%e
           if arity = 0 then make None
           else make (Some (build_tuple ~loc derive 1 ts [%expr array]))])
       else [%e next]]
 
-  let derive_of_variant_case_record ~loc derive make (n : label loc) fs
-      next =
+  let derive_of_enum_variant_case ~loc ~attrs _derive make (n : label loc)
+      _ts next =
+    let n_as =
+      get_json_as_string_payload attrs |> Option.get_or ~default:n
+    in
     [%expr
-      if tag = [%e estring ~loc:n.loc n.txt] then (
+      if enum = [%e estring ~loc:n_as.loc n_as.txt] then [%e make None]
+      else [%e next]]
+
+  let derive_of_variant_case_record ~loc ~attrs derive make
+      (n : label loc) fs next =
+    let n_as =
+      get_json_as_string_payload attrs |> Option.get_or ~default:n
+    in
+    [%expr
+      if tag = [%e estring ~loc:n_as.loc n_as.txt] then (
         [%e ensure_json_array_len ~loc 2 [%expr len]];
         let fs = Js.Array.unsafe_get array 1 in
         [%e ensure_json_object ~loc [%expr fs]];
@@ -128,6 +166,7 @@ module Of_json = struct
       ~of_t:(fun ~loc -> [%type: Js.Json.t])
       ~derive_of_tuple ~derive_of_record ~derive_of_variant
       ~derive_of_variant_case ~derive_of_variant_case_record
+      ~derive_of_enum_variant_case ~derive_of_enum_variant
 end
 
 module To_json = struct
@@ -138,20 +177,42 @@ module To_json = struct
 
   let derive_of_record ~loc derive fs es =
     let fs =
-      List.map2 fs es ~f:(fun (n, t) x ->
+      List.map2 fs es ~f:(fun (n, attrs, t) x ->
+          let n_key =
+            get_json_key_string_payload attrs |> Option.get_or ~default:n
+          in
           let this = derive ~loc t x in
-          map_loc lident n, this)
+          map_loc lident n_key, this)
     in
     let record = pexp_record ~loc fs None in
     as_json ~loc [%expr [%mel.obj [%e record]]]
 
-  let derive_of_variant_case ~loc derive n ts es =
-    let tag = [%expr string_to_json [%e estring ~loc:n.loc n.txt]] in
+  let derive_of_variant_case ~loc ~attrs derive n ts es =
+    let n_as =
+      get_json_as_string_payload attrs |> Option.get_or ~default:n
+    in
+    let tag =
+      [%expr string_to_json [%e estring ~loc:n_as.loc n_as.txt]]
+    in
     let es = List.map2 ts es ~f:(derive ~loc) in
     as_json ~loc (pexp_array ~loc (tag :: es))
 
-  let derive_of_variant_case_record ~loc derive n fs es =
-    let tag = [%expr string_to_json [%e estring ~loc:n.loc n.txt]] in
+  let derive_of_enum_variant_case ~loc ~attrs _derive n _ts _es =
+    let n_as =
+      get_json_as_string_payload attrs |> Option.get_or ~default:n
+    in
+    let tag =
+      [%expr string_to_json [%e estring ~loc:n_as.loc n_as.txt]]
+    in
+    as_json ~loc tag
+
+  let derive_of_variant_case_record ~loc ~attrs derive n fs es =
+    let n_as =
+      get_json_as_string_payload attrs |> Option.get_or ~default:n
+    in
+    let tag =
+      [%expr string_to_json [%e estring ~loc:n_as.loc n_as.txt]]
+    in
     let es = [ derive_of_record ~loc derive fs es ] in
     as_json ~loc (pexp_array ~loc (tag :: es))
 
@@ -159,7 +220,7 @@ module To_json = struct
     Ppx_deriving_tools.deriving_to () ~name:"to_json"
       ~t_to:(fun ~loc -> [%type: Js.Json.t])
       ~derive_of_tuple ~derive_of_record ~derive_of_variant_case
-      ~derive_of_variant_case_record
+      ~derive_of_variant_case_record ~derive_of_enum_variant_case
 end
 
 let () =
