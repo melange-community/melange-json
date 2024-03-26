@@ -516,8 +516,10 @@ type derive_of_type_expr =
   loc:location -> Repr.type_expr -> expression -> expression
 
 let deriving_of ~name ~of_t ~error ~derive_of_tuple ~derive_of_record
-    ~derive_of_variant ~derive_of_enum_variant ~derive_of_variant_case
-    ~derive_of_enum_variant_case ~derive_of_variant_case_record () =
+    ~derive_of_variant ?(derive_of_enum_variant = derive_of_variant)
+    ~derive_of_variant_case
+    ?(derive_of_enum_variant_case = derive_of_variant_case)
+    ~derive_of_variant_case_record () =
   let poly_name = sprintf "%s_poly" name in
   let poly =
     object (self)
@@ -671,7 +673,8 @@ let deriving_of ~name ~of_t ~error ~derive_of_tuple ~derive_of_record
     end)
 
 let deriving_of_match ~name ~of_t ~error ~derive_of_tuple
-    ~derive_of_record ~derive_of_variant_case ~derive_of_enum_variant_case
+    ~derive_of_record ~derive_of_variant_case
+    ?(derive_of_enum_variant_case = derive_of_variant_case)
     ~derive_of_variant_case_record () =
   let poly_name = sprintf "%s_poly" name in
   let poly =
@@ -838,7 +841,8 @@ let deriving_of_match ~name ~of_t ~error ~derive_of_tuple
     end)
 
 let deriving_to ~name ~t_to ~derive_of_tuple ~derive_of_record
-    ~derive_of_variant_case ~derive_of_enum_variant_case
+    ~derive_of_variant_case
+    ?(derive_of_enum_variant_case = derive_of_variant_case)
     ~derive_of_variant_case_record () =
   Deriving1
     (object (self)
