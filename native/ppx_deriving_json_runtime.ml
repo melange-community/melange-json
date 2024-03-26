@@ -11,6 +11,7 @@ module To_json = struct
   let string_to_json v = `String v
   let bool_to_json v = `Bool v
   let int_to_json v = `Int v
+  let float_to_json v = `Float v
   let unit_to_json () = `Null
   let list_to_json v_to_json vs = `List (List.map v_to_json vs)
 
@@ -23,6 +24,7 @@ module Of_json = struct
   let string_of_json = Yojson.Basic.Util.to_string
   let bool_of_json = Yojson.Basic.Util.to_bool
   let int_of_json = Yojson.Basic.Util.to_int
+  let float_of_json = Yojson.Basic.Util.to_float
 
   let unit_of_json = function
     | `Null -> ()
