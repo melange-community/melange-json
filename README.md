@@ -62,10 +62,10 @@ val to_json : t -> Js.Json.t
 
 ### Generating JSON converters from a type expressions
 
-You can also generate JSON converters for a type expression using the `json_of` and `json_of` extension points:
+You can also generate JSON converters for a type expression using the `to_json` and `of_json` extension points:
 
 ```ocaml
-let json = [%json_of: int * string] (42, "foo")
+let json = [%to_json: int * string] (42, "foo")
 ```
 
 ### Enumeration-like variants
