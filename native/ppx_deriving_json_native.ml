@@ -2,9 +2,9 @@ open Printf
 open ContainersLabels
 open Ppxlib
 open Ast_builder.Default
-open Ppx_deriving_tools.Deriving_helper
+open Ppx_deriving_tools
 open Ppx_deriving_tools.Conv
-open Utils
+open Ppx_deriving_json_shared
 
 module Of_json = struct
   let with_refs ~loc prefix fs inner =

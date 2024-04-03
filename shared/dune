@@ -1,5 +1,4 @@
 (library
- (name utils)
- (modules utils)
+ (name ppx_deriving_json_shared)
  (package ppx_deriving_json)
  (libraries ppxlib containers ppx_deriving_tools))
