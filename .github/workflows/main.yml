@@ -29,10 +29,9 @@ jobs:
         uses: ocaml/setup-ocaml@v2
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
-
-      - run: opam repo add andreypopp https://github.com/andreypopp/opam-repository.git
-
-      - run: opam update
+          opam-repositories: |
+            default: https://github.com/ocaml/opam-repository.git
+            andreypopp: https://github.com/andreypopp/opam-repository.git
 
       - run: opam install . --deps-only --with-test
 
