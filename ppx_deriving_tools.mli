@@ -27,28 +27,36 @@ val register_combined :
 
 (** A common scheme to define data conversions (like to_json/of_json). *)
 module Conv : sig
-  type tuple = {
+  type 'ctx tuple = {
     tpl_loc : location;
     tpl_types : core_type list;
-    tpl_attrs : attributes;
+    tpl_ctx : 'ctx;
   }
 
-  type record = {
+  type 'ctx record = {
     rcd_loc : location;
     rcd_fields : label_declaration list;
-    rcd_attrs : attributes;
+    rcd_ctx : 'ctx;
   }
 
   type variant_case =
-    | Vcs_tuple of label loc * tuple
-    | Vcs_record of label loc * record
-    | Vcs_enum of label loc * attributes
+    | Vcs_tuple of label loc * variant_case_ctx tuple
+    | Vcs_record of label loc * variant_case_ctx record
+    | Vcs_enum of label loc * variant_case_ctx
+
+  and variant_case_ctx =
+    | Vcs_ctx_variant of constructor_declaration
+    | Vcs_ctx_polyvariant of row_field
 
   type variant = {
     vrt_loc : location;
     vrt_cases : variant_case list;
-    vrt_attrs : attributes;
+    vrt_ctx : variant_ctx;
   }
+
+  and variant_ctx =
+    | Vrt_ctx_variant of type_declaration
+    | Vrt_ctx_polyvariant of core_type
 
   type derive_of_core_type := core_type -> expression -> expression
 
@@ -56,9 +64,15 @@ module Conv : sig
     name:label ->
     t_to:(loc:location -> core_type) ->
     derive_of_tuple:
-      (derive_of_core_type -> tuple -> expression list -> expression) ->
+      (derive_of_core_type ->
+      core_type tuple ->
+      expression list ->
+      expression) ->
     derive_of_record:
-      (derive_of_core_type -> record -> expression list -> expression) ->
+      (derive_of_core_type ->
+      type_declaration record ->
+      expression list ->
+      expression) ->
     derive_of_variant_case:
       (derive_of_core_type ->
       variant_case ->
@@ -72,9 +86,12 @@ module Conv : sig
     of_t:(loc:location -> core_type) ->
     error:(loc:location -> expression) ->
     derive_of_tuple:
-      (derive_of_core_type -> tuple -> expression -> expression) ->
+      (derive_of_core_type -> core_type tuple -> expression -> expression) ->
     derive_of_record:
-      (derive_of_core_type -> record -> expression -> expression) ->
+      (derive_of_core_type ->
+      type_declaration record ->
+      expression ->
+      expression) ->
     derive_of_variant:
       (derive_of_core_type ->
       variant ->
@@ -95,9 +112,12 @@ module Conv : sig
     of_t:(loc:location -> core_type) ->
     error:(loc:location -> expression) ->
     derive_of_tuple:
-      (derive_of_core_type -> tuple -> expression -> expression) ->
+      (derive_of_core_type -> core_type tuple -> expression -> expression) ->
     derive_of_record:
-      (derive_of_core_type -> record -> expression -> expression) ->
+      (derive_of_core_type ->
+      type_declaration record ->
+      expression ->
+      expression) ->
     derive_of_variant_case:
       (derive_of_core_type ->
       (expression option -> expression) ->
