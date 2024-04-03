@@ -161,6 +161,74 @@
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
   $ cat <<"EOF" | run
+  > type record_aliased = { name : string; [@json.key "my_name"] age : int; [@json.key "my_age"] [@json.default 100] } [@@deriving json]
+  > EOF
+  type record_aliased = {
+    name : string; [@json.key "my_name"]
+    age : int; [@json.key "my_age"] [@json.default 100]
+  }
+  [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : record_aliased) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec record_aliased_of_json =
+      (fun x ->
+         match x with
+         | `Assoc fs ->
+             let x_name = ref Stdlib.Option.None in
+             let x_age = ref (Stdlib.Option.Some 100) in
+             let rec iter = function
+               | [] -> ()
+               | (n', v) :: fs ->
+                   (match n' with
+                   | "my_name" ->
+                       x_name := Stdlib.Option.Some (string_of_json v)
+                   | "my_age" -> x_age := Stdlib.Option.Some (int_of_json v)
+                   | name ->
+                       Ppx_deriving_json_runtime.of_json_error
+                         (Stdlib.Printf.sprintf "unknown field: %s" name));
+                   iter fs
+             in
+             iter fs;
+             {
+               name =
+                 (match Stdlib.( ! ) x_name with
+                 | Stdlib.Option.Some v -> v
+                 | Stdlib.Option.None ->
+                     Ppx_deriving_json_runtime.of_json_error
+                       "missing field \"my_name\"");
+               age =
+                 (match Stdlib.( ! ) x_age with
+                 | Stdlib.Option.Some v -> v
+                 | Stdlib.Option.None -> 100);
+             }
+         | _ ->
+             Ppx_deriving_json_runtime.of_json_error
+               "expected a JSON object"
+        : Yojson.Basic.t -> record_aliased)
+  
+    let _ = record_aliased_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec record_aliased_to_json =
+      (fun x ->
+         match x with
+         | { name = x_name; age = x_age } ->
+             `Assoc
+               [
+                 "my_name", string_to_json x_name;
+                 "my_age", int_to_json x_age;
+               ]
+        : record_aliased -> Yojson.Basic.t)
+  
+    let _ = record_aliased_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
   > type sum = A | B of int | C of { name : string } [@@deriving json]
   > EOF
   type sum = A | B of int | C of { name : string } [@@deriving json]
@@ -394,5 +462,71 @@
         : polyrecur -> Yojson.Basic.t)
   
     let _ = polyrecur_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
+  > type evar = A | B [@json.as "b_aliased"] [@@deriving json]
+  > EOF
+  type evar = A | B [@json.as "b_aliased"] [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : evar) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec evar_of_json =
+      (fun x ->
+         match x with
+         | `String "A" -> A
+         | `String "b_aliased" -> B
+         | _ -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+        : Yojson.Basic.t -> evar)
+  
+    let _ = evar_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec evar_to_json =
+      (fun x -> match x with A -> `String "A" | B -> `String "b_aliased"
+        : evar -> Yojson.Basic.t)
+  
+    let _ = evar_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
+  > type epoly = [ `a [@json.as "A_aliased"] | `b ] [@@deriving json]
+  > EOF
+  type epoly = [ `a [@json.as "A_aliased"] | `b ] [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : epoly) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec epoly_of_json_poly =
+      (fun x ->
+         match x with
+         | `String "A_aliased" -> Some `a
+         | `String "b" -> Some `b
+         | x -> None
+        : Yojson.Basic.t -> epoly option)
+  
+    and epoly_of_json =
+      (fun x ->
+         match epoly_of_json_poly x with
+         | Some x -> x
+         | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+        : Yojson.Basic.t -> epoly)
+  
+    let _ = epoly_of_json_poly
+    and _ = epoly_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec epoly_to_json =
+      (fun x -> match x with `a -> `String "A_aliased" | `b -> `String "b"
+        : epoly -> Yojson.Basic.t)
+  
+    let _ = epoly_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 

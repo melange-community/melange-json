@@ -163,6 +163,69 @@
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
   $ cat <<"EOF" | run
+  > type record_aliased = { name : string; [@json.key "my_name"] age : int; [@json.key "my_age"] [@json.default 100] } [@@deriving json]
+  > EOF
+  type record_aliased = {
+    name : string; [@json.key "my_name"]
+    age : int; [@json.key "my_age"] [@json.default 100]
+  }
+  [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : record_aliased) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec record_aliased_of_json =
+      (fun x ->
+         if
+           not
+             (Js.typeof x = "object"
+             && (not (Js.Array.isArray x))
+             && not ((Obj.magic x : 'a Js.null) == Js.null))
+         then
+           Ppx_deriving_json_runtime.of_json_error "expected a JSON object";
+         let fs =
+           (Obj.magic x
+             : < my_name : Js.Json.t Js.undefined
+               ; my_age : Js.Json.t Js.undefined >
+               Js.t)
+         in
+         {
+           name =
+             (match Js.Undefined.toOption fs##my_name with
+             | Stdlib.Option.Some v -> string_of_json v
+             | Stdlib.Option.None ->
+                 Ppx_deriving_json_runtime.of_json_error
+                   "missing field \"my_name\"");
+           age =
+             (match Js.Undefined.toOption fs##my_age with
+             | Stdlib.Option.Some v -> int_of_json v
+             | Stdlib.Option.None -> 100);
+         }
+        : Js.Json.t -> record_aliased)
+  
+    let _ = record_aliased_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec record_aliased_to_json =
+      (fun x ->
+         match x with
+         | { name = x_name; age = x_age } ->
+             (Obj.magic
+                [%mel.obj
+                  {
+                    my_name = string_to_json x_name;
+                    my_age = int_to_json x_age;
+                  }]
+               : Js.Json.t)
+        : record_aliased -> Js.Json.t)
+  
+    let _ = record_aliased_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
   > type sum = A | B of int | C of { name : string } [@@deriving json]
   > EOF
   type sum = A | B of int | C of { name : string } [@@deriving json]
@@ -534,5 +597,77 @@
         : polyrecur -> Js.Json.t)
   
     let _ = polyrecur_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
+  > type evar = A | B [@json.as "b_aliased"] [@@deriving json]
+  > EOF
+  type evar = A | B [@json.as "b_aliased"] [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : evar) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec evar_of_json =
+      (fun x ->
+         let tag = Ppx_deriving_json_runtime.Primitives.string_of_json x in
+         if tag = "A" then A
+         else if tag = "b_aliased" then B
+         else Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+        : Js.Json.t -> evar)
+  
+    let _ = evar_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec evar_to_json =
+      (fun x ->
+         match x with
+         | A -> (Obj.magic (string_to_json "A") : Js.Json.t)
+         | B -> (Obj.magic (string_to_json "b_aliased") : Js.Json.t)
+        : evar -> Js.Json.t)
+  
+    let _ = evar_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
+  > type epoly = [ `a [@json.as "A_aliased"] | `b ] [@@deriving json]
+  > EOF
+  type epoly = [ `a [@json.as "A_aliased"] | `b ] [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : epoly) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec epoly_of_json_poly =
+      (fun x ->
+         let tag = Ppx_deriving_json_runtime.Primitives.string_of_json x in
+         if tag = "A_aliased" then Some `a
+         else if tag = "b" then Some `b
+         else None
+        : Js.Json.t -> epoly option)
+  
+    and epoly_of_json =
+      (fun x ->
+         match epoly_of_json_poly x with
+         | Some x -> x
+         | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+        : Js.Json.t -> epoly)
+  
+    let _ = epoly_of_json_poly
+    and _ = epoly_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec epoly_to_json =
+      (fun x ->
+         match x with
+         | `a -> (Obj.magic (string_to_json "A_aliased") : Js.Json.t)
+         | `b -> (Obj.magic (string_to_json "b") : Js.Json.t)
+        : epoly -> Js.Json.t)
+  
+    let _ = epoly_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
