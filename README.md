@@ -61,5 +61,60 @@ You can also generate JSON converters for a type expression using the `json_of` 
 let json = [%json_of: int * string] (42, "foo")
 ```
 
+### Enumeration-like variants
+
+Note that variants where all constructors have no arguments are treated as
+enumeration-like variants:
+
+```ocaml
+type t = A | B [@@deriving json]
+```
+
+Such variants are represented as strings in JSON:
+
+```ocaml
+let json = to_json A
+(* json = `String "A" *)
+```
+
+### `[@json.default E]`: default values for records
+
+You can specify default values for record fields using the `[@json.default E]` attribute:
+
+```ocaml
+type t = {
+  a: int;
+  b: string [@json.default "-"];
+} [@@deriving of_json]
+
+let t = of_json (`Assoc ["a", `Int 42])
+(* t = { a = 42; b = "-"; } *)
+```
+
+### `[@json.key E]`: customizing keys for record fields
+
+You can specify custom keys for record fields using the `[@json.key E]` attribute:
+
+```ocaml
+type t = {
+  a: int [@json.key "A"];
+  b: string [@json.key "B"];
+} [@@deriving of_json]
+
+let t = of_json (`Assoc ["A", `Int 42; "B", `String "foo"])
+(* t = { a = 42; b = "foo"; } *)
+```
+
+### `[@json.as E]`: customizing representation of a variant case
+
+You can specify custom representation for a variant case using the `[@json.as E]` attribute:
+
+```ocaml
+type t = A | B [@json.as "bbb"] [@@deriving json]
+
+let json = to_json B
+(* json = `String "bbb" *)
+```
+
 [ppx deriver plugin]: https://ocaml.org/docs/metaprogramming#attributes-and-derivers
 [melange]: https://melange.re
