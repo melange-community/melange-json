@@ -46,11 +46,18 @@ type t = {
 } [@@deriving json]
 ```
 
-This will generate the following pair of functions:
+This will generate the following pair of functions for native:
 
 ```ocaml
 val of_json : Yojson.Basic.json -> t
 val to_json : t -> Yojson.Basic.json
+```
+
+and the following pair of functions for melange:
+
+```ocaml
+val of_json : Js.Json.t -> t
+val to_json : t -> Js.Json.t
 ```
 
 ### Generating JSON converters from a type expressions
