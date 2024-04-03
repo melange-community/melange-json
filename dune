@@ -1,5 +1,6 @@
 (library
  (public_name ppx_deriving_tools)
+ (modules ppx_deriving_tools)
  (name ppx_deriving_tools)
  (preprocess
   (pps ppxlib.metaquot))
