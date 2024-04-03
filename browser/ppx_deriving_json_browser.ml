@@ -16,11 +16,8 @@ module Of_json = struct
   let build_js_type ~loc (fs : label_declaration list) =
     let f ld =
       let n = ld.pld_name in
-      let n_key =
-        get_json_key_string_payload ld.pld_attributes
-        |> Option.get_or ~default:n
-      in
-      let pof_desc = Otag (n_key, [%type: Js.Json.t Js.undefined]) in
+      let n = Option.get_or ~default:n (ld_attr_json_key ld) in
+      let pof_desc = Otag (n, [%type: Js.Json.t Js.undefined]) in
       { pof_loc = loc; pof_attributes = []; pof_desc }
     in
     let row = ptyp_object ~loc (List.map fs ~f) Closed in
@@ -29,28 +26,24 @@ module Of_json = struct
   let build_record ~loc derive (fs : label_declaration list) x make =
     let handle_field fs ld =
       ( map_loc lident ld.pld_name,
-        let n_key =
-          get_json_key_string_payload ld.pld_attributes
-          |> Option.get_or ~default:ld.pld_name
-        in
-        let n_default = get_json_default_expr_payload ld.pld_attributes in
+        let n = ld.pld_name in
+        let n = Option.get_or ~default:n (ld_attr_json_key ld) in
         [%expr
           match
             Js.Undefined.toOption
-              [%e fs]
-              ## [%e pexp_ident ~loc:n_key.loc (map_loc lident n_key)]
+              [%e fs] ## [%e pexp_ident ~loc:n.loc (map_loc lident n)]
           with
           | Stdlib.Option.Some v -> [%e derive ld.pld_type [%expr v]]
           | Stdlib.Option.None ->
               [%e
-                match n_default with
+                match ld_attr_json_default ld with
                 | Some default -> default
                 | None ->
                     [%expr
                       Ppx_deriving_json_runtime.of_json_error
                         [%e
-                          estring ~loc
-                            (sprintf "missing field %S" n_key.txt)]]]] )
+                          estring ~loc (sprintf "missing field %S" n.txt)]]]]
+      )
     in
     [%expr
       let fs = (Obj.magic [%e x] : [%t build_js_type ~loc fs]) in
@@ -138,22 +131,17 @@ module Of_json = struct
 
   let derive_of_variant_case derive make c next =
     match c with
-    | Vcs_enum (n, attrs) ->
+    | Vcs_enum (n, ctx) ->
         let loc = n.loc in
-        let n_as =
-          get_json_as_string_payload attrs |> Option.get_or ~default:n
-        in
+        let n = Option.get_or ~default:n (vcs_attr_json_as ctx) in
         [%expr
-          if tag = [%e estring ~loc:n_as.loc n_as.txt] then [%e make None]
+          if tag = [%e estring ~loc:n.loc n.txt] then [%e make None]
           else [%e next]]
     | Vcs_record (n, r) ->
         let loc = n.loc in
-        let n_as =
-          get_json_as_string_payload r.rcd_attrs
-          |> Option.get_or ~default:n
-        in
+        let n = Option.get_or ~default:n (vcs_attr_json_as r.rcd_ctx) in
         [%expr
-          if tag = [%e estring ~loc:n_as.loc n_as.txt] then (
+          if tag = [%e estring ~loc:n.loc n.txt] then (
             [%e ensure_json_array_len ~loc 2 [%expr len]];
             let fs = Js.Array.unsafe_get array 1 in
             [%e ensure_json_object ~loc [%expr fs]];
@@ -163,13 +151,10 @@ module Of_json = struct
           else [%e next]]
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
-        let n_as =
-          get_json_as_string_payload t.tpl_attrs
-          |> Option.get_or ~default:n
-        in
+        let n = Option.get_or ~default:n (vcs_attr_json_as t.tpl_ctx) in
         let arity = List.length t.tpl_types in
         [%expr
-          if tag = [%e estring ~loc:n_as.loc n_as.txt] then (
+          if tag = [%e estring ~loc:n.loc n.txt] then (
             [%e ensure_json_array_len ~loc (arity + 1) [%expr len]];
             [%e
               if arity = 0 then make None
@@ -199,47 +184,31 @@ module To_json = struct
     let loc = t.rcd_loc in
     let fs =
       List.map2 t.rcd_fields es ~f:(fun ld x ->
-          let n_key =
-            get_json_key_string_payload ld.pld_attributes
-            |> Option.get_or ~default:ld.pld_name
-          in
+          let n = ld.pld_name in
+          let n = Option.get_or ~default:n (ld_attr_json_key ld) in
           let this = derive ld.pld_type x in
-          map_loc lident n_key, this)
+          map_loc lident n, this)
     in
     let record = pexp_record ~loc fs None in
     as_json ~loc [%expr [%mel.obj [%e record]]]
 
   let derive_of_variant_case derive c es =
     match c with
-    | Vcs_enum (n, attrs) ->
+    | Vcs_enum (n, ctx) ->
         let loc = n.loc in
-        let n_as =
-          get_json_as_string_payload attrs |> Option.get_or ~default:n
-        in
-        let tag =
-          [%expr string_to_json [%e estring ~loc:n_as.loc n_as.txt]]
-        in
+        let n = Option.get_or ~default:n (vcs_attr_json_as ctx) in
+        let tag = [%expr string_to_json [%e estring ~loc:n.loc n.txt]] in
         as_json ~loc tag
     | Vcs_record (n, r) ->
         let loc = n.loc in
-        let n_as =
-          get_json_as_string_payload r.rcd_attrs
-          |> Option.get_or ~default:n
-        in
-        let tag =
-          [%expr string_to_json [%e estring ~loc:n_as.loc n_as.txt]]
-        in
+        let n = Option.get_or ~default:n (vcs_attr_json_as r.rcd_ctx) in
+        let tag = [%expr string_to_json [%e estring ~loc:n.loc n.txt]] in
         let es = [ derive_of_record derive r es ] in
         as_json ~loc (pexp_array ~loc (tag :: es))
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
-        let n_as =
-          get_json_as_string_payload t.tpl_attrs
-          |> Option.get_or ~default:n
-        in
-        let tag =
-          [%expr string_to_json [%e estring ~loc:n_as.loc n_as.txt]]
-        in
+        let n = Option.get_or ~default:n (vcs_attr_json_as t.tpl_ctx) in
+        let tag = [%expr string_to_json [%e estring ~loc:n.loc n.txt]] in
         let es = List.map2 t.tpl_types es ~f:derive in
         as_json ~loc (pexp_array ~loc (tag :: es))
 
