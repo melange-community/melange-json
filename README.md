@@ -91,7 +91,7 @@ let t = of_json (`Assoc ["a", `Int 42])
 (* t = { a = 42; b = "-"; } *)
 ```
 
-### `[@json.key E]`: customizing keys for record fields
+### `[@json.key "S"]`: customizing keys for record fields
 
 You can specify custom keys for record fields using the `[@json.key E]` attribute:
 
@@ -105,7 +105,7 @@ let t = of_json (`Assoc ["A", `Int 42; "B", `String "foo"])
 (* t = { a = 42; b = "foo"; } *)
 ```
 
-### `[@json.as E]`: customizing representation of a variant case
+### `[@json.as "S"]`: customizing representation of a variant case
 
 You can specify custom representation for a variant case using the `[@json.as E]` attribute:
 
