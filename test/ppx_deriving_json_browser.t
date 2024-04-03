@@ -265,8 +265,8 @@
   
     let rec other_of_json_poly =
       (fun x ->
-         let enum = Ppx_deriving_json_runtime.Primitives.string_of_json x in
-         if enum = "C" then Some `C else None
+         let tag = Ppx_deriving_json_runtime.Primitives.string_of_json x in
+         if tag = "C" then Some `C else None
         : Js.Json.t -> other option)
   
     and other_of_json =
@@ -274,7 +274,7 @@
          match other_of_json_poly x with
          | Some x -> x
          | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
-        : Js.Json.t -> [ `C ])
+        : Js.Json.t -> other)
   
     let _ = other_of_json_poly
     and _ = other_of_json
@@ -336,7 +336,7 @@
          match poly_of_json_poly x with
          | Some x -> x
          | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
-        : Js.Json.t -> [ `A | `B of int | other ])
+        : Js.Json.t -> poly)
   
     let _ = poly_of_json_poly
     and _ = poly_of_json
@@ -391,7 +391,7 @@
         Ppx_deriving_json_runtime.of_json_error
           "expected a non empty JSON array"
   
-    and c_of_json a_of_json : Js.Json.t -> [ `C of 'a ] =
+    and c_of_json a_of_json : Js.Json.t -> 'a c =
      fun x ->
       match (c_of_json_poly a_of_json) x with
       | Some x -> x
@@ -517,7 +517,7 @@
          match polyrecur_of_json_poly x with
          | Some x -> x
          | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
-        : Js.Json.t -> [ `A | `Fix of polyrecur ])
+        : Js.Json.t -> polyrecur)
   
     let _ = polyrecur_of_json_poly
     and _ = polyrecur_of_json
