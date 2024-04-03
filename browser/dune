@@ -19,3 +19,17 @@
  (name ppx_deriving_json_browser_test)
  (modules ppx_deriving_json_browser_test)
  (libraries ppx_deriving_json.browser ppxlib))
+
+(rule
+ (target ppx_deriving_json_browser.mli)
+ (action
+  (with-stdout-to
+   %{target}
+   (run echo ""))))
+
+(rule
+ (target ppx_deriving_json_browser_test.ml)
+ (action
+  (with-stdout-to
+   %{target}
+   (run echo "let () = Ppxlib.Driver.standalone ()"))))

@@ -19,3 +19,17 @@
  (name ppx_deriving_json_native_test)
  (modules ppx_deriving_json_native_test)
  (libraries ppx_deriving_json.native ppxlib))
+
+(rule
+ (target ppx_deriving_json_native.mli)
+ (action
+  (with-stdout-to
+   %{target}
+   (run echo ""))))
+
+(rule
+ (target ppx_deriving_json_native_test.ml)
+ (action
+  (with-stdout-to
+   %{target}
+   (run echo "let () = Ppxlib.Driver.standalone ()"))))
