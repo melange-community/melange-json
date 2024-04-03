@@ -1,7 +1,8 @@
 # ppx_deriving_tools
 
-Tools to build ppx deriving generators, consult [ppx_deriving_tools.mli][] for
-details.
+A collection of tools to make it easy to build ppx deriving plugins.
+
+Consult [ppx_deriving_tools.mli][] for details.
 
 [ppx_deriving_tools.mli]: ./ppx_deriving_tools.mli
 

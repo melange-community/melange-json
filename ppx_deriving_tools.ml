@@ -14,78 +14,73 @@ let pexp_error ~loc msg =
   pexp_extension ~loc (Location.error_extensionf ~loc "%s" msg)
 
 let stri_error ~loc msg = [%stri [%%ocaml.error [%e estring ~loc msg]]]
+let map_loc f a_loc = { a_loc with txt = f a_loc.txt }
 
-module Deriving_helper = struct
-  let map_loc f a_loc = { a_loc with txt = f a_loc.txt }
+let gen_bindings ~loc prefix n =
+  List.split
+    (List.init n ~f:(fun i ->
+         let id = sprintf "%s_%i" prefix i in
+         let patt = ppat_var ~loc { loc; txt = id } in
+         let expr = pexp_ident ~loc { loc; txt = lident id } in
+         patt, expr))
 
-  let gen_bindings ~loc prefix n =
+let gen_tuple ~loc prefix n =
+  let ps, es = gen_bindings ~loc prefix n in
+  ps, pexp_tuple ~loc es
+
+let gen_record ~loc prefix fs =
+  let ps, es =
     List.split
-      (List.init n ~f:(fun i ->
-           let id = sprintf "%s_%i" prefix i in
-           let patt = ppat_var ~loc { loc; txt = id } in
-           let expr = pexp_ident ~loc { loc; txt = lident id } in
-           patt, expr))
+      (List.map fs ~f:(fun (n, _attrs, _t) ->
+           let id = sprintf "%s_%s" prefix n.txt in
+           let patt = ppat_var ~loc { loc = n.loc; txt = id } in
+           let expr = pexp_ident ~loc { loc = n.loc; txt = lident id } in
+           (map_loc lident n, patt), expr))
+  in
+  let ns, ps = List.split ps in
+  ps, pexp_record ~loc (List.combine ns es) None
 
-  let gen_tuple ~loc prefix n =
-    let ps, es = gen_bindings ~loc prefix n in
-    ps, pexp_tuple ~loc es
+let gen_pat_tuple ~loc prefix n =
+  let patts, exprs = gen_bindings ~loc prefix n in
+  ppat_tuple ~loc patts, exprs
 
-  let gen_record ~loc prefix fs =
-    let ps, es =
-      List.split
-        (List.map fs ~f:(fun (n, _attrs, _t) ->
-             let id = sprintf "%s_%s" prefix n.txt in
-             let patt = ppat_var ~loc { loc = n.loc; txt = id } in
-             let expr =
-               pexp_ident ~loc { loc = n.loc; txt = lident id }
-             in
-             (map_loc lident n, patt), expr))
-    in
-    let ns, ps = List.split ps in
-    ps, pexp_record ~loc (List.combine ns es) None
+let gen_pat_list ~loc prefix n =
+  let patts, exprs = gen_bindings ~loc prefix n in
+  let patt =
+    List.fold_left (List.rev patts)
+      ~init:[%pat? []]
+      ~f:(fun prev patt -> [%pat? [%p patt] :: [%p prev]])
+  in
+  patt, exprs
 
-  let gen_pat_tuple ~loc prefix n =
-    let patts, exprs = gen_bindings ~loc prefix n in
-    ppat_tuple ~loc patts, exprs
+let gen_pat_record ~loc prefix ns =
+  let xs =
+    List.map ns ~f:(fun n ->
+        let id = sprintf "%s_%s" prefix n.txt in
+        let patt = ppat_var ~loc { loc = n.loc; txt = id } in
+        let expr = pexp_ident ~loc { loc = n.loc; txt = lident id } in
+        (map_loc lident n, patt), expr)
+  in
+  ppat_record ~loc (List.map xs ~f:fst) Closed, List.map xs ~f:snd
 
-  let gen_pat_list ~loc prefix n =
-    let patts, exprs = gen_bindings ~loc prefix n in
-    let patt =
-      List.fold_left (List.rev patts)
-        ~init:[%pat? []]
-        ~f:(fun prev patt -> [%pat? [%p patt] :: [%p prev]])
-    in
-    patt, exprs
+let pexp_list ~loc xs =
+  List.fold_left (List.rev xs) ~init:[%expr []] ~f:(fun xs x ->
+      [%expr [%e x] :: [%e xs]])
 
-  let gen_pat_record ~loc prefix ns =
-    let xs =
-      List.map ns ~f:(fun n ->
-          let id = sprintf "%s_%s" prefix n.txt in
-          let patt = ppat_var ~loc { loc = n.loc; txt = id } in
-          let expr = pexp_ident ~loc { loc = n.loc; txt = lident id } in
-          (map_loc lident n, patt), expr)
-    in
-    ppat_record ~loc (List.map xs ~f:fst) Closed, List.map xs ~f:snd
+let ( --> ) pc_lhs pc_rhs = { pc_lhs; pc_rhs; pc_guard = None }
 
-  let pexp_list ~loc xs =
-    List.fold_left (List.rev xs) ~init:[%expr []] ~f:(fun xs x ->
-        [%expr [%e x] :: [%e xs]])
+let derive_of_label name = function
+  | "t" -> name
+  | t -> Printf.sprintf "%s_%s" t name
 
-  let ( --> ) pc_lhs pc_rhs = { pc_lhs; pc_rhs; pc_guard = None }
+let derive_of_longident name (lid : Longident.t) =
+  match lid with
+  | Lident lab -> Longident.Lident (derive_of_label name lab)
+  | Ldot (lid, lab) -> Longident.Ldot (lid, derive_of_label name lab)
+  | Lapply (_, _) -> failwith "unable to get name of Lapply"
 
-  let derive_of_label name = function
-    | "t" -> name
-    | t -> Printf.sprintf "%s_%s" t name
-
-  let derive_of_longident name (lid : Longident.t) =
-    match lid with
-    | Lident lab -> Longident.Lident (derive_of_label name lab)
-    | Ldot (lid, lab) -> Longident.Ldot (lid, derive_of_label name lab)
-    | Lapply (_, _) -> failwith "unable to get name of Lapply"
-
-  let ederiver name (lid : Longident.t loc) =
-    pexp_ident ~loc:lid.loc (map_loc (derive_of_longident name) lid)
-end
+let ederiver name (lid : Longident.t loc) =
+  pexp_ident ~loc:lid.loc (map_loc (derive_of_longident name) lid)
 
 type deriver =
   | As_fun of (expression -> expression)
@@ -98,8 +93,6 @@ let as_fun ~loc deriver =
   match deriver with
   | As_fun f -> [%expr fun x -> [%e f [%expr x]]]
   | As_val f -> f
-
-open Deriving_helper
 
 class virtual deriving =
   object

@@ -1,21 +1,21 @@
-(** Helper library to create derivers ppx with easy. *)
+(** A collection of tools to make it easy to build ppx deriving plugins. *)
 
 open Ppxlib
 
-(** deriver is represented by this api *)
+(** A deriver is represented by this api *)
 class virtual deriving : object
   method virtual name : label
   (** name of the deriver *)
 
   method virtual extension :
     loc:location -> path:label -> core_type -> expression
-  (** deriver can be applied to a type expression *)
+  (** a deriver can be applied to as type expression as extension node. *)
 
   method virtual generator :
     ctxt:Expansion_context.Deriver.t ->
     rec_flag * type_declaration list ->
     structure
-  (** or to a type declaration *)
+  (** or it can be attached to a type declaration. *)
 end
 
 val register : ?deps:Deriving.t list -> deriving -> Deriving.t
@@ -27,6 +27,16 @@ val register_combined :
 
 (** A common scheme to define data conversions (like to_json/of_json). *)
 module Conv : sig
+  (** A simplified parsetree representation.
+
+      We define a few types to represent the data we want to derive conversions
+      for. Such types are less verbose but less precise than the original
+      parsetree, though it is enough for conversion purposes.
+
+      The types still keep the original parsetree nodes as context (this is
+      also needed to play well with Ppxlib.Attributes API).
+    *)
+
   type 'ctx tuple = {
     tpl_loc : location;
     tpl_types : core_type list;
@@ -80,6 +90,7 @@ module Conv : sig
       expression) ->
     unit ->
     deriving
+  (** Define a serializer. *)
 
   val deriving_of :
     name:label ->
@@ -106,6 +117,7 @@ module Conv : sig
       expression) ->
     unit ->
     deriving
+  (** Define a deserializer. *)
 
   val deriving_of_match :
     name:label ->
@@ -125,60 +137,14 @@ module Conv : sig
       case) ->
     unit ->
     deriving
-end
+  (** Define a deserializer using pattern matching.
 
-module Deriving_helper : sig
-  val gen_tuple :
-    loc:location -> label -> int -> pattern list * expression
-  (** [let patts, expr = gen_tuple label n in ...] creates a tuple expression
-      and a corresponding list of patterns. *)
-
-  val gen_record :
-    loc:location ->
-    label ->
-    (label loc * attributes * 'a) list ->
-    pattern list * expression
-  (** [let patts, expr = gen_tuple label n in ...] creates a record expression
-      and a corresponding list of patterns. *)
-
-  val gen_pat_tuple :
-    loc:location -> string -> int -> pattern * expression list
-  (** [let patt, exprs = gen_pat_tuple ~loc prefix n in ...]
-      generates a pattern to match a tuple of size [n] and a list of expressions
-      [exprs] to refer to names bound in this pattern. *)
-
-  val gen_pat_record :
-    loc:location -> string -> label loc list -> pattern * expression list
-  (** [let patt, exprs = gen_pat_record ~loc prefix fs in ...]
-      generates a pattern to match record with fields [fs] and a list of expressions
-      [exprs] to refer to names bound in this pattern. *)
-
-  val gen_pat_list :
-    loc:location -> string -> int -> pattern * expression list
-  (** [let patt, exprs = gen_pat_list ~loc prefix n in ...]
-      generates a pattern to match a list of size [n] and a list of expressions
-      [exprs] to refer to names bound in this pattern. *)
-
-  val pexp_list : loc:location -> expression list -> expression
-  (** A convenience helper to contruct list expressions. *)
-
-  val ( --> ) : pattern -> expression -> case
-  (** A shortcut to define a pattern matching case. *)
-
-  val map_loc : ('a -> 'b) -> 'a loc -> 'b loc
-  (** Map over data with location, useful to lift derive_of_label,
-      derive_of_longident *)
-
-  val derive_of_label : label -> label -> label
-  (** Construct a deriver label out of label:
-
-      - [derive_of_label name "t"] returns just [name]
-      - [derive_of_label name t_name] returns just [name ^ "_" ^ t_name]
+      This is a less general but more compact variant of [deriving_of], for
+      cases where the serialized data can be inspected with pattern matching.
     *)
-
-  val derive_of_longident : label -> longident -> longident
-  (** This is [derive_of_label] lifted to work on [longident]. *)
 end
+
+(** Utils for error handling. *)
 
 exception Error of location * string
 
@@ -189,6 +155,60 @@ val not_supported : loc:location -> string -> 'a
 
 val pexp_error : loc:location -> label -> expression
 val stri_error : loc:location -> label -> structure_item
+
+val gen_tuple : loc:location -> label -> int -> pattern list * expression
+(** [let patts, expr = gen_tuple label n in ...] creates a tuple expression
+      and a corresponding list of patterns. *)
+
+(** Auxiliary functions to generate record expressions and patterns. *)
+
+val gen_record :
+  loc:location ->
+  label ->
+  (label loc * attributes * 'a) list ->
+  pattern list * expression
+(** [let patts, expr = gen_tuple label n in ...] creates a record expression
+      and a corresponding list of patterns. *)
+
+val gen_pat_tuple :
+  loc:location -> string -> int -> pattern * expression list
+(** [let patt, exprs = gen_pat_tuple ~loc prefix n in ...]
+      generates a pattern to match a tuple of size [n] and a list of expressions
+      [exprs] to refer to names bound in this pattern. *)
+
+val gen_pat_record :
+  loc:location -> string -> label loc list -> pattern * expression list
+(** [let patt, exprs = gen_pat_record ~loc prefix fs in ...]
+      generates a pattern to match record with fields [fs] and a list of expressions
+      [exprs] to refer to names bound in this pattern. *)
+
+val gen_pat_list :
+  loc:location -> string -> int -> pattern * expression list
+(** [let patt, exprs = gen_pat_list ~loc prefix n in ...]
+      generates a pattern to match a list of size [n] and a list of expressions
+      [exprs] to refer to names bound in this pattern. *)
+
+val pexp_list : loc:location -> expression list -> expression
+(** A convenience helper to contruct list expressions. *)
+
+val ( --> ) : pattern -> expression -> case
+(** A shortcut to define a pattern matching case. *)
+
+val map_loc : ('a -> 'b) -> 'a loc -> 'b loc
+(** Map over data with location, useful to lift derive_of_label,
+      derive_of_longident *)
+
+val derive_of_label : label -> label -> label
+(** Construct a deriver label out of label:
+
+      - [derive_of_label name "t"] returns just [name]
+      - [derive_of_label name t_name] returns just [name ^ "_" ^ t_name]
+    *)
+
+val derive_of_longident : label -> longident -> longident
+(** This is [derive_of_label] lifted to work on [longident]. *)
+
+(** Low-level deriver classes. *)
 
 (** 0-arity deriver *)
 class virtual deriving0 : object
