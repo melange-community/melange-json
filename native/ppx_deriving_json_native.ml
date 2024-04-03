@@ -67,15 +67,22 @@ module Of_json = struct
             let key =
               Option.get_or ~default:ld.pld_name (ld_attr_json_key ld)
             in
+            let default = ld_attr_json_default ld in
             ( map_loc lident ld.pld_name,
               [%expr
                 match Stdlib.( ! ) [%e ename ld.pld_name] with
                 | Stdlib.Option.Some v -> v
                 | Stdlib.Option.None ->
-                    Ppx_deriving_json_runtime.of_json_error
-                      [%e
-                        estring ~loc:key.loc
-                          (sprintf "missing field %S" key.txt)]] ))
+                    [%e
+                      match default with
+                      | Some default -> default
+                      | None ->
+                          [%expr
+                            Ppx_deriving_json_runtime.of_json_error
+                              [%e
+                                estring ~loc:key.loc
+                                  (sprintf "missing field %S" key.txt)]]]]
+            ))
       in
       pexp_record ~loc fields None
     in
