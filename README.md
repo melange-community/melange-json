@@ -20,7 +20,7 @@ Then you can install the package:
 opam install -y ppx_deriving_json
 ```
 
-Finally add the `dune` configuration to your project:
+Finally, add the `dune` configuration to your project:
 
 ```dune
 (executable
@@ -60,7 +60,7 @@ val of_json : Js.Json.t -> t
 val to_json : t -> Js.Json.t
 ```
 
-### Generating JSON converters from a type expressions
+### Generating JSON converters from type expressions
 
 You can also generate JSON converters for a type expression using the `to_json` and `of_json` extension points:
 
@@ -112,7 +112,7 @@ let t = of_json (`Assoc ["A", `Int 42; "B", `String "foo"])
 (* t = { a = 42; b = "foo"; } *)
 ```
 
-### `[@json.as "S"]`: customizing representation of a variant case
+### `[@json.as "S"]`: customizing the representation of a variant case
 
 You can specify custom representation for a variant case using the `[@json.as E]` attribute:
 
