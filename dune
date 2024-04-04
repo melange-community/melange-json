@@ -1,0 +1,38 @@
+(library
+ (public_name ppx_deriving_toml)
+ (name ppx_deriving_toml)
+ (modules :standard \ ppx_deriving_toml_runtime ppx_deriving_toml_test)
+ (libraries ppx_deriving_tools ppxlib containers ppx_deriving_toml.runtime)
+ (ppx_runtime_libraries ppx_deriving_toml.runtime)
+ (preprocess
+  (pps ppxlib.metaquot))
+ (kind ppx_deriver))
+
+(library
+ (public_name ppx_deriving_toml.runtime)
+ (name ppx_deriving_toml_runtime)
+ (modules ppx_deriving_toml_runtime)
+ (libraries otoml))
+
+(executable
+ (name ppx_deriving_toml_test)
+ (modules ppx_deriving_toml_test)
+ (libraries ppx_deriving_toml ppxlib))
+
+(rule
+ (target ppx_deriving_toml.mli)
+ (action
+  (with-stdout-to
+   %{target}
+   (run echo ""))))
+
+(rule
+ (target ppx_deriving_toml_test.ml)
+ (action
+  (with-stdout-to
+   %{target}
+   (run echo "let () = Ppxlib.Driver.standalone ()"))))
+
+(cram
+ (deps
+  (package ppx_deriving_toml)))
