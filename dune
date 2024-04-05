@@ -3,6 +3,7 @@
  (name ppx_deriving_toml)
  (modules :standard \ ppx_deriving_toml_runtime ppx_deriving_toml_test)
  (libraries ppx_deriving_tools ppxlib containers ppx_deriving_toml.runtime)
+ (flags (:standard -open ContainersLabels -open Printf))
  (ppx_runtime_libraries ppx_deriving_toml.runtime)
  (preprocess
   (pps ppxlib.metaquot))

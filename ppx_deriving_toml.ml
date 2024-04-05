@@ -1,5 +1,3 @@
-open Printf
-open ContainersLabels
 open Ppxlib
 open Ast_builder.Default
 open Ppx_deriving_tools
