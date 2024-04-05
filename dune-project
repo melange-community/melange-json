@@ -23,4 +23,5 @@
   ppxlib
   ppx_deriving_tools
   containers
-  yojson))
+  yojson
+  (ocamlformat :with-test)))

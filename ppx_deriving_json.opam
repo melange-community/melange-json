@@ -13,6 +13,7 @@ depends: [
   "ppx_deriving_tools"
   "containers"
   "yojson"
+  "ocamlformat" {with-test}
   "odoc" {with-doc}
 ]
 build: [
