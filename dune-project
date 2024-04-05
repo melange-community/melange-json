@@ -17,7 +17,7 @@
  (name ppx_deriving_json)
  (depends
   (ocaml
-   (>= 5.1))
+   (>= 4.14))
   dune
   ppxlib
   ppx_deriving_tools
