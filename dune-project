@@ -17,7 +17,7 @@
  (name ppx_deriving_toml)
  (depends
   (ocaml
-   (>= 5.1))
+   (>= 4.14))
   dune
   ppxlib
   otoml

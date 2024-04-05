@@ -45,6 +45,9 @@
   >   let t_toml = Otoml.Printer.to_string (to_toml v_to_toml t) in
   >   print_endline t_toml;
   >   assert (v = decode ~v_of_toml t_toml)
+  > 
+  > let decode_then_reprint ?msg ~v_to_toml ~v_of_toml toml =
+  >   reprint ?msg ~v_to_toml ~v_of_toml @@ decode ~v_of_toml toml
   > " > harness.ml
 
   $ echo '
@@ -57,18 +60,18 @@
   > } [@@deriving toml]
   > let v = { a = "foo"; b = 42; c = true; e = None; };;
   > Harness.reprint ~msg:"reprint:" v ~v_to_toml ~v_of_toml;;
-  > let () = Harness.reprint ~msg:"decode:" ~v_to_toml ~v_of_toml @@ Harness.decode ~v_of_toml {|
+  > Harness.decode_then_reprint ~msg:"decode:" ~v_to_toml ~v_of_toml {|
   > [top]
   > a = "a"
   > B = 1
-  > |}
-  > let () = Harness.reprint ~msg:"decode with optionals:" ~v_to_toml ~v_of_toml @@ Harness.decode ~v_of_toml {|
+  > |};;
+  > Harness.decode_then_reprint ~msg:"decode with optionals:" ~v_to_toml ~v_of_toml {|
   > [top]
   > a = "a"
   > B = 1
   > c = true
   > e = 42
-  > |}
+  > |};;
   > ' >> record.ml
 
   $ echo '
