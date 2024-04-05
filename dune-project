@@ -21,4 +21,5 @@
   dune
   ppxlib
   ppx_deriving_tools
-  containers))
+  containers
+  yojson))

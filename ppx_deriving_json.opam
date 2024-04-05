@@ -11,6 +11,7 @@ depends: [
   "ppxlib"
   "ppx_deriving_tools"
   "containers"
+  "yojson"
   "odoc" {with-doc}
 ]
 build: [
