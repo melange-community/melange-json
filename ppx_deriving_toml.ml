@@ -33,6 +33,11 @@ module Attr = struct
          Attribute.Context.label_declaration
          Ast_pattern.(single_expr_payload __)
          (fun x -> x))
+
+  let ld_option =
+    Attribute.has_flag
+      (Attribute.declare_flag "toml.option"
+         Attribute.Context.label_declaration)
 end
 
 module Of_toml = struct
@@ -84,14 +89,27 @@ module Of_toml = struct
       let cases =
         List.fold_left (List.rev fs) ~init:[ fail_case ]
           ~f:(fun next ld ->
+            let is_option = Attr.ld_option ld in
             let key =
               Option.get_or ~default:ld.pld_name (Attr.ld_key ld)
             in
-            pstring ~loc:key.loc key.txt
-            --> [%expr
-                  [%e ename ld.pld_name] :=
-                    Stdlib.Option.Some [%e derive ld.pld_type v]]
-            :: next)
+            let patt = pstring ~loc:key.loc key.txt in
+            let expr =
+              match is_option with
+              | false ->
+                  [%expr
+                    [%e ename ld.pld_name] :=
+                      Stdlib.Option.Some [%e derive ld.pld_type v]]
+              | true -> (
+                  match ld.pld_type with
+                  | [%type: [%t? t] option] ->
+                      [%expr
+                        [%e ename ld.pld_name] :=
+                          Stdlib.Option.Some
+                            (Stdlib.Option.Some [%e derive t v])]
+                  | _ -> pexp_error ~loc "expected an option type")
+            in
+            (patt --> expr) :: next)
       in
       let cases =
         match ignore_type_field with
@@ -107,15 +125,17 @@ module Of_toml = struct
               Option.get_or ~default:ld.pld_name (Attr.ld_key ld)
             in
             let default = Attr.ld_default ld in
+            let is_option = Attr.ld_option ld in
             ( map_loc lident ld.pld_name,
               [%expr
                 match Stdlib.( ! ) [%e ename ld.pld_name] with
                 | Stdlib.Option.Some v -> v
                 | Stdlib.Option.None ->
                     [%e
-                      match default with
-                      | Some default -> default
-                      | None ->
+                      match default, is_option with
+                      | Some default, _ -> default
+                      | None, true -> [%expr None]
+                      | None, false ->
                           [%expr
                             Ppx_deriving_toml_runtime.of_toml_error
                               [%e
@@ -230,12 +250,30 @@ module To_toml = struct
   let derive_of_record derive t es =
     let loc = t.rcd_loc in
     let es =
-      List.map2 t.rcd_fields es ~f:(fun ld x ->
-          let n = Option.get_or ~default:ld.pld_name (Attr.ld_key ld) in
-          let n = estring ~loc:n.loc n.txt in
-          [%expr [%e n], [%e derive ld.pld_type x]])
+      List.combine t.rcd_fields es
+      |> List.rev
+      |> List.fold_left ~init:[%expr []] ~f:(fun prev (ld, x) ->
+             let n =
+               Option.get_or ~default:ld.pld_name (Attr.ld_key ld)
+             in
+             let n = estring ~loc:n.loc n.txt in
+             match Attr.ld_option ld with
+             | true -> (
+                 match ld.pld_type with
+                 | [%type: [%t? t] option] ->
+                     [%expr
+                       match [%e x] with
+                       | Some x ->
+                           ([%e n], [%e derive t [%expr x]]) :: [%e prev]
+                       | None -> [%e prev]]
+                 | _ ->
+                     [%expr
+                       [%e pexp_error ~loc "expected an option type"]
+                       :: [%e prev]])
+             | false ->
+                 [%expr ([%e n], [%e derive ld.pld_type x]) :: [%e prev]])
     in
-    [%expr Otoml.TomlTable [%e pexp_list ~loc es]]
+    [%expr Otoml.TomlTable [%e es]]
 
   let derive_of_variant_case derive vcs es =
     match vcs with

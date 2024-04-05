@@ -2,77 +2,118 @@
   $ echo '(lang dune 3.11)' > dune-project
 
   $ echo '
+  > (library 
+  >   (name harness)
+  >   (modules harness)
+  >   (libraries otoml)
+  >   (preprocess (pps ppx_deriving_toml)))
+  > 
   > (executable 
   >   (name tuple)
   >   (modules tuple)
-  >   (libraries toml)
+  >   (libraries otoml harness)
   >   (preprocess (pps ppx_deriving_toml)))
   > 
   > (executable 
   >   (name record)
   >   (modules record)
-  >   (libraries toml)
+  >   (libraries otoml harness)
   >   (preprocess (pps ppx_deriving_toml)))
   > 
   > (executable 
   >   (name variant)
   >   (modules variant)
-  >   (libraries toml)
+  >   (libraries otoml harness)
   >   (preprocess (pps ppx_deriving_toml)))
   > 
   > (executable 
   >   (name variant_record)
   >   (modules variant_record)
-  >   (libraries toml)
+  >   (libraries otoml harness)
   >   (preprocess (pps ppx_deriving_toml)))
   > ' > dune
 
+  $ echo "
+  > type 'a t = {top : 'a} [@@deriving toml]
+  > 
+  > let decode ~v_of_toml toml =
+  >   (of_toml v_of_toml (Otoml.Parser.from_string toml)).top
+  > 
+  > let reprint ?msg ~v_to_toml ~v_of_toml v =
+  >   Option.iter print_endline msg;
+  >   let t = { top = v } in
+  >   let t_toml = Otoml.Printer.to_string (to_toml v_to_toml t) in
+  >   print_endline t_toml;
+  >   assert (v = decode ~v_of_toml t_toml)
+  > " > harness.ml
+
   $ echo '
   > open Ppx_deriving_toml_runtime
-  > type t = { a : string; b : int } [@@deriving toml]
-  > let t = { a = "foo"; b = 42 }
-  > let t_toml = Otoml.Printer.to_string (to_toml t)
-  > let () = print_endline t_toml
-  > let t0 = of_toml (Otoml.Parser.from_string t_toml)
-  > let () = assert (t = t0)
+  > type v = { 
+  >   a : string;
+  >   b : int; [@toml.key "B"]
+  >   c : bool; [@toml.default false]
+  >   e : int option; [@toml.option]
+  > } [@@deriving toml]
+  > let v = { a = "foo"; b = 42; c = true; e = None; };;
+  > Harness.reprint ~msg:"reprint:" v ~v_to_toml ~v_of_toml;;
+  > let () = Harness.reprint ~msg:"decode:" ~v_to_toml ~v_of_toml @@ Harness.decode ~v_of_toml {|
+  > [top]
+  > a = "a"
+  > B = 1
+  > |}
+  > let () = Harness.reprint ~msg:"decode with optionals:" ~v_to_toml ~v_of_toml @@ Harness.decode ~v_of_toml {|
+  > [top]
+  > a = "a"
+  > B = 1
+  > c = true
+  > e = 42
+  > |}
   > ' >> record.ml
 
   $ echo '
   > open Ppx_deriving_toml_runtime
-  > type t = string * int [@@deriving toml]
-  > type top = {top : t} [@@deriving toml]
-  > let t = {top = ("foo", 42)}
-  > let t_toml = Otoml.Printer.to_string (top_to_toml t)
-  > let () = print_endline t_toml
-  > let t0 = top_of_toml (Otoml.Parser.from_string t_toml)
-  > let () = assert (t = t0)
+  > type v = string * int [@@deriving toml]
+  > let v = ("foo", 42)
+  > let () = Harness.reprint v ~v_to_toml ~v_of_toml
   > ' >> tuple.ml
 
   $ echo '
   > open Ppx_deriving_toml_runtime
-  > type t = A of string | B of int [@@deriving toml]
-  > type top = {top : t} [@@deriving toml]
-  > let t = {top = A "foo"}
-  > let t_toml = Otoml.Printer.to_string (top_to_toml t)
-  > let () = print_endline t_toml
-  > let t0 = top_of_toml (Otoml.Parser.from_string t_toml)
-  > let () = assert (t = t0)
+  > type v = A of string | B of int [@@deriving toml]
+  > let v = A "foo"
+  > let () = Harness.reprint v ~v_to_toml ~v_of_toml
   > ' >> variant.ml
 
   $ echo '
   > open Ppx_deriving_toml_runtime
-  > type t = A of {a: string} | B of {b: int} [@@deriving toml]
-  > type top = {top : t} [@@deriving toml]
-  > let t = {top = A {a="foo"}}
-  > let t_toml = Otoml.Printer.to_string (top_to_toml t)
-  > let () = print_endline t_toml
-  > let t0 = top_of_toml (Otoml.Parser.from_string t_toml)
-  > let () = assert (t = t0)
+  > type v = A of {a: string} | B of {b: int} [@@deriving toml]
+  > let v = A {a = "foo"}
+  > let () = Harness.reprint v ~v_to_toml ~v_of_toml
   > ' >> variant_record.ml
 
   $ dune exec ./record.exe
-  a = "foo"
-  b = 42
+  reprint:
+  
+  [top]
+    a = "foo"
+    B = 42
+    c = true
+  
+  decode:
+  
+  [top]
+    a = "a"
+    B = 1
+    c = false
+  
+  decode with optionals:
+  
+  [top]
+    a = "a"
+    B = 1
+    c = true
+    e = 42
   
 
   $ dune exec ./tuple.exe
