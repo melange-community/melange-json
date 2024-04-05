@@ -17,7 +17,7 @@
  (name ppx_deriving_tools)
  (depends
   (ocaml
-   (>= 5.1))
+   (>= 4.14))
   dune
   ppxlib
   containers))
