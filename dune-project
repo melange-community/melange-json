@@ -18,6 +18,7 @@
  (depends
   (ocaml
    (>= 4.14))
+  melange
   dune
   ppxlib
   ppx_deriving_tools

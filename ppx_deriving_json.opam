@@ -7,6 +7,7 @@ homepage: "https://github.com/andreypopp/ppx_deriving_json"
 bug-reports: "https://github.com/andreypopp/ppx_deriving_json/issues"
 depends: [
   "ocaml" {>= "4.14"}
+  "melange"
   "dune" {>= "3.11"}
   "ppxlib"
   "ppx_deriving_tools"
