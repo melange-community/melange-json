@@ -4,7 +4,7 @@ open Ppxlib
 open Ast_builder.Default
 open Ppx_deriving_tools
 open Ppx_deriving_tools.Conv
-open Ppx_deriving_json_shared
+open Ppx_deriving_json_common
 
 module Of_json = struct
   let build_tuple ~loc derive si (ts : core_type list) e =
