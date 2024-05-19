@@ -10,7 +10,6 @@ depends: [
   "dune" {>= "3.10"}
   "ppxlib"
   "otoml"
-  "ppx_deriving_tools"
   "containers"
   "odoc" {with-doc}
 ]

@@ -21,7 +21,6 @@
   melange
   dune
   ppxlib
-  ppx_deriving_tools
   containers
   yojson
   (ocamlformat :with-test)))
@@ -34,5 +33,4 @@
   dune
   ppxlib
   otoml
-  ppx_deriving_tools
   containers))

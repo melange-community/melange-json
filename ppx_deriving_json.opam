@@ -10,7 +10,6 @@ depends: [
   "melange"
   "dune" {>= "3.10"}
   "ppxlib"
-  "ppx_deriving_tools"
   "containers"
   "yojson"
   "ocamlformat" {with-test}

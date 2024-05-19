@@ -31,7 +31,6 @@ jobs:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
           opam-repositories: |
             default: https://github.com/ocaml/opam-repository.git
-            andreypopp: https://github.com/andreypopp/opam-repository.git
 
       - run: opam install . --deps-only --with-test
 
