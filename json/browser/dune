@@ -1,15 +1,16 @@
 (library
  (public_name ppx_deriving_json.browser)
  (name ppx_deriving_json_browser)
- (modules ppx_deriving_json_browser ppx_deriving_json_common)
- (libraries ppx_deriving_tools ppxlib containers)
+ (modules
+  :standard
+  \
+  ppx_deriving_json_runtime
+  ppx_deriving_json_browser_test)
+ (libraries ppxlib containers)
  (ppx_runtime_libraries ppx_deriving_json.browser_runtime)
  (preprocess
   (pps ppxlib.metaquot))
  (kind ppx_deriver))
-
-(copy_files#
- (files ../native/ppx_deriving_json_common.ml))
 
 (library
  (public_name ppx_deriving_json.browser_runtime)
@@ -36,3 +37,12 @@
   (with-stdout-to
    %{target}
    (run echo "let () = Ppxlib.Driver.standalone ()"))))
+
+(copy_files#
+ (files ../native/ppx_deriving_json_common.ml))
+
+(copy_files#
+ (files ../../tools/ppx_deriving_tools.ml))
+
+(copy_files#
+ (files ../../tools/ppx_deriving_tools.mli))

@@ -1,8 +1,12 @@
 (library
  (public_name ppx_deriving_json.native)
  (name ppx_deriving_json_native)
- (modules ppx_deriving_json_native ppx_deriving_json_common)
- (libraries ppx_deriving_tools ppxlib containers)
+ (modules
+  :standard
+  \
+  ppx_deriving_json_runtime
+  ppx_deriving_json_native_test)
+ (libraries ppxlib containers)
  (ppx_runtime_libraries ppx_deriving_json.native_runtime)
  (preprocess
   (pps ppxlib.metaquot))
@@ -33,3 +37,9 @@
   (with-stdout-to
    %{target}
    (run echo "let () = Ppxlib.Driver.standalone ()"))))
+
+(copy_files#
+ (files ../../tools/ppx_deriving_tools.ml))
+
+(copy_files#
+ (files ../../tools/ppx_deriving_tools.mli))
