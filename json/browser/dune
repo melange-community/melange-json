@@ -1,0 +1,38 @@
+(library
+ (public_name ppx_deriving_json.browser)
+ (name ppx_deriving_json_browser)
+ (modules ppx_deriving_json_browser ppx_deriving_json_common)
+ (libraries ppx_deriving_tools ppxlib containers)
+ (ppx_runtime_libraries ppx_deriving_json.browser_runtime)
+ (preprocess
+  (pps ppxlib.metaquot))
+ (kind ppx_deriver))
+
+(copy_files#
+ (files ../native/ppx_deriving_json_common.ml))
+
+(library
+ (public_name ppx_deriving_json.browser_runtime)
+ (name ppx_deriving_json_browser_runtime)
+ (modules ppx_deriving_json_runtime)
+ (wrapped false)
+ (modes melange))
+
+(executable
+ (name ppx_deriving_json_browser_test)
+ (modules ppx_deriving_json_browser_test)
+ (libraries ppx_deriving_json.browser ppxlib))
+
+(rule
+ (target ppx_deriving_json_browser.mli)
+ (action
+  (with-stdout-to
+   %{target}
+   (run echo ""))))
+
+(rule
+ (target ppx_deriving_json_browser_test.ml)
+ (action
+  (with-stdout-to
+   %{target}
+   (run echo "let () = Ppxlib.Driver.standalone ()"))))
