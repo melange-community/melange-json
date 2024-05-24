@@ -343,8 +343,8 @@ module Schema = struct
       method derive_of_type_declaration td =
         let loc = td.ptype_loc in
         let name = td.ptype_name in
-        let params =
-          List.map td.ptype_params ~f:(fun (t, _) ->
+        let rev_params =
+          List.rev_map td.ptype_params ~f:(fun (t, _) ->
               match t.ptyp_desc with
               | Ptyp_var txt -> { txt; loc = t.ptyp_loc }
               | _ -> failwith "type variable is not a variable")
@@ -362,7 +362,7 @@ module Schema = struct
               : [%t self#t ~loc name (gen_type_ascription td)])]
         in
         let expr =
-          List.fold_left params ~init:expr ~f:(fun body param ->
+          List.fold_left rev_params ~init:expr ~f:(fun body param ->
               pexp_fun ~loc Nolabel None
                 (ppat_var ~loc
                    (map_loc (derive_of_label self#name) param))

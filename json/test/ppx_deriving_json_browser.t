@@ -671,3 +671,60 @@
     let _ = epoly_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
+  $ cat <<"EOF" | run
+  > type ('a, 'b) result = Ok of 'a | Error of 'b [@@deriving json]
+  > EOF
+  type ('a, 'b) result = Ok of 'a | Error of 'b [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : ('a, 'b) result) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec result_of_json a_of_json b_of_json :
+        Js.Json.t -> ('a, 'b) result =
+     fun x ->
+      if Js.Array.isArray x then
+        let array = (Obj.magic x : Js.Json.t array) in
+        let len = Js.Array.length array in
+        if len > 0 then
+          let tag = Js.Array.unsafe_get array 0 in
+          if Js.typeof tag = "string" then
+            let tag = (Obj.magic tag : string) in
+            if tag = "Ok" then (
+              if len <> 2 then
+                Ppx_deriving_json_runtime.of_json_error
+                  "expected a JSON array of length 2";
+              Ok (a_of_json (Js.Array.unsafe_get array 1)))
+            else if tag = "Error" then (
+              if len <> 2 then
+                Ppx_deriving_json_runtime.of_json_error
+                  "expected a JSON array of length 2";
+              Error (b_of_json (Js.Array.unsafe_get array 1)))
+            else Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+          else
+            Ppx_deriving_json_runtime.of_json_error
+              "expected a non empty JSON array with element being a string"
+        else
+          Ppx_deriving_json_runtime.of_json_error
+            "expected a non empty JSON array"
+      else
+        Ppx_deriving_json_runtime.of_json_error
+          "expected a non empty JSON array"
+  
+    let _ = result_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec result_to_json a_to_json b_to_json :
+        ('a, 'b) result -> Js.Json.t =
+     fun x ->
+      match x with
+      | Ok x_0 ->
+          (Obj.magic [| string_to_json "Ok"; a_to_json x_0 |] : Js.Json.t)
+      | Error x_0 ->
+          (Obj.magic [| string_to_json "Error"; b_to_json x_0 |]
+            : Js.Json.t)
+  
+    let _ = result_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
