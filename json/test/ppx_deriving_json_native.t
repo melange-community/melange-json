@@ -531,33 +531,32 @@
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
   $ cat <<"EOF" | run
-  > type ('a, 'b) result = Ok of 'a | Error of 'b [@@deriving json]
+  > type ('a, 'b) p2 = A of 'a | B of 'b [@@deriving json]
   > EOF
-  type ('a, 'b) result = Ok of 'a | Error of 'b [@@deriving json]
+  type ('a, 'b) p2 = A of 'a | B of 'b [@@deriving json]
   
   include struct
-    let _ = fun (_ : ('a, 'b) result) -> ()
+    let _ = fun (_ : ('a, 'b) p2) -> ()
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec result_of_json a_of_json b_of_json :
-        Yojson.Basic.t -> ('a, 'b) result =
+    let rec p2_of_json a_of_json b_of_json : Yojson.Basic.t -> ('a, 'b) p2 =
      fun x ->
       match x with
-      | `List [ `String "Ok"; x_0 ] -> Ok (a_of_json x_0)
-      | `List [ `String "Error"; x_0 ] -> Error (b_of_json x_0)
+      | `List [ `String "A"; x_0 ] -> A (a_of_json x_0)
+      | `List [ `String "B"; x_0 ] -> B (b_of_json x_0)
       | _ -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
   
-    let _ = result_of_json
+    let _ = p2_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec result_to_json a_to_json b_to_json :
-        ('a, 'b) result -> Yojson.Basic.t =
+    let rec p2_to_json a_to_json b_to_json : ('a, 'b) p2 -> Yojson.Basic.t =
      fun x ->
       match x with
-      | Ok x_0 -> `List [ `String "Ok"; a_to_json x_0 ]
-      | Error x_0 -> `List [ `String "Error"; b_to_json x_0 ]
+      | A x_0 -> `List [ `String "A"; a_to_json x_0 ]
+      | B x_0 -> `List [ `String "B"; b_to_json x_0 ]
   
-    let _ = result_to_json
+    let _ = p2_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
+

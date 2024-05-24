@@ -672,17 +672,16 @@
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
   $ cat <<"EOF" | run
-  > type ('a, 'b) result = Ok of 'a | Error of 'b [@@deriving json]
+  > type ('a, 'b) p2 = A of 'a | B of 'b [@@deriving json]
   > EOF
-  type ('a, 'b) result = Ok of 'a | Error of 'b [@@deriving json]
+  type ('a, 'b) p2 = A of 'a | B of 'b [@@deriving json]
   
   include struct
-    let _ = fun (_ : ('a, 'b) result) -> ()
+    let _ = fun (_ : ('a, 'b) p2) -> ()
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec result_of_json a_of_json b_of_json :
-        Js.Json.t -> ('a, 'b) result =
+    let rec p2_of_json a_of_json b_of_json : Js.Json.t -> ('a, 'b) p2 =
      fun x ->
       if Js.Array.isArray x then
         let array = (Obj.magic x : Js.Json.t array) in
@@ -691,16 +690,16 @@
           let tag = Js.Array.unsafe_get array 0 in
           if Js.typeof tag = "string" then
             let tag = (Obj.magic tag : string) in
-            if tag = "Ok" then (
+            if tag = "A" then (
               if len <> 2 then
                 Ppx_deriving_json_runtime.of_json_error
                   "expected a JSON array of length 2";
-              Ok (a_of_json (Js.Array.unsafe_get array 1)))
-            else if tag = "Error" then (
+              A (a_of_json (Js.Array.unsafe_get array 1)))
+            else if tag = "B" then (
               if len <> 2 then
                 Ppx_deriving_json_runtime.of_json_error
                   "expected a JSON array of length 2";
-              Error (b_of_json (Js.Array.unsafe_get array 1)))
+              B (b_of_json (Js.Array.unsafe_get array 1)))
             else Ppx_deriving_json_runtime.of_json_error "invalid JSON"
           else
             Ppx_deriving_json_runtime.of_json_error
@@ -712,19 +711,18 @@
         Ppx_deriving_json_runtime.of_json_error
           "expected a non empty JSON array"
   
-    let _ = result_of_json
+    let _ = p2_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec result_to_json a_to_json b_to_json :
-        ('a, 'b) result -> Js.Json.t =
+    let rec p2_to_json a_to_json b_to_json : ('a, 'b) p2 -> Js.Json.t =
      fun x ->
       match x with
-      | Ok x_0 ->
-          (Obj.magic [| string_to_json "Ok"; a_to_json x_0 |] : Js.Json.t)
-      | Error x_0 ->
-          (Obj.magic [| string_to_json "Error"; b_to_json x_0 |]
-            : Js.Json.t)
+      | A x_0 ->
+          (Obj.magic [| string_to_json "A"; a_to_json x_0 |] : Js.Json.t)
+      | B x_0 ->
+          (Obj.magic [| string_to_json "B"; b_to_json x_0 |] : Js.Json.t)
   
-    let _ = result_to_json
+    let _ = p2_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
+

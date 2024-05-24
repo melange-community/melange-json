@@ -11,6 +11,7 @@ type recur = A | Fix of recur [@@deriving json]
 type polyrecur = [ `A | `Fix of polyrecur ] [@@deriving json]
 type evar = A | B [@json.as "b_aliased"] [@@deriving json]
 type epoly = [ `a [@json.as "A_aliased"] | `b ] [@@deriving json]
+type ('a, 'b) p2 = A of 'a | B of 'b [@@deriving json]
 
 module Cases = struct 
   type json = Ppx_deriving_json_runtime.t
@@ -34,6 +35,8 @@ module Cases = struct
     C ({|"A_aliased"|}, epoly_of_json, epoly_to_json, (`a : epoly)); (* polyvariant `a aliased to "A_aliased"*)
     C ({|{"my_name":"N","my_age":1}|}, record_aliased_of_json, record_aliased_to_json, {name="N"; age=1});
     C ({|{"my_name":"N"}|}, record_aliased_of_json, record_aliased_to_json, {name="N"; age=100});
+    C ({|["A",1]|}, p2_of_json int_of_json string_of_json, p2_to_json int_to_json string_to_json, A 1);
+    C ({|["B","ok"]|}, p2_of_json int_of_json string_of_json, p2_to_json int_to_json string_to_json, B "ok");
   ]
   let run' ~json_of_string ~json_to_string (C (data, of_json, to_json, v)) =
     print_endline (Printf.sprintf "JSON    DATA: %s" data);
