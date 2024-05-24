@@ -31,7 +31,9 @@ module Of_json = struct
     | _ -> of_json_error "expected null"
 
   let option_of_json v_of_json = Yojson.Basic.Util.to_option v_of_json
-  let list_of_json v_of_json = Yojson.Basic.Util.to_list v_of_json
+
+  let list_of_json v_of_json json =
+    List.map v_of_json (Yojson.Basic.Util.to_list json)
 end
 
 module Primitives = struct
