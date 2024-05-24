@@ -69,3 +69,32 @@ module Primitives = struct
   include Of_json
   include To_json
 end
+
+module Classify = struct
+  let classify :
+      t ->
+      [ `Null
+      | `String of string
+      | `Float of float
+      | `Int of int
+      | `Bool of bool
+      | `List of t list
+      | `Assoc of (string * t) list ] =
+   fun json ->
+    if (Obj.magic json : 'a Js.null) == Js.null then `Null
+    else
+      match Js.typeof json with
+      | "string" -> `String (Obj.magic json : string)
+      | "number" ->
+          let v = (Obj.magic json : float) in
+          if Of_json.is_int v then `Int (Obj.magic v : int) else `Float v
+      | "boolean" -> `Bool (Obj.magic json : bool)
+      | "object" ->
+          if Js.Array.isArray json then
+            let xs = Array.to_list (Obj.magic json : t array) in
+            `List xs
+          else
+            let xs = Js.Dict.entries (Obj.magic json : t Js.Dict.t) in
+            `Assoc (Array.to_list xs)
+      | typ -> failwith ("unknown JSON value type: " ^ typ)
+end
