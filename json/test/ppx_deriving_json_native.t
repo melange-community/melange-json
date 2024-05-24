@@ -229,6 +229,58 @@
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
   $ cat <<"EOF" | run
+  > type record_opt = { k : int option; [@json.option] } [@@deriving json]
+  > EOF
+  type record_opt = { k : int option [@json.option] } [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : record_opt) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec record_opt_of_json =
+      (fun x ->
+         match x with
+         | `Assoc fs ->
+             let x_k = ref (Stdlib.Option.Some Stdlib.Option.None) in
+             let rec iter = function
+               | [] -> ()
+               | (n', v) :: fs ->
+                   (match n' with
+                   | "k" ->
+                       x_k :=
+                         Stdlib.Option.Some ((option_of_json int_of_json) v)
+                   | name ->
+                       Ppx_deriving_json_runtime.of_json_error
+                         (Stdlib.Printf.sprintf "unknown field: %s" name));
+                   iter fs
+             in
+             iter fs;
+             {
+               k =
+                 (match Stdlib.( ! ) x_k with
+                 | Stdlib.Option.Some v -> v
+                 | Stdlib.Option.None -> Stdlib.Option.None);
+             }
+         | _ ->
+             Ppx_deriving_json_runtime.of_json_error
+               "expected a JSON object"
+        : Yojson.Basic.t -> record_opt)
+  
+    let _ = record_opt_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec record_opt_to_json =
+      (fun x ->
+         match x with
+         | { k = x_k } -> `Assoc [ "k", (option_to_json int_to_json) x_k ]
+        : record_opt -> Yojson.Basic.t)
+  
+    let _ = record_opt_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
   > type sum = A | B of int | C of { name : string } [@@deriving json]
   > EOF
   type sum = A | B of int | C of { name : string } [@@deriving json]

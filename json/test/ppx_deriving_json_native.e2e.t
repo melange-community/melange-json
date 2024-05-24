@@ -53,6 +53,10 @@
   JSON REPRINT: {"my_name":"N","my_age":1}
   JSON    DATA: {"my_name":"N"}
   JSON REPRINT: {"my_name":"N","my_age":100}
+  JSON    DATA: {}
+  JSON REPRINT: {"k":null}
+  JSON    DATA: {"k":42}
+  JSON REPRINT: {"k":42}
   JSON    DATA: ["A",1]
   JSON REPRINT: ["A",1]
   JSON    DATA: ["B","ok"]

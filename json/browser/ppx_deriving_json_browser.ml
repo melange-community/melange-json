@@ -36,7 +36,7 @@ module Of_json = struct
           | Stdlib.Option.Some v -> [%e derive ld.pld_type [%expr v]]
           | Stdlib.Option.None ->
               [%e
-                match ld_attr_json_default ld with
+                match ld_attr_default ld with
                 | Some default -> default
                 | None ->
                     [%expr

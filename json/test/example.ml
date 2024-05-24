@@ -4,6 +4,7 @@ type opt = string option [@@deriving json]
 type tuple = int * string [@@deriving json]
 type record = { name : string; age : int } [@@deriving json]
 type record_aliased = { name : string; [@json.key "my_name"] age : int; [@json.key "my_age"] [@json.default 100] } [@@deriving json]
+type record_opt = { k : int option; [@json.option] } [@@deriving json]
 type sum = A | B of int | C of { name : string } [@@deriving json]
 type other = [ `C ] [@@deriving json] type poly = [ `A | `B of int | other ] [@@deriving json]
 type 'a c = [ `C of 'a ] [@@deriving json]
@@ -35,6 +36,8 @@ module Cases = struct
     C ({|"A_aliased"|}, epoly_of_json, epoly_to_json, (`a : epoly)); (* polyvariant `a aliased to "A_aliased"*)
     C ({|{"my_name":"N","my_age":1}|}, record_aliased_of_json, record_aliased_to_json, {name="N"; age=1});
     C ({|{"my_name":"N"}|}, record_aliased_of_json, record_aliased_to_json, {name="N"; age=100});
+    C ({|{}|}, record_opt_of_json, record_opt_to_json, {k=None});
+    C ({|{"k":42}|}, record_opt_of_json, record_opt_to_json, {k=Some 42});
     C ({|["A",1]|}, p2_of_json int_of_json string_of_json, p2_to_json int_to_json string_to_json, A 1);
     C ({|["B","ok"]|}, p2_of_json int_of_json string_of_json, p2_to_json int_to_json string_to_json, B "ok");
   ]

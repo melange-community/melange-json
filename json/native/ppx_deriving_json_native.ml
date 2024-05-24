@@ -21,7 +21,7 @@ module Of_json = struct
           let [%p patt] =
             ref
               [%e
-                match ld_attr_json_default ld with
+                match ld_attr_default ld with
                 | Some default -> [%expr Stdlib.Option.Some [%e default]]
                 | None -> [%expr Stdlib.Option.None]]
           in
@@ -67,7 +67,7 @@ module Of_json = struct
             let key =
               Option.get_or ~default:ld.pld_name (ld_attr_json_key ld)
             in
-            let default = ld_attr_json_default ld in
+            let default = ld_attr_default ld in
             ( map_loc lident ld.pld_name,
               [%expr
                 match Stdlib.( ! ) [%e ename ld.pld_name] with

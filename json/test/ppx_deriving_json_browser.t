@@ -226,6 +226,49 @@
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
   $ cat <<"EOF" | run
+  > type record_opt = { k : int option; [@json.option] } [@@deriving json]
+  > EOF
+  type record_opt = { k : int option [@json.option] } [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : record_opt) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec record_opt_of_json =
+      (fun x ->
+         if
+           not
+             (Js.typeof x = "object"
+             && (not (Js.Array.isArray x))
+             && not ((Obj.magic x : 'a Js.null) == Js.null))
+         then
+           Ppx_deriving_json_runtime.of_json_error "expected a JSON object";
+         let fs = (Obj.magic x : < k : Js.Json.t Js.undefined > Js.t) in
+         {
+           k =
+             (match Js.Undefined.toOption fs##k with
+             | Stdlib.Option.Some v -> (option_of_json int_of_json) v
+             | Stdlib.Option.None -> Stdlib.Option.None);
+         }
+        : Js.Json.t -> record_opt)
+  
+    let _ = record_opt_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec record_opt_to_json =
+      (fun x ->
+         match x with
+         | { k = x_k } ->
+             (Obj.magic [%mel.obj { k = (option_to_json int_to_json) x_k }]
+               : Js.Json.t)
+        : record_opt -> Js.Json.t)
+  
+    let _ = record_opt_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
   > type sum = A | B of int | C of { name : string } [@@deriving json]
   > EOF
   type sum = A | B of int | C of { name : string } [@@deriving json]

@@ -25,8 +25,24 @@ let ld_attr_json_key =
        Ast_pattern.(single_expr_payload (estring __'))
        (fun x -> x))
 
+let ld_attr_json_option =
+  Attribute.get
+    (Attribute.declare "json.option" Attribute.Context.label_declaration
+       Ast_pattern.(pstr nil)
+       ())
+
 let ld_attr_json_default =
   Attribute.get
     (Attribute.declare "json.default" Attribute.Context.label_declaration
        Ast_pattern.(single_expr_payload __)
        (fun x -> x))
+
+let ld_attr_default ld =
+  match ld_attr_json_default ld with
+  | Some e -> Some e
+  | None -> (
+      match ld_attr_json_option ld with
+      | Some () ->
+          let loc = ld.pld_loc in
+          Some [%expr Stdlib.Option.None]
+      | None -> None)

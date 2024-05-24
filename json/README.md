@@ -98,6 +98,21 @@ let t = of_json (`Assoc ["a", `Int 42])
 (* t = { a = 42; b = "-"; } *)
 ```
 
+### `[@json.option]`: a shortcut for `[@json.default None]`
+
+When a field has type `_ option` then you can use the `[@json.option]`
+attribute to specify that the default value is `None`:
+
+```ocaml
+type t = {
+  a: int;
+  b: string option [@json.option];
+} [@@deriving of_json]
+
+let t = of_json (`Assoc ["a", `Int 42])
+(* t = { a = 42; b = None; } *)
+```
+
 ### `[@json.key "S"]`: customizing keys for record fields
 
 You can specify custom keys for record fields using the `[@json.key E]` attribute:
