@@ -2,6 +2,8 @@ type t = Yojson.Basic.t
 
 let to_json t = t
 let of_json t = t
+let to_string t = Yojson.Basic.to_string t
+let of_string s = Yojson.Basic.from_string s
 
 exception Of_json_error of string
 

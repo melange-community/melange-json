@@ -2,6 +2,8 @@ type t = Js.Json.t
 
 let to_json t = t
 let of_json t = t
+let to_string t = Js.Json.stringify t
+let of_string s = Js.Json.parseExn s
 let of_json_error msg = Js.Exn.raiseError msg
 
 module To_json = struct
