@@ -612,3 +612,104 @@
     let _ = p2_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
+  $ cat <<"EOF" | run
+  > type allow_extra_fields = {a: int} [@@deriving json] [@@json.allow_extra_fields]
+  > EOF
+  type allow_extra_fields = { a : int }
+  [@@deriving json] [@@json.allow_extra_fields]
+  
+  include struct
+    let _ = fun (_ : allow_extra_fields) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec allow_extra_fields_of_json =
+      (fun x ->
+         match x with
+         | `Assoc fs ->
+             let x_a = ref Stdlib.Option.None in
+             let rec iter = function
+               | [] -> ()
+               | (n', v) :: fs ->
+                   (match n' with
+                   | "a" -> x_a := Stdlib.Option.Some (int_of_json v)
+                   | name -> ());
+                   iter fs
+             in
+             iter fs;
+             {
+               a =
+                 (match Stdlib.( ! ) x_a with
+                 | Stdlib.Option.Some v -> v
+                 | Stdlib.Option.None ->
+                     Ppx_deriving_json_runtime.of_json_error
+                       "missing field \"a\"");
+             }
+         | _ ->
+             Ppx_deriving_json_runtime.of_json_error
+               "expected a JSON object"
+        : Yojson.Basic.t -> allow_extra_fields)
+  
+    let _ = allow_extra_fields_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec allow_extra_fields_to_json =
+      (fun x ->
+         match x with { a = x_a } -> `Assoc [ "a", int_to_json x_a ]
+        : allow_extra_fields -> Yojson.Basic.t)
+  
+    let _ = allow_extra_fields_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
+  > type allow_extra_fields2 = A of {a: int} [@json.allow_extra_fields] [@@deriving json]
+  > EOF
+  type allow_extra_fields2 = A of { a : int } [@json.allow_extra_fields]
+  [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : allow_extra_fields2) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec allow_extra_fields2_of_json =
+      (fun x ->
+         match x with
+         | `List [ `String "A"; `Assoc fs ] ->
+             let x_a = ref Stdlib.Option.None in
+             let rec iter = function
+               | [] -> ()
+               | (n', v) :: fs ->
+                   (match n' with
+                   | "a" -> x_a := Stdlib.Option.Some (int_of_json v)
+                   | name -> ());
+                   iter fs
+             in
+             iter fs;
+             A
+               {
+                 a =
+                   (match Stdlib.( ! ) x_a with
+                   | Stdlib.Option.Some v -> v
+                   | Stdlib.Option.None ->
+                       Ppx_deriving_json_runtime.of_json_error
+                         "missing field \"a\"");
+               }
+         | _ -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+        : Yojson.Basic.t -> allow_extra_fields2)
+  
+    let _ = allow_extra_fields2_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec allow_extra_fields2_to_json =
+      (fun x ->
+         match x with
+         | A { a = x_a } ->
+             `List [ `String "A"; `Assoc [ "a", int_to_json x_a ] ]
+        : allow_extra_fields2 -> Yojson.Basic.t)
+  
+    let _ = allow_extra_fields2_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+

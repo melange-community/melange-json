@@ -769,3 +769,125 @@
     let _ = p2_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
+  $ cat <<"EOF" | run
+  > type allow_extra_fields = {a: int} [@@deriving json] [@@json.allow_extra_fields]
+  > EOF
+  type allow_extra_fields = { a : int }
+  [@@deriving json] [@@json.allow_extra_fields]
+  
+  include struct
+    let _ = fun (_ : allow_extra_fields) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec allow_extra_fields_of_json =
+      (fun x ->
+         if
+           not
+             (Js.typeof x = "object"
+             && (not (Js.Array.isArray x))
+             && not ((Obj.magic x : 'a Js.null) == Js.null))
+         then
+           Ppx_deriving_json_runtime.of_json_error "expected a JSON object";
+         let fs = (Obj.magic x : < a : Js.Json.t Js.undefined > Js.t) in
+         {
+           a =
+             (match Js.Undefined.toOption fs##a with
+             | Stdlib.Option.Some v -> int_of_json v
+             | Stdlib.Option.None ->
+                 Ppx_deriving_json_runtime.of_json_error
+                   "missing field \"a\"");
+         }
+        : Js.Json.t -> allow_extra_fields)
+  
+    let _ = allow_extra_fields_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec allow_extra_fields_to_json =
+      (fun x ->
+         match x with
+         | { a = x_a } ->
+             (Obj.magic [%mel.obj { a = int_to_json x_a }] : Js.Json.t)
+        : allow_extra_fields -> Js.Json.t)
+  
+    let _ = allow_extra_fields_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
+  > type allow_extra_fields2 = A of {a: int} [@json.allow_extra_fields] [@@deriving json]
+  > EOF
+  type allow_extra_fields2 = A of { a : int } [@json.allow_extra_fields]
+  [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : allow_extra_fields2) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec allow_extra_fields2_of_json =
+      (fun x ->
+         if Js.Array.isArray x then
+           let array = (Obj.magic x : Js.Json.t array) in
+           let len = Js.Array.length array in
+           if len > 0 then
+             let tag = Js.Array.unsafe_get array 0 in
+             if Js.typeof tag = "string" then
+               let tag = (Obj.magic tag : string) in
+               if tag = "A" then (
+                 if len <> 2 then
+                   Ppx_deriving_json_runtime.of_json_error
+                     "expected a JSON array of length 2";
+                 let fs = Js.Array.unsafe_get array 1 in
+                 if
+                   not
+                     (Js.typeof fs = "object"
+                     && (not (Js.Array.isArray fs))
+                     && not ((Obj.magic fs : 'a Js.null) == Js.null))
+                 then
+                   Ppx_deriving_json_runtime.of_json_error
+                     "expected a JSON object";
+                 let fs =
+                   (Obj.magic fs : < a : Js.Json.t Js.undefined > Js.t)
+                 in
+                 A
+                   {
+                     a =
+                       (match Js.Undefined.toOption fs##a with
+                       | Stdlib.Option.Some v -> int_of_json v
+                       | Stdlib.Option.None ->
+                           Ppx_deriving_json_runtime.of_json_error
+                             "missing field \"a\"");
+                   })
+               else Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+             else
+               Ppx_deriving_json_runtime.of_json_error
+                 "expected a non empty JSON array with element being a \
+                  string"
+           else
+             Ppx_deriving_json_runtime.of_json_error
+               "expected a non empty JSON array"
+         else
+           Ppx_deriving_json_runtime.of_json_error
+             "expected a non empty JSON array"
+        : Js.Json.t -> allow_extra_fields2)
+  
+    let _ = allow_extra_fields2_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec allow_extra_fields2_to_json =
+      (fun x ->
+         match x with
+         | A { a = x_a } ->
+             (Obj.magic
+                [|
+                  string_to_json "A";
+                  (Obj.magic [%mel.obj { a = int_to_json x_a }] : Js.Json.t);
+                |]
+               : Js.Json.t)
+        : allow_extra_fields2 -> Js.Json.t)
+  
+    let _ = allow_extra_fields2_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+

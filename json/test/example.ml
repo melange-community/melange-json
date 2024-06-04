@@ -13,6 +13,8 @@ type polyrecur = [ `A | `Fix of polyrecur ] [@@deriving json]
 type evar = A | B [@json.as "b_aliased"] [@@deriving json]
 type epoly = [ `a [@json.as "A_aliased"] | `b ] [@@deriving json]
 type ('a, 'b) p2 = A of 'a | B of 'b [@@deriving json]
+type allow_extra_fields = {a: int} [@@deriving json] [@@json.allow_extra_fields]
+type allow_extra_fields2 = A of {a: int} [@json.allow_extra_fields] [@@deriving json]
 
 module Cases = struct 
   type json = Ppx_deriving_json_runtime.t
@@ -40,6 +42,8 @@ module Cases = struct
     C ({|{"k":42}|}, record_opt_of_json, record_opt_to_json, {k=Some 42});
     C ({|["A",1]|}, p2_of_json int_of_json string_of_json, p2_to_json int_to_json string_to_json, A 1);
     C ({|["B","ok"]|}, p2_of_json int_of_json string_of_json, p2_to_json int_to_json string_to_json, B "ok");
+    C ({|{"a":1,"b":2}|}, allow_extra_fields_of_json, allow_extra_fields_to_json, {a=1});
+    C ({|["A",{"a":1,"b":2}]|}, allow_extra_fields2_of_json, allow_extra_fields2_to_json, A {a=1});
   ]
   let run' ~json_of_string ~json_to_string (C (data, of_json, to_json, v)) =
     print_endline (Printf.sprintf "JSON    DATA: %s" data);

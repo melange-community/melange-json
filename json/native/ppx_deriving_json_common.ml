@@ -31,6 +31,20 @@ let ld_attr_json_option =
        Ast_pattern.(pstr nil)
        ())
 
+let attr_json_allow_extra_fields ctx =
+  Attribute.declare "json.allow_extra_fields" ctx
+    Ast_pattern.(pstr nil)
+    ()
+
+let td_attr_json_allow_extra_fields =
+  Attribute.get
+    (attr_json_allow_extra_fields Attribute.Context.type_declaration)
+
+let cd_attr_json_allow_extra_fields =
+  Attribute.get
+    (attr_json_allow_extra_fields
+       Attribute.Context.constructor_declaration)
+
 let ld_attr_json_default =
   Attribute.get
     (Attribute.declare "json.default" Attribute.Context.label_declaration

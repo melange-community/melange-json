@@ -38,14 +38,17 @@ module Of_json = struct
     in
     pexp_tuple ~loc args
 
-  let build_record ~loc derive fs x make =
+  let build_record ~allow_extra_fields ~loc derive fs x make =
     with_refs ~loc "x" fs @@ fun ename ->
     let handle_field k v =
       let fail_case =
         [%pat? name]
-        --> [%expr
-              Ppx_deriving_json_runtime.of_json_error
-                (Stdlib.Printf.sprintf "unknown field: %s" name)]
+        -->
+        if allow_extra_fields then [%expr ()]
+        else
+          [%expr
+            Ppx_deriving_json_runtime.of_json_error
+              (Stdlib.Printf.sprintf "unknown field: %s" name)]
       in
       let cases =
         List.fold_left (List.rev fs) ~init:[ fail_case ]
@@ -114,10 +117,14 @@ module Of_json = struct
 
   let derive_of_record derive t x =
     let loc = t.rcd_loc in
+    let allow_extra_fields =
+      Option.is_some (td_attr_json_allow_extra_fields t.rcd_ctx)
+    in
     pexp_match ~loc x
       [
         [%pat? `Assoc fs]
-        --> build_record ~loc derive t.rcd_fields [%expr fs] Fun.id;
+        --> build_record ~allow_extra_fields ~loc derive t.rcd_fields
+              [%expr fs] Fun.id;
         [%pat? _]
         --> [%expr
               Ppx_deriving_json_runtime.of_json_error
@@ -145,9 +152,15 @@ module Of_json = struct
     | Vcs_record (n, t) ->
         let loc = n.loc in
         let n = Option.get_or ~default:n (vcs_attr_json_as t.rcd_ctx) in
+        let allow_extra_fields =
+          match t.rcd_ctx with
+          | Vcs_ctx_variant cd ->
+              Option.is_some (cd_attr_json_allow_extra_fields cd)
+          | Vcs_ctx_polyvariant _ -> false
+        in
         [%pat? `List [ `String [%p pstring ~loc:n.loc n.txt]; `Assoc fs ]]
-        --> build_record ~loc derive t.rcd_fields [%expr fs] (fun e ->
-                make (Some e))
+        --> build_record ~allow_extra_fields ~loc derive t.rcd_fields
+              [%expr fs] (fun e -> make (Some e))
 
   let deriving : Ppx_deriving_tools.deriving =
     deriving_of_match () ~name:"of_json"
