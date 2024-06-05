@@ -188,25 +188,12 @@ val gen_pat_list :
       generates a pattern to match a list of size [n] and a list of expressions
       [exprs] to refer to names bound in this pattern. *)
 
-val pexp_list : loc:location -> expression list -> expression
-(** A convenience helper to contruct list expressions. *)
-
 val ( --> ) : pattern -> expression -> case
 (** A shortcut to define a pattern matching case. *)
 
 val map_loc : ('a -> 'b) -> 'a loc -> 'b loc
 (** Map over data with location, useful to lift derive_of_label,
       derive_of_longident *)
-
-val derive_of_label : label -> label -> label
-(** Construct a deriver label out of label:
-
-      - [derive_of_label name "t"] returns just [name]
-      - [derive_of_label name t_name] returns just [name ^ "_" ^ t_name]
-    *)
-
-val derive_of_longident : label -> longident -> longident
-(** This is [derive_of_label] lifted to work on [longident]. *)
 
 (** Low-level deriver classes. *)
 

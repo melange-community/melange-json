@@ -2,6 +2,7 @@ open Printf
 open Ppxlib
 open Ast_builder.Default
 open ContainersLabels
+open Expansion_helpers
 
 exception Error of location * string
 
@@ -63,21 +64,9 @@ let gen_pat_record ~loc prefix ns =
   in
   ppat_record ~loc (List.map xs ~f:fst) Closed, List.map xs ~f:snd
 
-let pexp_list ~loc xs =
-  List.fold_left (List.rev xs) ~init:[%expr []] ~f:(fun xs x ->
-      [%expr [%e x] :: [%e xs]])
-
 let ( --> ) pc_lhs pc_rhs = { pc_lhs; pc_rhs; pc_guard = None }
-
-let derive_of_label name = function
-  | "t" -> name
-  | t -> Printf.sprintf "%s_%s" t name
-
-let derive_of_longident name (lid : Longident.t) =
-  match lid with
-  | Lident lab -> Longident.Lident (derive_of_label name lab)
-  | Ldot (lid, lab) -> Longident.Ldot (lid, derive_of_label name lab)
-  | Lapply (_, _) -> failwith "unable to get name of Lapply"
+let derive_of_label name = mangle (Suffix name)
+let derive_of_longident name = mangle_lid (Suffix name)
 
 let ederiver name (lid : Longident.t loc) =
   pexp_ident ~loc:lid.loc (map_loc (derive_of_longident name) lid)

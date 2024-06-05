@@ -243,7 +243,7 @@ module To_toml = struct
       List.combine t.tpl_types es
       |> List.map ~f:(fun (t, e) -> derive t e)
     in
-    [%expr Otoml.TomlArray [%e pexp_list ~loc es]]
+    [%expr Otoml.TomlArray [%e elist ~loc es]]
 
   let derive_of_record derive t es =
     let loc = t.rcd_loc in

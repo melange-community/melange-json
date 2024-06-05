@@ -174,7 +174,7 @@ module To_json = struct
   let derive_of_tuple derive t es =
     let loc = t.tpl_loc in
     let es = List.map2 t.tpl_types es ~f:derive in
-    [%expr `List [%e pexp_list ~loc es]]
+    [%expr `List [%e elist ~loc es]]
 
   let derive_of_record derive t es =
     let loc = t.rcd_loc in
@@ -186,7 +186,7 @@ module To_json = struct
           [%expr
             [%e estring ~loc:key.loc key.txt], [%e derive ld.pld_type x]])
     in
-    [%expr `Assoc [%e pexp_list ~loc es]]
+    [%expr `Assoc [%e elist ~loc es]]
 
   let derive_of_variant_case derive vcs es =
     match vcs with
@@ -200,7 +200,7 @@ module To_json = struct
         [%expr
           `List
             (`String [%e estring ~loc:n.loc n.txt]
-            :: [%e pexp_list ~loc (List.map2 t.tpl_types es ~f:derive)])]
+            :: [%e elist ~loc (List.map2 t.tpl_types es ~f:derive)])]
     | Vcs_record (n, t) ->
         let loc = n.loc in
         let n = Option.get_or ~default:n (vcs_attr_json_as t.rcd_ctx) in
