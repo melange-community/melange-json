@@ -6,7 +6,7 @@
 
 (generate_opam_files true)
 
-(authors "glennsl")
+(authors "glennsl" "Andrey Popp")
 
 (maintainers
  "Antonio Nuno Monteiro <anmonteiro@gmail.com>"
@@ -35,5 +35,8 @@
    (and
     (>= "3.10.0")
     :with-test))
+  ppxlib
+  containers
+  yojson
   (opam-check-npm-deps :with-test) ; todo: use with-dev-setup once opam 2.2 is out
   (ocaml-lsp-server :with-test)))

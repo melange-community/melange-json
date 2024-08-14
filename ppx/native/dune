@@ -1,0 +1,42 @@
+(library
+ (public_name ppx_deriving_json.native)
+ (name ppx_deriving_json_native)
+ (modules
+  :standard
+  \
+  ppx_deriving_json_runtime
+  ppx_deriving_json_native_test)
+ (libraries ppxlib containers)
+ (ppx_runtime_libraries ppx_deriving_json.native_runtime)
+ (preprocess
+  (pps ppxlib.metaquot))
+ (kind ppx_deriver))
+
+(library
+ (public_name ppx_deriving_json.native_runtime)
+ (name ppx_deriving_json_native_runtime)
+ (wrapped false)
+ (modules ppx_deriving_json_runtime)
+ (libraries yojson))
+
+(executable
+ (name ppx_deriving_json_native_test)
+ (modules ppx_deriving_json_native_test)
+ (libraries ppx_deriving_json.native ppxlib))
+
+(rule
+ (target ppx_deriving_json_native.mli)
+ (action
+  (with-stdout-to
+   %{target}
+   (run echo ""))))
+
+(rule
+ (target ppx_deriving_json_native_test.ml)
+ (action
+  (with-stdout-to
+   %{target}
+   (run echo "let () = Ppxlib.Driver.standalone ()"))))
+
+(copy_files#
+ (files ../../tools/ppx_deriving_tools.{ml,mli}))
