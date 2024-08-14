@@ -7,7 +7,7 @@
   ppx_deriving_json_runtime
   ppx_deriving_json_native_test)
  (libraries ppxlib containers)
- (ppx_runtime_libraries ppx_deriving_json.native_runtime)
+ (ppx_runtime_libraries melange-json.native_runtime)
  (preprocess
   (pps ppxlib.metaquot))
  (kind ppx_deriver))
@@ -22,7 +22,7 @@
 (executable
  (name ppx_deriving_json_native_test)
  (modules ppx_deriving_json_native_test)
- (libraries ppx_deriving_json.native ppxlib))
+ (libraries melange-json.native ppxlib))
 
 (rule
  (target ppx_deriving_json_native.mli)

@@ -7,7 +7,7 @@
   ppx_deriving_json_runtime
   ppx_deriving_json_browser_test)
  (libraries ppxlib containers)
- (ppx_runtime_libraries ppx_deriving_json.browser_runtime)
+ (ppx_runtime_libraries melange-json.browser_runtime)
  (preprocess
   (pps ppxlib.metaquot))
  (kind ppx_deriver))
@@ -22,7 +22,7 @@
 (executable
  (name ppx_deriving_json_browser_test)
  (modules ppx_deriving_json_browser_test)
- (libraries ppx_deriving_json.browser ppxlib))
+ (libraries melange-json.browser ppxlib))
 
 (rule
  (target ppx_deriving_json_browser.mli)

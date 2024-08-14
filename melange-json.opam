@@ -23,7 +23,7 @@ depends: [
   "yojson"
   "opam-check-npm-deps" {with-test}
   "ocaml-lsp-server" {with-test}
-  "ocaml-format" {with-test}
+  "ocamlformat" {with-test}
   "odoc" {with-doc}
 ]
 build: [

@@ -5,7 +5,7 @@
   >   (name main)
   >   (libraries yojson)
   >   (flags :standard -w -37-69 -open Ppx_deriving_json_runtime.Primitives)
-  >   (preprocess (pps ppx_deriving_json.native)))' > dune
+  >   (preprocess (pps melange-json.native)))' > dune
 
   $ echo '
   > open Example

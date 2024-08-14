@@ -8,7 +8,7 @@
   >  (modes melange)
   >  (modules example main)
   >  (flags :standard -w -37-69 -open Ppx_deriving_json_runtime.Primitives)
-  >  (preprocess (pps melange.ppx ppx_deriving_json.browser)))
+  >  (preprocess (pps melange.ppx melange-json.browser)))
   > (melange.emit
   >  (alias js)
   >  (target output)

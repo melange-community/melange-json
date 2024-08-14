@@ -40,4 +40,4 @@
   yojson ; only used for the native version
   (opam-check-npm-deps :with-test) ; todo: use with-dev-setup once opam 2.2 is out
   (ocaml-lsp-server :with-test)
-  (ocaml-format :with-test)))
+  (ocamlformat :with-test)))
