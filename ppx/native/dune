@@ -1,5 +1,5 @@
 (library
- (public_name ppx_deriving_json.native)
+ (public_name melange-json.native)
  (name ppx_deriving_json_native)
  (modules
   :standard
@@ -13,7 +13,7 @@
  (kind ppx_deriver))
 
 (library
- (public_name ppx_deriving_json.native_runtime)
+ (public_name melange-json.native_runtime)
  (name ppx_deriving_json_native_runtime)
  (wrapped false)
  (modules ppx_deriving_json_runtime)

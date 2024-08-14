@@ -1,8 +1,8 @@
-# ppx_deriving_json
+# PPX
 
 A [ppx deriver plugin][] for converting OCaml values to and from JSON. Works
 both in native (using `yojson` JSON representation) and [melange][] (using
-`Js.Json.t` JSON representation.
+`Js.Json.t` JSON representation).
 
 ## Installation
 
@@ -25,19 +25,20 @@ Finally, add the `dune` configuration to your project:
 ```dune
 (executable
  ...
- (preprocess (pps ppx_deriving_json.native)))
+ (preprocess (pps melange-json.native)))
 
 (library
  (modes melange)
- (preprocess (pps ppx_deriving_json.browser)))
+ (preprocess (pps melange-json.browser)))
 ```
 
-Note that you need to use the `ppx_deriving_json.native` preprocessor for
-native and the `ppx_deriving_json.browser` preprocessor for melange.
+Note that you need to use the `melange-json.native` preprocessor for native and
+the `melange-json.browser` preprocessor for melange.
 
 ## Usage
 
-To generate JSON converters for a type, add the `[@@deriving json]` attribute to a type declaration:
+To generate JSON converters for a type, add the `[@@deriving json]` attribute to
+a type declaration:
 
 ```ocaml
 type t = {
@@ -62,7 +63,8 @@ val to_json : t -> Js.Json.t
 
 ### Generating JSON converters from type expressions
 
-You can also generate JSON converters for a type expression using the `to_json` and `of_json` extension points:
+You can also generate JSON converters for a type expression using the `to_json`
+and `of_json` extension points:
 
 ```ocaml
 let json = [%to_json: int * string] (42, "foo")
@@ -86,7 +88,8 @@ let json = to_json A
 
 ### `[@json.default E]`: default values for records
 
-You can specify default values for record fields using the `[@json.default E]` attribute:
+You can specify default values for record fields using the `[@json.default E]`
+attribute:
 
 ```ocaml
 type t = {
@@ -100,8 +103,8 @@ let t = of_json (`Assoc ["a", `Int 42])
 
 ### `[@json.option]`: a shortcut for `[@json.default None]`
 
-When a field has type `_ option` then you can use the `[@json.option]`
-attribute to specify that the default value is `None`:
+When a field has type `_ option` then you can use the `[@json.option]` attribute
+to specify that the default value is `None`:
 
 ```ocaml
 type t = {
@@ -115,7 +118,8 @@ let t = of_json (`Assoc ["a", `Int 42])
 
 ### `[@json.key "S"]`: customizing keys for record fields
 
-You can specify custom keys for record fields using the `[@json.key E]` attribute:
+You can specify custom keys for record fields using the `[@json.key E]`
+attribute:
 
 ```ocaml
 type t = {
@@ -129,7 +133,8 @@ let t = of_json (`Assoc ["A", `Int 42; "B", `String "foo"])
 
 ### `[@json.as "S"]`: customizing the representation of a variant case
 
-You can specify custom representation for a variant case using the `[@json.as E]` attribute:
+You can specify custom representation for a variant case using the `[@json.as
+E]` attribute:
 
 ```ocaml
 type t = A | B [@json.as "bbb"] [@@deriving json]
