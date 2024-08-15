@@ -1,5 +1,5 @@
 open Printf
-open ContainersLabels
+open StdLabels
 open Ppxlib
 open Ast_builder.Default
 open Ppx_deriving_tools
@@ -16,7 +16,7 @@ module Of_json = struct
   let build_js_type ~loc (fs : label_declaration list) =
     let f ld =
       let n = ld.pld_name in
-      let n = Option.get_or ~default:n (ld_attr_json_key ld) in
+      let n = Option.value ~default:n (ld_attr_json_key ld) in
       let pof_desc = Otag (n, [%type: Js.Json.t Js.undefined]) in
       { pof_loc = loc; pof_attributes = []; pof_desc }
     in
@@ -27,7 +27,7 @@ module Of_json = struct
     let handle_field fs ld =
       ( map_loc lident ld.pld_name,
         let n = ld.pld_name in
-        let n = Option.get_or ~default:n (ld_attr_json_key ld) in
+        let n = Option.value ~default:n (ld_attr_json_key ld) in
         [%expr
           match
             Js.Undefined.toOption
@@ -133,13 +133,13 @@ module Of_json = struct
     match c with
     | Vcs_enum (n, ctx) ->
         let loc = n.loc in
-        let n = Option.get_or ~default:n (vcs_attr_json_as ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_as ctx) in
         [%expr
           if tag = [%e estring ~loc:n.loc n.txt] then [%e make None]
           else [%e next]]
     | Vcs_record (n, r) ->
         let loc = n.loc in
-        let n = Option.get_or ~default:n (vcs_attr_json_as r.rcd_ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_as r.rcd_ctx) in
         [%expr
           if tag = [%e estring ~loc:n.loc n.txt] then (
             [%e ensure_json_array_len ~loc 2 [%expr len]];
@@ -151,7 +151,7 @@ module Of_json = struct
           else [%e next]]
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
-        let n = Option.get_or ~default:n (vcs_attr_json_as t.tpl_ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_as t.tpl_ctx) in
         let arity = List.length t.tpl_types in
         [%expr
           if tag = [%e estring ~loc:n.loc n.txt] then (
@@ -185,7 +185,7 @@ module To_json = struct
     let fs =
       List.map2 t.rcd_fields es ~f:(fun ld x ->
           let n = ld.pld_name in
-          let n = Option.get_or ~default:n (ld_attr_json_key ld) in
+          let n = Option.value ~default:n (ld_attr_json_key ld) in
           let this = derive ld.pld_type x in
           map_loc lident n, this)
     in
@@ -196,18 +196,18 @@ module To_json = struct
     match c with
     | Vcs_enum (n, ctx) ->
         let loc = n.loc in
-        let n = Option.get_or ~default:n (vcs_attr_json_as ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_as ctx) in
         let tag = [%expr string_to_json [%e estring ~loc:n.loc n.txt]] in
         as_json ~loc tag
     | Vcs_record (n, r) ->
         let loc = n.loc in
-        let n = Option.get_or ~default:n (vcs_attr_json_as r.rcd_ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_as r.rcd_ctx) in
         let tag = [%expr string_to_json [%e estring ~loc:n.loc n.txt]] in
         let es = [ derive_of_record derive r es ] in
         as_json ~loc (pexp_array ~loc (tag :: es))
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
-        let n = Option.get_or ~default:n (vcs_attr_json_as t.tpl_ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_as t.tpl_ctx) in
         let tag = [%expr string_to_json [%e estring ~loc:n.loc n.txt]] in
         let es = List.map2 t.tpl_types es ~f:derive in
         as_json ~loc (pexp_array ~loc (tag :: es))

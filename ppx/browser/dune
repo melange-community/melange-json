@@ -6,7 +6,7 @@
   \
   ppx_deriving_json_runtime
   ppx_deriving_json_browser_test)
- (libraries ppxlib containers)
+ (libraries ppxlib)
  (ppx_runtime_libraries melange-json.browser_runtime)
  (preprocess
   (pps ppxlib.metaquot))

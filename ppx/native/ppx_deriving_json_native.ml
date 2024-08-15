@@ -1,5 +1,5 @@
 open Printf
-open ContainersLabels
+open StdLabels
 open Ppxlib
 open Ast_builder.Default
 open Ppx_deriving_tools
@@ -54,7 +54,7 @@ module Of_json = struct
         List.fold_left (List.rev fs) ~init:[ fail_case ]
           ~f:(fun next ld ->
             let key =
-              Option.get_or ~default:ld.pld_name (ld_attr_json_key ld)
+              Option.value ~default:ld.pld_name (ld_attr_json_key ld)
             in
             pstring ~loc:key.loc key.txt
             --> [%expr
@@ -68,7 +68,7 @@ module Of_json = struct
       let fields =
         List.map fs ~f:(fun ld ->
             let key =
-              Option.get_or ~default:ld.pld_name (ld_attr_json_key ld)
+              Option.value ~default:ld.pld_name (ld_attr_json_key ld)
             in
             let default = ld_attr_default ld in
             ( map_loc lident ld.pld_name,
@@ -135,11 +135,11 @@ module Of_json = struct
     match vcs with
     | Vcs_enum (n, ctx) ->
         let loc = n.loc in
-        let n = Option.get_or ~default:n (vcs_attr_json_as ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_as ctx) in
         [%pat? `String [%p pstring ~loc:n.loc n.txt]] --> make None
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
-        let n = Option.get_or ~default:n (vcs_attr_json_as t.tpl_ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_as t.tpl_ctx) in
         let arity = List.length t.tpl_types in
         if arity = 0 then
           [%pat? `List [ `String [%p pstring ~loc:n.loc n.txt] ]]
@@ -151,7 +151,7 @@ module Of_json = struct
           --> make (Some (build_tuple ~loc derive xexprs t.tpl_types))
     | Vcs_record (n, t) ->
         let loc = n.loc in
-        let n = Option.get_or ~default:n (vcs_attr_json_as t.rcd_ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_as t.rcd_ctx) in
         let allow_extra_fields =
           match t.rcd_ctx with
           | Vcs_ctx_variant cd ->
@@ -181,7 +181,7 @@ module To_json = struct
     let es =
       List.map2 t.rcd_fields es ~f:(fun ld x ->
           let key =
-            Option.get_or ~default:ld.pld_name (ld_attr_json_key ld)
+            Option.value ~default:ld.pld_name (ld_attr_json_key ld)
           in
           [%expr
             [%e estring ~loc:key.loc key.txt], [%e derive ld.pld_type x]])
@@ -192,18 +192,18 @@ module To_json = struct
     match vcs with
     | Vcs_enum (n, ctx) ->
         let loc = n.loc in
-        let n = Option.get_or ~default:n (vcs_attr_json_as ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_as ctx) in
         [%expr `String [%e estring ~loc:n.loc n.txt]]
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
-        let n = Option.get_or ~default:n (vcs_attr_json_as t.tpl_ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_as t.tpl_ctx) in
         [%expr
           `List
             (`String [%e estring ~loc:n.loc n.txt]
             :: [%e elist ~loc (List.map2 t.tpl_types es ~f:derive)])]
     | Vcs_record (n, t) ->
         let loc = n.loc in
-        let n = Option.get_or ~default:n (vcs_attr_json_as t.rcd_ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_as t.rcd_ctx) in
         [%expr
           `List
             (`String [%e estring ~loc:n.loc n.txt]

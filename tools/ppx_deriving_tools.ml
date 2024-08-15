@@ -1,7 +1,7 @@
 open Printf
 open Ppxlib
 open Ast_builder.Default
-open ContainersLabels
+open StdLabels
 open Expansion_helpers
 
 exception Error of location * string
@@ -19,7 +19,7 @@ let map_loc f a_loc = { a_loc with txt = f a_loc.txt }
 
 let gen_bindings ~loc prefix n =
   List.split
-    (List.init n ~f:(fun i ->
+    (List.init ~len:n ~f:(fun i ->
          let id = sprintf "%s_%i" prefix i in
          let patt = ppat_var ~loc { loc; txt = id } in
          let expr = pexp_ident ~loc { loc; txt = lident id } in
@@ -250,7 +250,7 @@ module Schema = struct
         fun ~ctxt (_rec_flag, type_decls) ->
           let loc = Expansion_context.Deriver.derived_item_loc ctxt in
           let bindings =
-            List.flat_map type_decls ~f:(fun decl ->
+            List.concat_map type_decls ~f:(fun decl ->
                 self#derive_of_type_declaration decl)
           in
           [%str
@@ -376,7 +376,7 @@ module Schema = struct
         fun ~ctxt (_rec_flag, tds) ->
           let loc = Expansion_context.Deriver.derived_item_loc ctxt in
           let bindings =
-            List.flat_map tds ~f:self#derive_of_type_declaration
+            List.concat_map tds ~f:self#derive_of_type_declaration
           in
           [%str
             [@@@ocaml.warning "-39-11-27"]
@@ -689,17 +689,17 @@ module Conv = struct
           let loc = t.ptyp_loc in
           let is_enum, cases = repr_polyvariant_cases cs in
           let ctors, inherits =
-            List.partition_filter_map cases ~f:(fun (c, r) ->
+            List.partition_map cases ~f:(fun (c, r) ->
                 let ctx = Vcs_ctx_polyvariant c in
                 match r with
                 | `Rtag (n, ts) ->
-                    if is_enum then `Left (n, Vcs_enum (n, ctx))
+                    if is_enum then Left (n, Vcs_enum (n, ctx))
                     else
                       let t =
                         { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
                       in
-                      `Left (n, Vcs_tuple (n, t))
-                | `Rinherit (n, ts) -> `Right (n, ts))
+                      Left (n, Vcs_tuple (n, t))
+                | `Rinherit (n, ts) -> Right (n, ts))
           in
           let catch_all =
             [%pat? x]
@@ -785,17 +785,17 @@ module Conv = struct
          let loc = t.ptyp_loc in
          let is_enum, cases = repr_polyvariant_cases cs in
          let ctors, inherits =
-           List.partition_filter_map cases ~f:(fun (c, r) ->
+           List.partition_map cases ~f:(fun (c, r) ->
                let ctx = Vcs_ctx_polyvariant c in
                match r with
                | `Rtag (n, ts) ->
-                   if is_enum then `Left (n, Vcs_enum (n, ctx))
+                   if is_enum then Left (n, Vcs_enum (n, ctx))
                    else
                      let t =
                        { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
                      in
-                     `Left (n, Vcs_tuple (n, t))
-               | `Rinherit (n, ts) -> `Right (n, ts))
+                     Left (n, Vcs_tuple (n, t))
+               | `Rinherit (n, ts) -> Right (n, ts))
          in
          let catch_all =
            [%pat? x]
