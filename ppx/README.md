@@ -12,15 +12,15 @@ configuration to your project:
 ```dune
 (executable
  ...
- (preprocess (pps melange-json.native)))
+ (preprocess (pps melange-json.ppx-native)))
 
 (library
  (modes melange)
- (preprocess (pps melange-json.js)))
+ (preprocess (pps melange-json.ppx)))
 ```
 
-Note that you need to use the `melange-json.native` preprocessor for OCaml
-native and the `melange-json.js` preprocessor for Melange.
+Note that you need to use the `melange-json.ppx-native` preprocessor for OCaml
+native and the `melange-json.ppx` preprocessor for Melange.
 
 ## Usage
 
