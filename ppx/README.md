@@ -6,21 +6,8 @@ both in native (using `yojson` JSON representation) and [melange][] (using
 
 ## Installation
 
-While the package is not yet available in the official opam repository, you
-either need to pin the package or add a custom opam repository:
-
-```sh
-opam repo add andreypopp https://github.com/andreypopp/opam-repository.git
-opam update
-```
-
-Then you can install the package:
-
-```sh
-opam install -y ppx_deriving_json
-```
-
-Finally, add the `dune` configuration to your project:
+The PPX is included in `melange-json` package. To use it, just add the `dune`
+configuration to your project:
 
 ```dune
 (executable
