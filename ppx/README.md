@@ -29,11 +29,11 @@ Finally, add the `dune` configuration to your project:
 
 (library
  (modes melange)
- (preprocess (pps melange-json.browser)))
+ (preprocess (pps melange-json.js)))
 ```
 
-Note that you need to use the `melange-json.native` preprocessor for native and
-the `melange-json.browser` preprocessor for melange.
+Note that you need to use the `melange-json.native` preprocessor for OCaml
+native and the `melange-json.js` preprocessor for Melange.
 
 ## Usage
 
@@ -143,5 +143,6 @@ let json = to_json B
 (* json = `String "bbb" *)
 ```
 
-[ppx deriver plugin]: https://ocaml.org/docs/metaprogramming#attributes-and-derivers
+[ppx deriver plugin]:
+    https://ocaml.org/docs/metaprogramming#attributes-and-derivers
 [melange]: https://melange.re

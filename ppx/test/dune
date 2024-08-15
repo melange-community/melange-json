@@ -4,4 +4,4 @@
   ./example.ml
   ../../.ocamlformat
   ../native/ppx_deriving_json_native_test.exe
-  ../browser/ppx_deriving_json_browser_test.exe))
+  ../browser/ppx_deriving_json_js_test.exe))

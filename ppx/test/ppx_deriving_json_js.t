@@ -1,4 +1,4 @@
-  $ alias run='../browser/ppx_deriving_json_browser_test.exe -impl - | ocamlformat - --impl'
+  $ alias run='../browser/ppx_deriving_json_js_test.exe -impl - | ocamlformat - --impl'
 
   $ cat <<"EOF" | run
   > type user = int [@@deriving json]
