@@ -424,7 +424,8 @@ module Conv = struct
     let is_enum =
       List.for_all cases ~f:(fun (_, r) ->
           match r with
-          | `Rtag (_, ts) -> List.is_empty ts
+          | `Rtag (_, ts) -> (
+              match ts with [] -> true | _ :: _ -> false)
           | `Rinherit _ -> false)
     in
     is_enum, cases
