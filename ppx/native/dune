@@ -39,4 +39,4 @@
    (run echo "let () = Ppxlib.Driver.standalone ()"))))
 
 (copy_files#
- (files ../../tools/ppx_deriving_tools.{ml,mli}))
+ (files ../tools/ppx_deriving_tools.{ml,mli}))
