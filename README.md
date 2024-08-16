@@ -205,7 +205,7 @@ Such variants are represented as strings in JSON:
 
 ```ocaml
 let json = to_json A
-(* json = `String "A" *)
+(* "A" *)
 ```
 
 #### `[@json.default E]`: default values for records
@@ -219,7 +219,7 @@ type t = {
   b: string [@json.default "-"];
 } [@@deriving of_json]
 
-let t = of_json (`Assoc ["a", `Int 42])
+let t = of_json (Json.parseOrRaise {|{"a": 42}|})
 (* t = { a = 42; b = "-"; } *)
 ```
 
@@ -234,7 +234,7 @@ type t = {
   b: string option [@json.option];
 } [@@deriving of_json]
 
-let t = of_json (`Assoc ["a", `Int 42])
+let t = of_json (Json.parseOrRaise {|{"a": 42}|})
 (* t = { a = 42; b = None; } *)
 ```
 
@@ -249,7 +249,7 @@ type t = {
   b: string [@json.key "B"];
 } [@@deriving of_json]
 
-let t = of_json (`Assoc ["A", `Int 42; "B", `String "foo"])
+let t = of_json (Json.parseOrRaise {|{"A": 42, "B": "foo"}|})
 (* t = { a = 42; b = "foo"; } *)
 ```
 
@@ -262,7 +262,7 @@ E]` attribute:
 type t = A | B [@json.as "bbb"] [@@deriving json]
 
 let json = to_json B
-(* json = `String "bbb" *)
+(* "bbb" *)
 ```
 
 ## License
