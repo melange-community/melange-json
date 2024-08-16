@@ -37,7 +37,8 @@
     (>= "3.10.0")
     :with-test))
   ppxlib
-  yojson ; only used for the native version
+  (yojson
+   (>= "1.6.0")) ; only used for the native version
   (opam-check-npm-deps :with-test) ; todo: use with-dev-setup once opam 2.2 is out
   (ocaml-lsp-server :with-test)
   (ocamlformat :with-test)))
