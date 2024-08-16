@@ -1,8 +1,7 @@
 # PPX
 
-A [ppx deriver plugin][] for converting OCaml values to and from JSON. Works
-both in native (using `yojson` JSON representation) and [melange][] (using
-`Js.Json.t` JSON representation).
+A [ppx deriver plugin][] for converting OCaml values to and from JSON. Works on
+[melange][] (using `Js.Json.t` JSON representation).
 
 ## Installation
 
@@ -10,17 +9,10 @@ The PPX is included in `melange-json` package. To use it, just add the `dune`
 configuration to your project:
 
 ```dune
-(executable
- ...
- (preprocess (pps melange-json.ppx-native)))
-
 (library
  (modes melange)
  (preprocess (pps melange-json.ppx)))
 ```
-
-Note that you need to use the `melange-json.ppx-native` preprocessor for OCaml
-native and the `melange-json.ppx` preprocessor for Melange.
 
 ## Usage
 
