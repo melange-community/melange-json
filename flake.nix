@@ -7,21 +7,14 @@
     url = "github:nix-ocaml/nix-overlays";
     inputs.flake-utils.follows = "flake-utils";
   };
-  inputs.melange-src = {
-    url = "github:melange-re/melange";
-    inputs.nix-filter.follows = "nix-filter";
-    inputs.flake-utils.follows = "flake-utils";
-    inputs.nixpkgs.follows = "nixpkgs";
-  };
 
-  outputs = { self, nixpkgs, flake-utils, nix-filter, melange-src }:
+  outputs = { self, nixpkgs, flake-utils, nix-filter }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages."${system}".appendOverlays [
           (self: super: {
-            ocamlPackages = super.ocaml-ng.ocamlPackages_5_1;
+            ocamlPackages = super.ocaml-ng.ocamlPackages_5_2;
           })
-          melange-src.overlays.default
         ];
         inherit (pkgs) nodejs_latest lib stdenv darwin;
 
@@ -31,7 +24,11 @@
 
           src = ./.;
           nativeBuildInputs = with pkgs.ocamlPackages; [ melange ];
-          propagatedBuildInputs = with pkgs.ocamlPackages; [ melange ];
+          propagatedBuildInputs = with pkgs.ocamlPackages; [
+            melange
+            yojson
+            ppxlib
+          ];
         };
 
         mkShell = { buildInputs ? [ ] }: pkgs.mkShell {

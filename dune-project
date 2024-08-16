@@ -6,11 +6,11 @@
 
 (generate_opam_files true)
 
-(authors "glennsl")
+(authors "glennsl" "Andrey Popp")
 
 (maintainers
  "Antonio Nuno Monteiro <anmonteiro@gmail.com>"
- "Javier Ch\195\161varri <javier.chavarri@gmail.com>")
+ "Javier Chávarri <javier.chavarri@gmail.com>")
 
 (license "LGPL-3.0-only" "MPL-2.0")
 
@@ -23,9 +23,10 @@
 
 (package
  (name melange-json)
- (synopsis "Compositional JSON encode/decode library for Melange")
+ (synopsis
+  "Compositional JSON encode/decode library and PPX for Melange, with native compatibility")
  (description
-  "Provides encoders and decoders to convert JSON values into typed values. With the possibility to create custom encoders and decoders.")
+  "Provides encoders and decoders to convert JSON values into typed values. With the possibility to create custom encoders and decoders and automate them with a PPX.")
  (depends
   ocaml
   (melange
@@ -35,5 +36,8 @@
    (and
     (>= "3.10.0")
     :with-test))
+  ppxlib
+  yojson ; only used for the native version
   (opam-check-npm-deps :with-test) ; todo: use with-dev-setup once opam 2.2 is out
-  (ocaml-lsp-server :with-test)))
+  (ocaml-lsp-server :with-test)
+  (ocamlformat :with-test)))
