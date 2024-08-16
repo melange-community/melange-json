@@ -1,4 +1,4 @@
-## Unreleased
+## 1.2.0 (2024-08-16)
 
 - Port PPX from @andreypopp/ppx_deriving_json
   ([#10](https://github.com/melange-community/melange-json/pull/10))
