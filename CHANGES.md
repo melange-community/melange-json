@@ -1,3 +1,8 @@
+## Unreleased
+
+- PPX: Qualify usages of infix operators with `Stdlib`
+  ([#11](https://github.com/melange-community/melange-json/pull/11))
+
 ## 1.2.0 (2024-08-16)
 
 - Port PPX from @andreypopp/ppx_deriving_json
