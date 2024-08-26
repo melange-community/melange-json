@@ -121,7 +121,7 @@
          if
            not
              (Stdlib.( && )
-                (Js.typeof x = "object")
+                (Stdlib.( = ) (Js.typeof x) "object")
                 (Stdlib.( && )
                    (not (Js.Array.isArray x))
                    (not (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
@@ -185,7 +185,7 @@
          if
            not
              (Stdlib.( && )
-                (Js.typeof x = "object")
+                (Stdlib.( = ) (Js.typeof x) "object")
                 (Stdlib.( && )
                    (not (Js.Array.isArray x))
                    (not (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
@@ -246,7 +246,7 @@
          if
            not
              (Stdlib.( && )
-                (Js.typeof x = "object")
+                (Stdlib.( = ) (Js.typeof x) "object")
                 (Stdlib.( && )
                    (not (Js.Array.isArray x))
                    (not (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
@@ -293,7 +293,7 @@
            let len = Js.Array.length array in
            if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
-             if Js.typeof tag = "string" then
+             if Stdlib.( = ) (Js.typeof tag) "string" then
                let tag = (Obj.magic tag : string) in
                if Stdlib.( = ) tag "A" then (
                  if Stdlib.( <> ) len 1 then
@@ -313,7 +313,7 @@
                  if
                    not
                      (Stdlib.( && )
-                        (Js.typeof fs = "object")
+                        (Stdlib.( = ) (Js.typeof fs) "object")
                         (Stdlib.( && )
                            (not (Js.Array.isArray fs))
                            (not
@@ -422,7 +422,7 @@
            let len = Js.Array.length array in
            if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
-             if Js.typeof tag = "string" then
+             if Stdlib.( = ) (Js.typeof tag) "string" then
                let tag = (Obj.magic tag : string) in
                if Stdlib.( = ) tag "A" then (
                  if Stdlib.( <> ) len 1 then
@@ -492,7 +492,7 @@
         let len = Js.Array.length array in
         if Stdlib.( > ) len 0 then
           let tag = Js.Array.unsafe_get array 0 in
-          if Js.typeof tag = "string" then
+          if Stdlib.( = ) (Js.typeof tag) "string" then
             let tag = (Obj.magic tag : string) in
             if Stdlib.( = ) tag "C" then (
               if Stdlib.( <> ) len 2 then
@@ -547,7 +547,7 @@
            let len = Js.Array.length array in
            if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
-             if Js.typeof tag = "string" then
+             if Stdlib.( = ) (Js.typeof tag) "string" then
                let tag = (Obj.magic tag : string) in
                if Stdlib.( = ) tag "A" then (
                  if Stdlib.( <> ) len 1 then
@@ -605,7 +605,7 @@
            let len = Js.Array.length array in
            if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
-             if Js.typeof tag = "string" then
+             if Stdlib.( = ) (Js.typeof tag) "string" then
                let tag = (Obj.magic tag : string) in
                if Stdlib.( = ) tag "A" then (
                  if Stdlib.( <> ) len 1 then
@@ -744,7 +744,7 @@
         let len = Js.Array.length array in
         if Stdlib.( > ) len 0 then
           let tag = Js.Array.unsafe_get array 0 in
-          if Js.typeof tag = "string" then
+          if Stdlib.( = ) (Js.typeof tag) "string" then
             let tag = (Obj.magic tag : string) in
             if Stdlib.( = ) tag "A" then (
               if Stdlib.( <> ) len 2 then
@@ -798,7 +798,7 @@
          if
            not
              (Stdlib.( && )
-                (Js.typeof x = "object")
+                (Stdlib.( = ) (Js.typeof x) "object")
                 (Stdlib.( && )
                    (not (Js.Array.isArray x))
                    (not (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
@@ -847,7 +847,7 @@
            let len = Js.Array.length array in
            if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
-             if Js.typeof tag = "string" then
+             if Stdlib.( = ) (Js.typeof tag) "string" then
                let tag = (Obj.magic tag : string) in
                if Stdlib.( = ) tag "A" then (
                  if Stdlib.( <> ) len 2 then
@@ -857,7 +857,7 @@
                  if
                    not
                      (Stdlib.( && )
-                        (Js.typeof fs = "object")
+                        (Stdlib.( = ) (Js.typeof fs) "object")
                         (Stdlib.( && )
                            (not (Js.Array.isArray fs))
                            (not

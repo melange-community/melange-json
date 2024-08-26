@@ -56,7 +56,7 @@ module Of_json = struct
   let eis_json_object ~loc x =
     [%expr
       Stdlib.( && )
-        (Js.typeof [%e x] = "object")
+        (Stdlib.( = ) (Js.typeof [%e x]) "object")
         (Stdlib.( && )
            (not (Js.Array.isArray [%e x]))
            (not (Stdlib.( == ) (Obj.magic [%e x] : 'a Js.null) Js.null)))]
@@ -119,7 +119,7 @@ module Of_json = struct
             let len = Js.Array.length array in
             if Stdlib.( > ) len 0 then
               let tag = Js.Array.unsafe_get array 0 in
-              if Js.typeof tag = "string" then
+              if Stdlib.( = ) (Js.typeof tag) "string" then
                 let tag = (Obj.magic tag : string) in
                 [%e body]
               else
