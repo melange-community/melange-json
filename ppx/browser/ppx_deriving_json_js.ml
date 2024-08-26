@@ -58,12 +58,13 @@ module Of_json = struct
       Stdlib.( && )
         (Stdlib.( = ) (Js.typeof [%e x]) "object")
         (Stdlib.( && )
-           (not (Js.Array.isArray [%e x]))
-           (not (Stdlib.( == ) (Obj.magic [%e x] : 'a Js.null) Js.null)))]
+           (Stdlib.not (Js.Array.isArray [%e x]))
+           (Stdlib.not
+              (Stdlib.( == ) (Obj.magic [%e x] : 'a Js.null) Js.null)))]
 
   let ensure_json_object ~loc x =
     [%expr
-      if not [%e eis_json_object ~loc x] then
+      if Stdlib.not [%e eis_json_object ~loc x] then
         Ppx_deriving_json_runtime.of_json_error
           [%e estring ~loc (sprintf "expected a JSON object")]]
 

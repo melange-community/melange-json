@@ -119,12 +119,13 @@
     let rec record_of_json =
       (fun x ->
          if
-           not
+           Stdlib.not
              (Stdlib.( && )
                 (Stdlib.( = ) (Js.typeof x) "object")
                 (Stdlib.( && )
-                   (not (Js.Array.isArray x))
-                   (not (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
+                   (Stdlib.not (Js.Array.isArray x))
+                   (Stdlib.not
+                      (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
          then
            Ppx_deriving_json_runtime.of_json_error "expected a JSON object";
          let fs =
@@ -183,12 +184,13 @@
     let rec record_aliased_of_json =
       (fun x ->
          if
-           not
+           Stdlib.not
              (Stdlib.( && )
                 (Stdlib.( = ) (Js.typeof x) "object")
                 (Stdlib.( && )
-                   (not (Js.Array.isArray x))
-                   (not (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
+                   (Stdlib.not (Js.Array.isArray x))
+                   (Stdlib.not
+                      (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
          then
            Ppx_deriving_json_runtime.of_json_error "expected a JSON object";
          let fs =
@@ -244,12 +246,13 @@
     let rec record_opt_of_json =
       (fun x ->
          if
-           not
+           Stdlib.not
              (Stdlib.( && )
                 (Stdlib.( = ) (Js.typeof x) "object")
                 (Stdlib.( && )
-                   (not (Js.Array.isArray x))
-                   (not (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
+                   (Stdlib.not (Js.Array.isArray x))
+                   (Stdlib.not
+                      (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
          then
            Ppx_deriving_json_runtime.of_json_error "expected a JSON object";
          let fs = (Obj.magic x : < k : Js.Json.t Js.undefined > Js.t) in
@@ -311,12 +314,12 @@
                      "expected a JSON array of length 2";
                  let fs = Js.Array.unsafe_get array 1 in
                  if
-                   not
+                   Stdlib.not
                      (Stdlib.( && )
                         (Stdlib.( = ) (Js.typeof fs) "object")
                         (Stdlib.( && )
-                           (not (Js.Array.isArray fs))
-                           (not
+                           (Stdlib.not (Js.Array.isArray fs))
+                           (Stdlib.not
                               (Stdlib.( == )
                                  (Obj.magic fs : 'a Js.null)
                                  Js.null))))
@@ -796,12 +799,13 @@
     let rec allow_extra_fields_of_json =
       (fun x ->
          if
-           not
+           Stdlib.not
              (Stdlib.( && )
                 (Stdlib.( = ) (Js.typeof x) "object")
                 (Stdlib.( && )
-                   (not (Js.Array.isArray x))
-                   (not (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
+                   (Stdlib.not (Js.Array.isArray x))
+                   (Stdlib.not
+                      (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
          then
            Ppx_deriving_json_runtime.of_json_error "expected a JSON object";
          let fs = (Obj.magic x : < a : Js.Json.t Js.undefined > Js.t) in
@@ -855,12 +859,12 @@
                      "expected a JSON array of length 2";
                  let fs = Js.Array.unsafe_get array 1 in
                  if
-                   not
+                   Stdlib.not
                      (Stdlib.( && )
                         (Stdlib.( = ) (Js.typeof fs) "object")
                         (Stdlib.( && )
-                           (not (Js.Array.isArray fs))
-                           (not
+                           (Stdlib.not (Js.Array.isArray fs))
+                           (Stdlib.not
                               (Stdlib.( == )
                                  (Obj.magic fs : 'a Js.null)
                                  Js.null))))
