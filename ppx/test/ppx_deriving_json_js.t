@@ -78,8 +78,10 @@
     let rec tuple_of_json =
       (fun x ->
          if
-           Js.Array.isArray x
-           && Js.Array.length (Obj.magic x : Js.Json.t array) = 2
+           Stdlib.( && ) (Js.Array.isArray x)
+             (Stdlib.( = )
+                (Js.Array.length (Obj.magic x : Js.Json.t array))
+                2)
          then
            let es = (Obj.magic x : Js.Json.t array) in
            ( int_of_json (Js.Array.unsafe_get es 0),
@@ -117,10 +119,13 @@
     let rec record_of_json =
       (fun x ->
          if
-           not
-             (Js.typeof x = "object"
-             && (not (Js.Array.isArray x))
-             && not ((Obj.magic x : 'a Js.null) == Js.null))
+           Stdlib.not
+             (Stdlib.( && )
+                (Stdlib.( = ) (Js.typeof x) "object")
+                (Stdlib.( && )
+                   (Stdlib.not (Js.Array.isArray x))
+                   (Stdlib.not
+                      (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
          then
            Ppx_deriving_json_runtime.of_json_error "expected a JSON object";
          let fs =
@@ -179,10 +184,13 @@
     let rec record_aliased_of_json =
       (fun x ->
          if
-           not
-             (Js.typeof x = "object"
-             && (not (Js.Array.isArray x))
-             && not ((Obj.magic x : 'a Js.null) == Js.null))
+           Stdlib.not
+             (Stdlib.( && )
+                (Stdlib.( = ) (Js.typeof x) "object")
+                (Stdlib.( && )
+                   (Stdlib.not (Js.Array.isArray x))
+                   (Stdlib.not
+                      (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
          then
            Ppx_deriving_json_runtime.of_json_error "expected a JSON object";
          let fs =
@@ -238,10 +246,13 @@
     let rec record_opt_of_json =
       (fun x ->
          if
-           not
-             (Js.typeof x = "object"
-             && (not (Js.Array.isArray x))
-             && not ((Obj.magic x : 'a Js.null) == Js.null))
+           Stdlib.not
+             (Stdlib.( && )
+                (Stdlib.( = ) (Js.typeof x) "object")
+                (Stdlib.( && )
+                   (Stdlib.not (Js.Array.isArray x))
+                   (Stdlib.not
+                      (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
          then
            Ppx_deriving_json_runtime.of_json_error "expected a JSON object";
          let fs = (Obj.magic x : < k : Js.Json.t Js.undefined > Js.t) in
@@ -283,30 +294,35 @@
          if Js.Array.isArray x then
            let array = (Obj.magic x : Js.Json.t array) in
            let len = Js.Array.length array in
-           if len > 0 then
+           if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
-             if Js.typeof tag = "string" then
+             if Stdlib.( = ) (Js.typeof tag) "string" then
                let tag = (Obj.magic tag : string) in
-               if tag = "A" then (
-                 if len <> 1 then
+               if Stdlib.( = ) tag "A" then (
+                 if Stdlib.( <> ) len 1 then
                    Ppx_deriving_json_runtime.of_json_error
                      "expected a JSON array of length 1";
                  A)
-               else if tag = "B" then (
-                 if len <> 2 then
+               else if Stdlib.( = ) tag "B" then (
+                 if Stdlib.( <> ) len 2 then
                    Ppx_deriving_json_runtime.of_json_error
                      "expected a JSON array of length 2";
                  B (int_of_json (Js.Array.unsafe_get array 1)))
-               else if tag = "C" then (
-                 if len <> 2 then
+               else if Stdlib.( = ) tag "C" then (
+                 if Stdlib.( <> ) len 2 then
                    Ppx_deriving_json_runtime.of_json_error
                      "expected a JSON array of length 2";
                  let fs = Js.Array.unsafe_get array 1 in
                  if
-                   not
-                     (Js.typeof fs = "object"
-                     && (not (Js.Array.isArray fs))
-                     && not ((Obj.magic fs : 'a Js.null) == Js.null))
+                   Stdlib.not
+                     (Stdlib.( && )
+                        (Stdlib.( = ) (Js.typeof fs) "object")
+                        (Stdlib.( && )
+                           (Stdlib.not (Js.Array.isArray fs))
+                           (Stdlib.not
+                              (Stdlib.( == )
+                                 (Obj.magic fs : 'a Js.null)
+                                 Js.null))))
                  then
                    Ppx_deriving_json_runtime.of_json_error
                      "expected a JSON object";
@@ -372,7 +388,7 @@
     let rec other_of_json_poly =
       (fun x ->
          let tag = Ppx_deriving_json_runtime.Primitives.string_of_json x in
-         if tag = "C" then Some `C else None
+         if Stdlib.( = ) tag "C" then Some `C else None
         : Js.Json.t -> other option)
   
     and other_of_json =
@@ -407,17 +423,17 @@
          if Js.Array.isArray x then
            let array = (Obj.magic x : Js.Json.t array) in
            let len = Js.Array.length array in
-           if len > 0 then
+           if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
-             if Js.typeof tag = "string" then
+             if Stdlib.( = ) (Js.typeof tag) "string" then
                let tag = (Obj.magic tag : string) in
-               if tag = "A" then (
-                 if len <> 1 then
+               if Stdlib.( = ) tag "A" then (
+                 if Stdlib.( <> ) len 1 then
                    Ppx_deriving_json_runtime.of_json_error
                      "expected a JSON array of length 1";
                  Some `A)
-               else if tag = "B" then (
-                 if len <> 2 then
+               else if Stdlib.( = ) tag "B" then (
+                 if Stdlib.( <> ) len 2 then
                    Ppx_deriving_json_runtime.of_json_error
                      "expected a JSON array of length 2";
                  Some (`B (int_of_json (Js.Array.unsafe_get array 1))))
@@ -477,12 +493,12 @@
       if Js.Array.isArray x then
         let array = (Obj.magic x : Js.Json.t array) in
         let len = Js.Array.length array in
-        if len > 0 then
+        if Stdlib.( > ) len 0 then
           let tag = Js.Array.unsafe_get array 0 in
-          if Js.typeof tag = "string" then
+          if Stdlib.( = ) (Js.typeof tag) "string" then
             let tag = (Obj.magic tag : string) in
-            if tag = "C" then (
-              if len <> 2 then
+            if Stdlib.( = ) tag "C" then (
+              if Stdlib.( <> ) len 2 then
                 Ppx_deriving_json_runtime.of_json_error
                   "expected a JSON array of length 2";
               Some (`C (a_of_json (Js.Array.unsafe_get array 1))))
@@ -532,17 +548,17 @@
          if Js.Array.isArray x then
            let array = (Obj.magic x : Js.Json.t array) in
            let len = Js.Array.length array in
-           if len > 0 then
+           if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
-             if Js.typeof tag = "string" then
+             if Stdlib.( = ) (Js.typeof tag) "string" then
                let tag = (Obj.magic tag : string) in
-               if tag = "A" then (
-                 if len <> 1 then
+               if Stdlib.( = ) tag "A" then (
+                 if Stdlib.( <> ) len 1 then
                    Ppx_deriving_json_runtime.of_json_error
                      "expected a JSON array of length 1";
                  A)
-               else if tag = "Fix" then (
-                 if len <> 2 then
+               else if Stdlib.( = ) tag "Fix" then (
+                 if Stdlib.( <> ) len 2 then
                    Ppx_deriving_json_runtime.of_json_error
                      "expected a JSON array of length 2";
                  Fix (recur_of_json (Js.Array.unsafe_get array 1)))
@@ -590,17 +606,17 @@
          if Js.Array.isArray x then
            let array = (Obj.magic x : Js.Json.t array) in
            let len = Js.Array.length array in
-           if len > 0 then
+           if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
-             if Js.typeof tag = "string" then
+             if Stdlib.( = ) (Js.typeof tag) "string" then
                let tag = (Obj.magic tag : string) in
-               if tag = "A" then (
-                 if len <> 1 then
+               if Stdlib.( = ) tag "A" then (
+                 if Stdlib.( <> ) len 1 then
                    Ppx_deriving_json_runtime.of_json_error
                      "expected a JSON array of length 1";
                  Some `A)
-               else if tag = "Fix" then (
-                 if len <> 2 then
+               else if Stdlib.( = ) tag "Fix" then (
+                 if Stdlib.( <> ) len 2 then
                    Ppx_deriving_json_runtime.of_json_error
                      "expected a JSON array of length 2";
                  Some
@@ -655,8 +671,8 @@
     let rec evar_of_json =
       (fun x ->
          let tag = Ppx_deriving_json_runtime.Primitives.string_of_json x in
-         if tag = "A" then A
-         else if tag = "b_aliased" then B
+         if Stdlib.( = ) tag "A" then A
+         else if Stdlib.( = ) tag "b_aliased" then B
          else Ppx_deriving_json_runtime.of_json_error "invalid JSON"
         : Js.Json.t -> evar)
   
@@ -687,8 +703,8 @@
     let rec epoly_of_json_poly =
       (fun x ->
          let tag = Ppx_deriving_json_runtime.Primitives.string_of_json x in
-         if tag = "A_aliased" then Some `a
-         else if tag = "b" then Some `b
+         if Stdlib.( = ) tag "A_aliased" then Some `a
+         else if Stdlib.( = ) tag "b" then Some `b
          else None
         : Js.Json.t -> epoly option)
   
@@ -729,17 +745,17 @@
       if Js.Array.isArray x then
         let array = (Obj.magic x : Js.Json.t array) in
         let len = Js.Array.length array in
-        if len > 0 then
+        if Stdlib.( > ) len 0 then
           let tag = Js.Array.unsafe_get array 0 in
-          if Js.typeof tag = "string" then
+          if Stdlib.( = ) (Js.typeof tag) "string" then
             let tag = (Obj.magic tag : string) in
-            if tag = "A" then (
-              if len <> 2 then
+            if Stdlib.( = ) tag "A" then (
+              if Stdlib.( <> ) len 2 then
                 Ppx_deriving_json_runtime.of_json_error
                   "expected a JSON array of length 2";
               A (a_of_json (Js.Array.unsafe_get array 1)))
-            else if tag = "B" then (
-              if len <> 2 then
+            else if Stdlib.( = ) tag "B" then (
+              if Stdlib.( <> ) len 2 then
                 Ppx_deriving_json_runtime.of_json_error
                   "expected a JSON array of length 2";
               B (b_of_json (Js.Array.unsafe_get array 1)))
@@ -783,10 +799,13 @@
     let rec allow_extra_fields_of_json =
       (fun x ->
          if
-           not
-             (Js.typeof x = "object"
-             && (not (Js.Array.isArray x))
-             && not ((Obj.magic x : 'a Js.null) == Js.null))
+           Stdlib.not
+             (Stdlib.( && )
+                (Stdlib.( = ) (Js.typeof x) "object")
+                (Stdlib.( && )
+                   (Stdlib.not (Js.Array.isArray x))
+                   (Stdlib.not
+                      (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
          then
            Ppx_deriving_json_runtime.of_json_error "expected a JSON object";
          let fs = (Obj.magic x : < a : Js.Json.t Js.undefined > Js.t) in
@@ -830,20 +849,25 @@
          if Js.Array.isArray x then
            let array = (Obj.magic x : Js.Json.t array) in
            let len = Js.Array.length array in
-           if len > 0 then
+           if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
-             if Js.typeof tag = "string" then
+             if Stdlib.( = ) (Js.typeof tag) "string" then
                let tag = (Obj.magic tag : string) in
-               if tag = "A" then (
-                 if len <> 2 then
+               if Stdlib.( = ) tag "A" then (
+                 if Stdlib.( <> ) len 2 then
                    Ppx_deriving_json_runtime.of_json_error
                      "expected a JSON array of length 2";
                  let fs = Js.Array.unsafe_get array 1 in
                  if
-                   not
-                     (Js.typeof fs = "object"
-                     && (not (Js.Array.isArray fs))
-                     && not ((Obj.magic fs : 'a Js.null) == Js.null))
+                   Stdlib.not
+                     (Stdlib.( && )
+                        (Stdlib.( = ) (Js.typeof fs) "object")
+                        (Stdlib.( && )
+                           (Stdlib.not (Js.Array.isArray fs))
+                           (Stdlib.not
+                              (Stdlib.( == )
+                                 (Obj.magic fs : 'a Js.null)
+                                 Js.null))))
                  then
                    Ppx_deriving_json_runtime.of_json_error
                      "expected a JSON object";

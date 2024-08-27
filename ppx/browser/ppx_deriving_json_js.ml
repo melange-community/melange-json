@@ -55,19 +55,22 @@ module Of_json = struct
 
   let eis_json_object ~loc x =
     [%expr
-      Js.typeof [%e x] = "object"
-      && (not (Js.Array.isArray [%e x]))
-      && not ((Obj.magic [%e x] : 'a Js.null) == Js.null)]
+      Stdlib.( && )
+        (Stdlib.( = ) (Js.typeof [%e x]) "object")
+        (Stdlib.( && )
+           (Stdlib.not (Js.Array.isArray [%e x]))
+           (Stdlib.not
+              (Stdlib.( == ) (Obj.magic [%e x] : 'a Js.null) Js.null)))]
 
   let ensure_json_object ~loc x =
     [%expr
-      if not [%e eis_json_object ~loc x] then
+      if Stdlib.not [%e eis_json_object ~loc x] then
         Ppx_deriving_json_runtime.of_json_error
           [%e estring ~loc (sprintf "expected a JSON object")]]
 
   let ensure_json_array_len ~loc n len =
     [%expr
-      if [%e len] <> [%e eint ~loc n] then
+      if Stdlib.( <> ) [%e len] [%e eint ~loc n] then
         Ppx_deriving_json_runtime.of_json_error
           [%e
             estring ~loc (sprintf "expected a JSON array of length %i" n)]]
@@ -77,9 +80,11 @@ module Of_json = struct
     let n = List.length t.tpl_types in
     [%expr
       if
-        Js.Array.isArray [%e x]
-        && Js.Array.length (Obj.magic [%e x] : Js.Json.t array)
-           = [%e eint ~loc n]
+        Stdlib.( && )
+          (Js.Array.isArray [%e x])
+          (Stdlib.( = )
+             (Js.Array.length (Obj.magic [%e x] : Js.Json.t array))
+             [%e eint ~loc n])
       then
         let es = (Obj.magic [%e x] : Js.Json.t array) in
         [%e build_tuple ~loc derive 0 t.tpl_types [%expr es]]
@@ -113,9 +118,9 @@ module Of_json = struct
           if Js.Array.isArray [%e x] then
             let array = (Obj.magic [%e x] : Js.Json.t array) in
             let len = Js.Array.length array in
-            if len > 0 then
+            if Stdlib.( > ) len 0 then
               let tag = Js.Array.unsafe_get array 0 in
-              if Js.typeof tag = "string" then
+              if Stdlib.( = ) (Js.typeof tag) "string" then
                 let tag = (Obj.magic tag : string) in
                 [%e body]
               else
@@ -135,13 +140,14 @@ module Of_json = struct
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_as ctx) in
         [%expr
-          if tag = [%e estring ~loc:n.loc n.txt] then [%e make None]
+          if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then
+            [%e make None]
           else [%e next]]
     | Vcs_record (n, r) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_as r.rcd_ctx) in
         [%expr
-          if tag = [%e estring ~loc:n.loc n.txt] then (
+          if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then (
             [%e ensure_json_array_len ~loc 2 [%expr len]];
             let fs = Js.Array.unsafe_get array 1 in
             [%e ensure_json_object ~loc [%expr fs]];
@@ -154,10 +160,10 @@ module Of_json = struct
         let n = Option.value ~default:n (vcs_attr_json_as t.tpl_ctx) in
         let arity = List.length t.tpl_types in
         [%expr
-          if tag = [%e estring ~loc:n.loc n.txt] then (
+          if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then (
             [%e ensure_json_array_len ~loc (arity + 1) [%expr len]];
             [%e
-              if arity = 0 then make None
+              if Stdlib.( = ) arity 0 then make None
               else
                 make
                   (Some
