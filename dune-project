@@ -23,10 +23,9 @@
 
 (package
  (name melange-json)
- (synopsis
-  "Compositional JSON encode/decode library and PPX for Melange, with native compatibility")
+ (synopsis "Compositional JSON encode/decode library and PPX for Melange")
  (description
-  "Provides encoders and decoders to convert JSON values into typed values. With the possibility to create custom encoders and decoders and automate them with a PPX.")
+  "Provides tools for converting JSON to typed OCaml values in Melange. It includes custom encoders, decoders, and a PPX for automating these conversions.")
  (depends
   ocaml
   (melange
@@ -37,8 +36,17 @@
     (>= "3.10.0")
     :with-test))
   ppxlib
-  (yojson
-   (>= "1.6.0")) ; only used for the native version
   (opam-check-npm-deps :with-test) ; todo: use with-dev-setup once opam 2.2 is out
   (ocaml-lsp-server :with-test)
   (ocamlformat :with-test)))
+
+(package
+ (name melange-json-native)
+ (synopsis "Compositional JSON encode/decode PPX for OCaml")
+ (description
+  "A PPX for OCaml that automates encoding and decoding JSON into typed values. It supports custom encoders and decoders, and integrates with Yojson")
+ (depends
+  ocaml
+  ppxlib
+  (yojson
+   (>= "1.6.0"))))

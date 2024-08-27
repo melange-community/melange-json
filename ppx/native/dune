@@ -1,5 +1,5 @@
 (library
- (public_name melange-json.ppx-native)
+ (public_name melange-json-native.ppx)
  (name ppx_deriving_json_native)
  (modules
   :standard
@@ -7,13 +7,13 @@
   ppx_deriving_json_runtime
   ppx_deriving_json_native_test)
  (libraries ppxlib)
- (ppx_runtime_libraries melange-json.ppx-runtime-native)
+ (ppx_runtime_libraries melange-json-native.ppx-runtime)
  (preprocess
   (pps ppxlib.metaquot))
  (kind ppx_deriver))
 
 (library
- (public_name melange-json.ppx-runtime-native)
+ (public_name melange-json-native.ppx-runtime)
  (name ppx_deriving_json_native_runtime)
  (wrapped false)
  (modules ppx_deriving_json_runtime)
@@ -22,7 +22,7 @@
 (executable
  (name ppx_deriving_json_native_test)
  (modules ppx_deriving_json_native_test)
- (libraries melange-json.ppx-native ppxlib))
+ (libraries melange-json-native.ppx ppxlib))
 
 (rule
  (target ppx_deriving_json_native.mli)
