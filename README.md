@@ -5,12 +5,15 @@ Compositional JSON encode/decode library and PPX for
 
 Based on [@glennsl/bs-json](https://github.com/glennsl/bs-json).
 
-The Decode module in particular provides a basic set of decoder functions to be composed into more complex decoders. A
-decoder is a function that takes a `Js.Json.t` and either returns a value of the desired type if successful or raises a
-`DecodeError` exception if not. Other functions accept a decoder and produce another decoder. Like `array`, which when
-given a decoder for type `t` will return a decoder that tries to produce a value of type `t array`. So to decode an
-`int array` you combine `Json.Decode.int` with `Json.Decode.array` into `Json.Decode.(array int)`. An array of arrays of
-ints? `Json.Decode.(array (array int))`. Dict containing arrays of ints? `Json.Decode.(dict (array int))`.
+The Decode module in particular provides a basic set of decoder functions to be
+composed into more complex decoders. A decoder is a function that takes a
+`Js.Json.t` and either returns a value of the desired type if successful or
+raises a `DecodeError` exception if not. Other functions accept a decoder and
+produce another decoder. Like `array`, which when given a decoder for type `t`
+will return a decoder that tries to produce a value of type `t array`. So to
+decode an `int array` you combine `Json.Decode.int` with `Json.Decode.array`
+into `Json.Decode.(array int)`. An array of arrays of ints? `Json.Decode.(array
+(array int))`. Dict containing arrays of ints? `Json.Decode.(dict (array int))`.
 
 ## Example
 
@@ -49,10 +52,11 @@ let line = data |> Json.parseOrRaise
                 |> Decode.line;
 ```
 
-NOTE: `Json.Decode.{ ... }` creates an ordinary record, but also opens the `Json.Decode` module locally, within the
-scope delimited by the curly braces, so we don't have to qualify the functions we use from it, like `field`, `int` and
-`optional` here. You can also use `Json.Decode.( ... )` to open the module locally within the parentheses, if you're not
-creating a record.
+NOTE: `Json.Decode.{ ... }` creates an ordinary record, but also opens the
+`Json.Decode` module locally, within the scope delimited by the curly braces, so
+we don't have to qualify the functions we use from it, like `field`, `int` and
+`optional` here. You can also use `Json.Decode.( ... )` to open the module
+locally within the parentheses, if you're not creating a record.
 
 See [examples](./examples/) for more.
 
@@ -88,14 +92,17 @@ For the moment, please see the interface files:
 
 ### Writing custom decoders and encoders
 
-If you look at the type signature of `Json.Decode.array`, for example, you'll see it takes an `'a decoder` and returns an
-`'a array decoder`. `'a decoder` is just an alias for `Js.Json.t -> 'a`, so if we expand the type signature of `array`
-we'll get `(Js.Json.t -> 'a) -> Js.Json.t -> 'a array`. We can now see that it is a function that takes a decoder and
-returns a function, itself a decoder. Applying the `int` decoder to `array` will give us an `int array decoder`, a
-function `Js.Json.t -> int array`.
+If you look at the type signature of `Json.Decode.array`, for example, you'll
+see it takes an `'a decoder` and returns an `'a array decoder`. `'a decoder` is
+just an alias for `Js.Json.t -> 'a`, so if we expand the type signature of
+`array` we'll get `(Js.Json.t -> 'a) -> Js.Json.t -> 'a array`. We can now see
+that it is a function that takes a decoder and returns a function, itself a
+decoder. Applying the `int` decoder to `array` will give us an `int array
+decoder`, a function `Js.Json.t -> int array`.
 
-If you've written a function that takes just `Js.Json.t` and returns user-defined types of your own, you've already been
-writing composable decoders! Let's look at `Decode.point` from the example above:
+If you've written a function that takes just `Js.Json.t` and returns
+user-defined types of your own, you've already been writing composable decoders!
+Let's look at `Decode.point` from the example above:
 
 ```reason
 let point = json => {
@@ -107,14 +114,16 @@ let point = json => {
 };
 ```
 
-This is a function `Js.Json.t -> point`, or a `point decoder`. So if we'd like to decode an array of points, we can just
-pass it to `Json.Decode.array` to get a `point array decoder` in return.
+This is a function `Js.Json.t -> point`, or a `point decoder`. So if we'd like
+to decode an array of points, we can just pass it to `Json.Decode.array` to get
+a `point array decoder` in return.
 
 #### Builders
 
-To write a decoder _builder_ like `Json.Decode.array` we need to take another decoder as an argument, and thanks to
-currying we just need to apply it where we'd otherwise use a fixed decoder. Say we want to be able to decode both
-`int point`s and `float point`s. First we'd have to parameterize the type:
+To write a decoder _builder_ like `Json.Decode.array` we need to take another
+decoder as an argument, and thanks to currying we just need to apply it where
+we'd otherwise use a fixed decoder. Say we want to be able to decode both `int
+point`s and `float point`s. First we'd have to parameterize the type:
 
 ```reason
 type point('a) = {
@@ -123,7 +132,8 @@ type point('a) = {
 }
 ```
 
-Then we can change our `point` function from above to take and use a decoder argument:
+Then we can change our `point` function from above to take and use a decoder
+argument:
 
 ```reason
 let point = (decodeNumber, json) => {
@@ -144,14 +154,15 @@ let floatPoint = point(Json.Decode.float);
 
 #### Encoders
 
-Encoders work exactly the same way, just in reverse. `'a encoder` is just an alias for `'a -> Js.Json.t`, and this also
-transfers to composition: `'a encoder -> 'a array encoder` expands to `('a -> Js.Json.t) -> 'a array -> Js.Json.t`.
+Encoders work exactly the same way, just in reverse. `'a encoder` is just an
+alias for `'a -> Js.Json.t`, and this also transfers to composition: `'a encoder
+-> 'a array encoder` expands to `('a -> Js.Json.t) -> 'a array -> Js.Json.t`.
 
-## PPX
+## PPX for Melange
 
 A [ppx deriver
 plugin](https://ocaml.org/docs/metaprogramming#attributes-and-derivers) is
-provided to automatically convert OCaml values to and from JSON.
+provided to automatically convert Melange values to and from JSON.
 
 ### Installation
 
@@ -265,11 +276,55 @@ let json = to_json B
 (* "bbb" *)
 ```
 
+## PPX for OCaml native
+
+A similar PPX is exposed in the `melange-json-native` package, which works with
+the `yojson` JSON representation instead of `Js.Json.t`.
+
+### Installation
+
+The PPX is included in `melange-json-native` package, so that package will have
+to be installed first:
+
+```sh
+opam install melange-json-native
+```
+
+To use it, add the `dune` configuration to your project:
+
+```dune
+(executable
+ ...
+ (preprocess (pps melange-json-native.ppx)))
+```
+
+### Usage
+
+From the usage perspective, the PPX is similar to the Melange one:
+
+```ocaml
+type t = {
+  a: int;
+  b: string;
+} [@@deriving json]
+```
+
+This will generate the following pair of functions:
+
+```ocaml
+val of_json : Yojson.Basic.json -> t
+val to_json : t -> Yojson.Basic.json
+```
+
+Refer to the [PPX for Melange](#ppx-for-melange) section for more details on
+usage patterns.
+
 ## License
 
-This work is dual-licensed under LGPL 3.0 and MPL 2.0.
-You can choose between one of them if you use this work.
+This work is dual-licensed under LGPL 3.0 and MPL 2.0. You can choose between
+one of them if you use this work.
 
-Please see LICENSE.LGPL-3.0 and LICENSE.MPL-2.0 for the full text of each license.
+Please see LICENSE.LGPL-3.0 and LICENSE.MPL-2.0 for the full text of each
+license.
 
 `SPDX-License-Identifier: LGPL-3.0 OR MPL-2.0`
