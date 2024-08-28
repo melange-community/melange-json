@@ -2,6 +2,8 @@
 
 - PPX: Qualify usages of infix operators with `Stdlib`
   ([#11](https://github.com/melange-community/melange-json/pull/11))
+- Add `melange-json-native` package
+  ([#12](https://github.com/melange-community/melange-json/pull/12))
 
 ## 1.2.0 (2024-08-16)
 
