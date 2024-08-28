@@ -6,8 +6,6 @@
 
 (generate_opam_files true)
 
-(authors "glennsl" "Andrey Popp")
-
 (maintainers
  "Antonio Nuno Monteiro <anmonteiro@gmail.com>"
  "Javier Chávarri <javier.chavarri@gmail.com>")
@@ -23,6 +21,7 @@
 
 (package
  (name melange-json)
+ (authors "glennsl" "Andrey Popp")
  (synopsis "Compositional JSON encode/decode library and PPX for Melange")
  (description
   "Provides tools for converting JSON to typed OCaml values in Melange. It includes custom encoders, decoders, and a PPX for automating these conversions.")
@@ -42,11 +41,14 @@
 
 (package
  (name melange-json-native)
+ (authors "Andrey Popp")
  (synopsis "Compositional JSON encode/decode PPX for OCaml")
  (description
   "A PPX for OCaml that automates encoding and decoding JSON into typed values. It supports custom encoders and decoders, and integrates with Yojson")
  (depends
-  ocaml
-  ppxlib
+  (ocaml
+   (>= "4.12"))
+  (ppxlib
+   (>= "0.29.0"))
   (yojson
    (>= "1.6.0"))))
