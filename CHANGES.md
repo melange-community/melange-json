@@ -1,4 +1,4 @@
-## Unreleased
+## 1.3.0 (2024-08-28)
 
 - PPX: Qualify usages of infix operators with `Stdlib`
   ([#11](https://github.com/melange-community/melange-json/pull/11))
