@@ -1,3 +1,8 @@
+## Unpublished
+
+- PPX: Add runtime for `result`
+  ([#13](https://github.com/melange-community/melange-json/pull/13))
+
 ## 1.3.0 (2024-08-28)
 
 - PPX: Qualify usages of infix operators with `Stdlib`
