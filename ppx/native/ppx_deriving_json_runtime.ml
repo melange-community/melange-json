@@ -20,6 +20,11 @@ module To_json = struct
   let option_to_json v_to_json = function
     | None -> `Null
     | Some v -> v_to_json v
+
+  let result_to_json a_to_json b_to_json v =
+    match v with
+    | Ok x -> `List [ `String "Ok"; a_to_json x ]
+    | Error x -> `List [ `String "Error"; b_to_json x ]
 end
 
 module Of_json = struct
@@ -36,6 +41,12 @@ module Of_json = struct
 
   let list_of_json v_of_json json =
     List.map v_of_json (Yojson.Basic.Util.to_list json)
+
+  let result_of_json a_of_json b_of_json json =
+    match json with
+    | `List [ `String "Ok"; x ] -> Ok (a_of_json x)
+    | `List [ `String "Error"; x ] -> Error (b_of_json x)
+    | _ -> of_json_error "invalid JSON"
 end
 
 module Primitives = struct
