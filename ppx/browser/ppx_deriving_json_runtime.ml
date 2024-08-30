@@ -71,7 +71,7 @@ module Of_json = struct
     if (Obj.magic json : 'a Js.null) == Js.null then None
     else Some (v_of_json json)
 
-  let result_of_json a_of_json b_of_json (json : t) =
+  let result_of_json ok_of_json err_of_json (json : t) =
     if Js.Array.isArray json then
       let array = (Obj.magic json : Js.Json.t array) in
       let len = Js.Array.length array in
@@ -82,11 +82,11 @@ module Of_json = struct
           if Stdlib.( = ) tag "Ok" then (
             if Stdlib.( <> ) len 2 then
               of_json_error "expected a JSON array of length 2";
-            Ok (a_of_json (Js.Array.unsafe_get array 1)))
+            Ok (ok_of_json (Js.Array.unsafe_get array 1)))
           else if Stdlib.( = ) tag "Error" then (
             if Stdlib.( <> ) len 2 then
               of_json_error "expected a JSON array of length 2";
-            Error (b_of_json (Js.Array.unsafe_get array 1)))
+            Error (err_of_json (Js.Array.unsafe_get array 1)))
           else of_json_error "invalid JSON"
         else
           of_json_error
