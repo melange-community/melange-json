@@ -42,10 +42,10 @@ module Of_json = struct
   let list_of_json v_of_json json =
     List.map v_of_json (Yojson.Basic.Util.to_list json)
 
-  let result_of_json a_of_json b_of_json json =
+  let result_of_json ok_of_json err_of_json json =
     match json with
-    | `List [ `String "Ok"; x ] -> Ok (a_of_json x)
-    | `List [ `String "Error"; x ] -> Error (b_of_json x)
+    | `List [ `String "Ok"; x ] -> Ok (ok_of_json x)
+    | `List [ `String "Error"; x ] -> Error (err_of_json x)
     | _ -> of_json_error "invalid JSON"
 end
 
