@@ -24,6 +24,11 @@ module To_json = struct
 
   let option_to_json v_to_json v : t =
     match v with None -> Obj.magic Js.null | Some v -> v_to_json v
+
+  let result_to_json a_to_json b_to_json v : t =
+    match v with
+    | Ok x -> Obj.magic [| string_to_json "Ok"; a_to_json x |]
+    | Error x -> Obj.magic [| string_to_json "Error"; b_to_json x |]
 end
 
 module Of_json = struct
@@ -65,6 +70,29 @@ module Of_json = struct
   let option_of_json v_of_json (json : t) =
     if (Obj.magic json : 'a Js.null) == Js.null then None
     else Some (v_of_json json)
+
+  let result_of_json a_of_json b_of_json (json : t) =
+    if Js.Array.isArray json then
+      let array = (Obj.magic json : Js.Json.t array) in
+      let len = Js.Array.length array in
+      if Stdlib.( > ) len 0 then
+        let tag = Js.Array.unsafe_get array 0 in
+        if Stdlib.( = ) (Js.typeof tag) "string" then
+          let tag = (Obj.magic tag : string) in
+          if Stdlib.( = ) tag "Ok" then (
+            if Stdlib.( <> ) len 2 then
+              of_json_error "expected a JSON array of length 2";
+            Ok (a_of_json (Js.Array.unsafe_get array 1)))
+          else if Stdlib.( = ) tag "Error" then (
+            if Stdlib.( <> ) len 2 then
+              of_json_error "expected a JSON array of length 2";
+            Error (b_of_json (Js.Array.unsafe_get array 1)))
+          else of_json_error "invalid JSON"
+        else
+          of_json_error
+            "expected a non empty JSON array with element being a string"
+      else of_json_error "expected a non empty JSON array"
+    else of_json_error "expected a non empty JSON array"
 end
 
 module Primitives = struct

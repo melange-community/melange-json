@@ -1,6 +1,7 @@
 type user = int [@@deriving json]
 type 'a param = 'a [@@deriving json]
 type opt = string option [@@deriving json]
+type res = (int, string) result [@@deriving json]
 type tuple = int * string [@@deriving json]
 type record = { name : string; age : int } [@@deriving json]
 type record_aliased = { name : string; [@json.key "my_name"] age : int; [@json.key "my_age"] [@json.default 100] } [@@deriving json]
@@ -23,6 +24,8 @@ module Cases = struct
     C ({|1|}, user_of_json, user_to_json, 1);
     C ({|"OK"|}, (param_of_json string_of_json), (param_to_json string_to_json), "OK");
     C ({|"some"|}, opt_of_json, opt_to_json, (Some "some"));
+    C ({|["Ok", 1]|}, res_of_json, res_to_json, Ok 1);
+    C ({|["Error", "oops"]|}, res_of_json, res_to_json, Error "oops");
     C ({|[42, "works"]|}, tuple_of_json, tuple_to_json, (42, "works"));
     C ({|{"name":"N","age":1}|}, record_of_json, record_to_json, {name="N"; age=1});
     C ({|["A"]|}, sum_of_json, sum_to_json, (A : sum));

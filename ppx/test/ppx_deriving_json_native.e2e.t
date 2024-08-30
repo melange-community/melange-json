@@ -23,6 +23,10 @@
   JSON REPRINT: "OK"
   JSON    DATA: "some"
   JSON REPRINT: "some"
+  JSON    DATA: ["Ok", 1]
+  JSON REPRINT: ["Ok",1]
+  JSON    DATA: ["Error", "oops"]
+  JSON REPRINT: ["Error","oops"]
   JSON    DATA: [42, "works"]
   JSON REPRINT: [42,"works"]
   JSON    DATA: {"name":"N","age":1}
