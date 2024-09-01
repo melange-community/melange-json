@@ -172,7 +172,8 @@ The PPX is included in the `melange-json` package. To use it, just add the
 ```dune
 (library
  (modes melange)
- (preprocess (pps melange-json.ppx)))
+ (preprocess (pps melange-json.ppx))
+ (flags :standard -open Ppx_deriving_json_runtime.Primitives))
 ```
 
 ### Usage
