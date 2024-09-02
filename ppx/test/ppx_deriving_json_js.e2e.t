@@ -26,65 +26,57 @@
   > ' >> main.ml
 
   $ dune build @js
-  File "example.ml", line 6, characters 0-60:
-  6 | type record = { name : string; age : int } [@@deriving json]
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  Alert unprocessed: `[@mel.*]' attributes found in external declaration. Did you forget to preprocess with `melange.ppx'?
-  
-  File "example.ml", line 6, characters 0-60:
-  6 | type record = { name : string; age : int } [@@deriving json]
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  Alert unprocessed: `[@mel.*]' attributes found in external declaration. Did you forget to preprocess with `melange.ppx'?
-  
-  File "example.ml", line 7, characters 0-132:
-  7 | type record_aliased = { name : string; [@json.key "my_name"] age : int; [@json.key "my_age"] [@json.default 100] } [@@deriving json]
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  Alert unprocessed: `[@mel.*]' attributes found in external declaration. Did you forget to preprocess with `melange.ppx'?
-  
-  File "example.ml", line 7, characters 0-132:
-  7 | type record_aliased = { name : string; [@json.key "my_name"] age : int; [@json.key "my_age"] [@json.default 100] } [@@deriving json]
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  Alert unprocessed: `[@mel.*]' attributes found in external declaration. Did you forget to preprocess with `melange.ppx'?
-  
-  File "example.ml", line 8, characters 0-70:
-  8 | type record_opt = { k : int option; [@json.option] } [@@deriving json]
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  Alert unprocessed: `[@mel.*]' attributes found in external declaration. Did you forget to preprocess with `melange.ppx'?
-  
-  File "example.ml", line 9, characters 26-27:
-  9 | type sum = A | B of int | C of { name : string } [@@deriving json]
-                                ^
-  Alert unprocessed: `[@mel.*]' attributes found in external declaration. Did you forget to preprocess with `melange.ppx'?
-  
-  File "example.ml", line 17, characters 0-80:
-  17 | type allow_extra_fields = {a: int} [@@deriving json] [@@json.allow_extra_fields]
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  Alert unprocessed: `[@mel.*]' attributes found in external declaration. Did you forget to preprocess with `melange.ppx'?
-  
-  File "example.ml", line 18, characters 27-28:
-  18 | type allow_extra_fields2 = A of {a: int} [@json.allow_extra_fields] [@@deriving json]
-                                  ^
-  Alert unprocessed: `[@mel.*]' attributes found in external declaration. Did you forget to preprocess with `melange.ppx'?
-  
-  File "example.ml", line 6, characters 0-60:
-  6 | type record = { name : string; age : int } [@@deriving json]
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  Error: ## is not a valid value identifier.
-  [1]
 
   $ node ./_build/default/output/main.js
-  node:internal/modules/cjs/loader:1137
-    throw err;
-    ^
-  
-  Error: Cannot find module '$TESTCASE_ROOT/_build/default/output/main.js'
-      at Module._resolveFilename (node:internal/modules/cjs/loader:1134:15)
-      at Module._load (node:internal/modules/cjs/loader:975:27)
-      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:128:12)
-      at node:internal/main/run_main_module:28:49 {
-    code: 'MODULE_NOT_FOUND',
-    requireStack: []
-  }
-  
-  Node.js v18.19.0
-  [1]
+  JSON    DATA: 1
+  JSON REPRINT: 1
+  JSON    DATA: "OK"
+  JSON REPRINT: "OK"
+  JSON    DATA: "some"
+  JSON REPRINT: "some"
+  JSON    DATA: ["Ok", 1]
+  JSON REPRINT: ["Ok",1]
+  JSON    DATA: ["Error", "oops"]
+  JSON REPRINT: ["Error","oops"]
+  JSON    DATA: [42, "works"]
+  JSON REPRINT: [42,"works"]
+  JSON    DATA: {"name":"N","age":1}
+  JSON REPRINT: {"name":"N","age":1}
+  JSON    DATA: ["A"]
+  JSON REPRINT: ["A"]
+  JSON    DATA: ["B", 42]
+  JSON REPRINT: ["B",42]
+  JSON    DATA: ["C", {"name": "cname"}]
+  JSON REPRINT: ["C",{"name":"cname"}]
+  JSON    DATA: ["A"]
+  JSON REPRINT: ["A"]
+  JSON    DATA: ["B", 42]
+  JSON REPRINT: ["B",42]
+  JSON    DATA: ["Fix",["Fix",["Fix",["A"]]]]
+  JSON REPRINT: ["Fix",["Fix",["Fix",["A"]]]]
+  JSON    DATA: ["Fix",["Fix",["Fix",["A"]]]]
+  JSON REPRINT: ["Fix",["Fix",["Fix",["A"]]]]
+  JSON    DATA: "A"
+  JSON REPRINT: "A"
+  JSON    DATA: "b_aliased"
+  JSON REPRINT: "b_aliased"
+  JSON    DATA: "b"
+  JSON REPRINT: "b"
+  JSON    DATA: "A_aliased"
+  JSON REPRINT: "A_aliased"
+  JSON    DATA: {"my_name":"N","my_age":1}
+  JSON REPRINT: {"my_name":"N","my_age":1}
+  JSON    DATA: {"my_name":"N"}
+  JSON REPRINT: {"my_name":"N","my_age":100}
+  JSON    DATA: {}
+  JSON REPRINT: {"k":null}
+  JSON    DATA: {"k":42}
+  JSON REPRINT: {"k":42}
+  JSON    DATA: ["A",1]
+  JSON REPRINT: ["A",1]
+  JSON    DATA: ["B","ok"]
+  JSON REPRINT: ["B","ok"]
+  JSON    DATA: {"a":1,"b":2}
+  JSON REPRINT: {"a":1}
+  JSON    DATA: ["A",{"a":1,"b":2}]
+  JSON REPRINT: ["A",{"a":1}]
