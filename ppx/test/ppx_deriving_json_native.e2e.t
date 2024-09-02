@@ -1,9 +1,10 @@
 
-  $ echo '(lang dune 3.11)' > dune-project
+  $ echo '(lang dune 3.11)
+  > (implicit_transitive_deps false)
+  > ' >> dune-project
   $ echo '
   > (executable 
   >   (name main)
-  >   (libraries yojson)
   >   (flags :standard -w -37-69 -open Ppx_deriving_json_runtime.Primitives)
   >   (preprocess (pps melange-json-native.ppx)))' > dune
 
