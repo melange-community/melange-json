@@ -172,16 +172,18 @@ The PPX is included in the `melange-json` package. To use it, just add the
 ```dune
 (library
  (modes melange)
- (preprocess (pps melange-json.ppx))
- (flags :standard -open Ppx_deriving_json_runtime.Primitives))
+ (preprocess (pps melange-json.ppx)))
 ```
 
 ### Usage
 
-To generate JSON converters for a type, add the `[@@deriving json]` attribute to
-a type declaration:
+To generate JSON converters for a type,
+add the `[@@deriving json]` attribute to the type declaration,
+ensuring the converters for primitives like `int` and `string` are in scope if necessary:
 
 ```ocaml
+open Ppx_deriving_json_runtime.Primitives
+
 type t = {
   a: int;
   b: string;
