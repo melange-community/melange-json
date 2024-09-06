@@ -1,11 +1,7 @@
 (library
  (public_name melange-json.ppx)
  (name ppx_deriving_json_js)
- (modules
-  :standard
-  \
-  ppx_deriving_json_runtime
-  ppx_deriving_json_js_test)
+ (modules :standard \ ppx_deriving_json_runtime ppx_deriving_json_js_test)
  (libraries ppxlib)
  (ppx_runtime_libraries melange-json.ppx-runtime)
  (preprocess

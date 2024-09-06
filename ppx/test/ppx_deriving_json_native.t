@@ -154,7 +154,12 @@
          match x with
          | { name = x_name; age = x_age } ->
              `Assoc
-               [ "name", string_to_json x_name; "age", int_to_json x_age ]
+               (let bnds__001_ = [] in
+                let bnds__001_ = ("age", int_to_json x_age) :: bnds__001_ in
+                let bnds__001_ =
+                  ("name", string_to_json x_name) :: bnds__001_
+                in
+                bnds__001_)
         : record -> Yojson.Basic.t)
   
     let _ = record_to_json
@@ -219,10 +224,14 @@
          match x with
          | { name = x_name; age = x_age } ->
              `Assoc
-               [
-                 "my_name", string_to_json x_name;
-                 "my_age", int_to_json x_age;
-               ]
+               (let bnds__001_ = [] in
+                let bnds__001_ =
+                  ("my_age", int_to_json x_age) :: bnds__001_
+                in
+                let bnds__001_ =
+                  ("my_name", string_to_json x_name) :: bnds__001_
+                in
+                bnds__001_)
         : record_aliased -> Yojson.Basic.t)
   
     let _ = record_aliased_to_json
@@ -274,7 +283,13 @@
     let rec record_opt_to_json =
       (fun x ->
          match x with
-         | { k = x_k } -> `Assoc [ "k", (option_to_json int_to_json) x_k ]
+         | { k = x_k } ->
+             `Assoc
+               (let bnds__001_ = [] in
+                let bnds__001_ =
+                  ("k", (option_to_json int_to_json) x_k) :: bnds__001_
+                in
+                bnds__001_)
         : record_opt -> Yojson.Basic.t)
   
     let _ = record_opt_to_json
@@ -331,7 +346,16 @@
          | A -> `List [ `String "A" ]
          | B x_0 -> `List [ `String "B"; int_to_json x_0 ]
          | C { name = x_name } ->
-             `List [ `String "C"; `Assoc [ "name", string_to_json x_name ] ]
+             `List
+               [
+                 `String "C";
+                 `Assoc
+                   (let bnds__001_ = [] in
+                    let bnds__001_ =
+                      ("name", string_to_json x_name) :: bnds__001_
+                    in
+                    bnds__001_);
+               ]
         : sum -> Yojson.Basic.t)
   
     let _ = sum_to_json
@@ -656,7 +680,12 @@
   
     let rec allow_extra_fields_to_json =
       (fun x ->
-         match x with { a = x_a } -> `Assoc [ "a", int_to_json x_a ]
+         match x with
+         | { a = x_a } ->
+             `Assoc
+               (let bnds__001_ = [] in
+                let bnds__001_ = ("a", int_to_json x_a) :: bnds__001_ in
+                bnds__001_)
         : allow_extra_fields -> Yojson.Basic.t)
   
     let _ = allow_extra_fields_to_json
@@ -707,9 +736,91 @@
       (fun x ->
          match x with
          | A { a = x_a } ->
-             `List [ `String "A"; `Assoc [ "a", int_to_json x_a ] ]
+             `List
+               [
+                 `String "A";
+                 `Assoc
+                   (let bnds__001_ = [] in
+                    let bnds__001_ = ("a", int_to_json x_a) :: bnds__001_ in
+                    bnds__001_);
+               ]
         : allow_extra_fields2 -> Yojson.Basic.t)
   
     let _ = allow_extra_fields2_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
+  > type drop_default_option = { a: int; b_opt: int option; [@option] [@json.drop_default] } [@@deriving json]
+  > EOF
+  type drop_default_option = {
+    a : int;
+    b_opt : int option; [@option] [@json.drop_default]
+  }
+  [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : drop_default_option) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec drop_default_option_of_json =
+      (fun x ->
+         match x with
+         | `Assoc fs ->
+             let x_a = ref Stdlib.Option.None in
+             let x_b_opt = ref (Stdlib.Option.Some Stdlib.Option.None) in
+             let rec iter = function
+               | [] -> ()
+               | (n', v) :: fs ->
+                   (match n' with
+                   | "a" -> x_a := Stdlib.Option.Some (int_of_json v)
+                   | "b_opt" ->
+                       x_b_opt :=
+                         Stdlib.Option.Some ((option_of_json int_of_json) v)
+                   | name ->
+                       Ppx_deriving_json_runtime.of_json_error
+                         (Stdlib.Printf.sprintf "unknown field: %s" name));
+                   iter fs
+             in
+             iter fs;
+             {
+               a =
+                 (match Stdlib.( ! ) x_a with
+                 | Stdlib.Option.Some v -> v
+                 | Stdlib.Option.None ->
+                     Ppx_deriving_json_runtime.of_json_error
+                       "missing field \"a\"");
+               b_opt =
+                 (match Stdlib.( ! ) x_b_opt with
+                 | Stdlib.Option.Some v -> v
+                 | Stdlib.Option.None -> Stdlib.Option.None);
+             }
+         | _ ->
+             Ppx_deriving_json_runtime.of_json_error
+               "expected a JSON object"
+        : Yojson.Basic.t -> drop_default_option)
+  
+    let _ = drop_default_option_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec drop_default_option_to_json =
+      (fun x ->
+         match x with
+         | { a = x_a; b_opt = x_b_opt } ->
+             `Assoc
+               (let bnds__001_ = [] in
+                let bnds__001_ =
+                  match x_b_opt with
+                  | Stdlib.Option.None -> bnds__001_
+                  | Stdlib.Option.Some _ ->
+                      ("b_opt", (option_to_json int_to_json) x_b_opt)
+                      :: bnds__001_
+                in
+                let bnds__001_ = ("a", int_to_json x_a) :: bnds__001_ in
+                bnds__001_)
+        : drop_default_option -> Yojson.Basic.t)
+  
+    let _ = drop_default_option_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 

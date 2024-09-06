@@ -70,3 +70,7 @@
   JSON REPRINT: {"a":1}
   JSON    DATA: ["A",{"a":1,"b":2}]
   JSON REPRINT: ["A",{"a":1}]
+  JSON    DATA: {"a":1}
+  JSON REPRINT: {"a":1}
+  JSON    DATA: {"a":1,"b_opt":2}
+  JSON REPRINT: {"a":1,"b_opt":2}

@@ -915,3 +915,74 @@
     let _ = allow_extra_fields2_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
+  $ cat <<"EOF" | run
+  > type drop_default_option = { a: int; b_opt: int option; [@option] [@json.drop_default] } [@@deriving json]
+  > EOF
+  type drop_default_option = {
+    a : int;
+    b_opt : int option; [@option] [@json.drop_default]
+  }
+  [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : drop_default_option) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec drop_default_option_of_json =
+      (fun x ->
+         if
+           Stdlib.not
+             (Stdlib.( && )
+                (Stdlib.( = ) (Js.typeof x) "object")
+                (Stdlib.( && )
+                   (Stdlib.not (Js.Array.isArray x))
+                   (Stdlib.not
+                      (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
+         then
+           Ppx_deriving_json_runtime.of_json_error "expected a JSON object";
+         let fs =
+           (Obj.magic x
+             : < a : Js.Json.t Js.undefined
+               ; b_opt : Js.Json.t Js.undefined >
+               Js.t)
+         in
+         {
+           a =
+             (match Js.Undefined.toOption fs##a with
+             | Stdlib.Option.Some v -> int_of_json v
+             | Stdlib.Option.None ->
+                 Ppx_deriving_json_runtime.of_json_error
+                   "missing field \"a\"");
+           b_opt =
+             (match Js.Undefined.toOption fs##b_opt with
+             | Stdlib.Option.Some v -> (option_of_json int_of_json) v
+             | Stdlib.Option.None -> Stdlib.Option.None);
+         }
+        : Js.Json.t -> drop_default_option)
+  
+    let _ = drop_default_option_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec drop_default_option_to_json =
+      (fun x ->
+         match x with
+         | { a = x_a; b_opt = x_b_opt } ->
+             (Obj.magic
+                [%mel.obj
+                  {
+                    a = int_to_json x_a;
+                    b_opt =
+                      (match x_b_opt with
+                      | Stdlib.Option.None -> Js.Undefined.empty
+                      | Stdlib.Option.Some _ ->
+                          Js.Undefined.return
+                            ((option_to_json int_to_json) x_b_opt));
+                  }]
+               : Js.Json.t)
+        : drop_default_option -> Js.Json.t)
+  
+    let _ = drop_default_option_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
