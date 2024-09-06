@@ -16,6 +16,7 @@ type epoly = [ `a [@json.as "A_aliased"] | `b ] [@@deriving json]
 type ('a, 'b) p2 = A of 'a | B of 'b [@@deriving json]
 type allow_extra_fields = {a: int} [@@deriving json] [@@json.allow_extra_fields]
 type allow_extra_fields2 = A of {a: int} [@json.allow_extra_fields] [@@deriving json]
+type drop_default_option = { a: int; b_opt: int option; [@option] [@json.drop_default] } [@@deriving json]
 
 module Cases = struct 
   type json = Ppx_deriving_json_runtime.t
@@ -47,6 +48,8 @@ module Cases = struct
     C ({|["B","ok"]|}, p2_of_json int_of_json string_of_json, p2_to_json int_to_json string_to_json, B "ok");
     C ({|{"a":1,"b":2}|}, allow_extra_fields_of_json, allow_extra_fields_to_json, {a=1});
     C ({|["A",{"a":1,"b":2}]|}, allow_extra_fields2_of_json, allow_extra_fields2_to_json, A {a=1});
+    C ({|{"a":1}|}, drop_default_option_of_json, drop_default_option_to_json, {a=1; b_opt=None});
+    C ({|{"a":1,"b_opt":2}|}, drop_default_option_of_json, drop_default_option_to_json, {a=1; b_opt=Some 2});
   ]
   let run' ~json_of_string ~json_to_string (C (data, of_json, to_json, v)) =
     print_endline (Printf.sprintf "JSON    DATA: %s" data);

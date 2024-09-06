@@ -51,6 +51,13 @@ let ld_attr_json_default =
        Ast_pattern.(single_expr_payload __)
        (fun x -> x))
 
+let ld_attr_json_drop_default =
+  Attribute.get
+    (Attribute.declare "json.drop_default"
+       Attribute.Context.label_declaration
+       Ast_pattern.(pstr nil)
+       ())
+
 let ld_attr_default ld =
   match ld_attr_json_default ld with
   | Some e -> Some e
@@ -60,3 +67,12 @@ let ld_attr_default ld =
           let loc = ld.pld_loc in
           Some [%expr Stdlib.Option.None]
       | None -> None)
+
+let ld_drop_default ld =
+  let loc = ld.pld_loc in
+  match ld_attr_json_drop_default ld, ld_attr_json_option ld with
+  | Some (), None ->
+      Ppx_deriving_tools.error ~loc
+        "found [@drop_default] attribute without [@option]"
+  | Some (), Some () -> `Drop_option
+  | None, _ -> `No

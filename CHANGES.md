@@ -11,6 +11,9 @@
   ([#11](https://github.com/melange-community/melange-json/pull/11))
 - Add `melange-json-native` package
   ([#12](https://github.com/melange-community/melange-json/pull/12))
+- Add `[@drop_default]` attribute to drop `None` values from JSON
+  representation
+  ([#17](https://github.com/melange-community/melange-json/pull/17))
 
 ## 1.2.0 (2024-08-16)
 

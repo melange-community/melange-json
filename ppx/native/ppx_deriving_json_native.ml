@@ -171,6 +171,10 @@ module Of_json = struct
 end
 
 module To_json = struct
+  let gen_exp_pat ~loc prefix =
+    let n = gen_symbol ~prefix () in
+    evar ~loc n, pvar ~loc n
+
   let derive_of_tuple derive t es =
     let loc = t.tpl_loc in
     let es = List.map2 t.tpl_types es ~f:derive in
@@ -178,15 +182,33 @@ module To_json = struct
 
   let derive_of_record derive t es =
     let loc = t.rcd_loc in
-    let es =
-      List.map2 t.rcd_fields es ~f:(fun ld x ->
-          let key =
-            Option.value ~default:ld.pld_name (ld_attr_json_key ld)
-          in
-          [%expr
-            [%e estring ~loc:key.loc key.txt], [%e derive ld.pld_type x]])
+    let ebnds, pbnds = gen_exp_pat ~loc "bnds" in
+    let e =
+      List.combine t.rcd_fields es
+      |> List.fold_left ~init:ebnds ~f:(fun acc (ld, x) ->
+             let key =
+               Option.value ~default:ld.pld_name (ld_attr_json_key ld)
+             in
+             let k = estring ~loc:key.loc key.txt in
+             let v = derive ld.pld_type x in
+             let ebnds =
+               match ld_drop_default ld with
+               | `No -> [%expr ([%e k], [%e v]) :: [%e ebnds]]
+               | `Drop_option ->
+                   [%expr
+                     match [%e x] with
+                     | Stdlib.Option.None -> [%e ebnds]
+                     | Stdlib.Option.Some _ ->
+                         ([%e k], [%e v]) :: [%e ebnds]]
+             in
+             [%expr
+               let [%p pbnds] = [%e ebnds] in
+               [%e acc]])
     in
-    [%expr `Assoc [%e elist ~loc es]]
+    [%expr
+      `Assoc
+        (let [%p pbnds] = [] in
+         [%e e])]
 
   let derive_of_variant_case derive vcs es =
     match vcs with

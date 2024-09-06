@@ -190,10 +190,21 @@ module To_json = struct
     let loc = t.rcd_loc in
     let fs =
       List.map2 t.rcd_fields es ~f:(fun ld x ->
-          let n = ld.pld_name in
-          let n = Option.value ~default:n (ld_attr_json_key ld) in
-          let this = derive ld.pld_type x in
-          map_loc lident n, this)
+          let k =
+            let k = ld.pld_name in
+            Option.value ~default:k (ld_attr_json_key ld)
+          in
+          let v =
+            let v = derive ld.pld_type x in
+            match ld_drop_default ld with
+            | `No -> v
+            | `Drop_option ->
+                [%expr
+                  match [%e x] with
+                  | Stdlib.Option.None -> Js.Undefined.empty
+                  | Stdlib.Option.Some _ -> Js.Undefined.return [%e v]]
+          in
+          map_loc lident k, v)
     in
     let record = pexp_record ~loc fs None in
     as_json ~loc [%expr [%mel.obj [%e record]]]

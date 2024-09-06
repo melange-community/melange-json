@@ -252,6 +252,22 @@ let t = of_json (Json.parseOrRaise {|{"a": 42}|})
 (* t = { a = 42; b = None; } *)
 ```
 
+#### `[@json.drop_default]`: drop default values from JSON
+
+When a field has `[@option]` attribute one can use `[@json.drop_default]`
+attribute to make the generated `to_json` function to drop the field if it's
+value is `None`:
+
+```ocaml
+type t = {
+  a: int;
+  b: string option [@json.option] [@json.drop_default];
+} [@@deriving to_json]
+
+let t = to_json { a = 1; b = None; }
+(* {"a": 1} *)
+```
+
 #### `[@json.key "S"]`: customizing keys for record fields
 
 You can specify custom keys for record fields using the `[@json.key E]`
