@@ -20,6 +20,12 @@
   $ dune exec ./main.exe
   JSON    DATA: 1
   JSON REPRINT: 1
+  JSON    DATA: 1.1
+  JSON REPRINT: 1.1
+  JSON    DATA: 1.0
+  JSON REPRINT: 1.0
+  JSON    DATA: 42
+  JSON REPRINT: 42.0
   JSON    DATA: "OK"
   JSON REPRINT: "OK"
   JSON    DATA: "some"

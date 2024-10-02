@@ -28,6 +28,12 @@
   $ node ./_build/default/output/main.js
   JSON    DATA: 1
   JSON REPRINT: 1
+  JSON    DATA: 1.1
+  JSON REPRINT: 1.1
+  JSON    DATA: 1.0
+  JSON REPRINT: 1
+  JSON    DATA: 42
+  JSON REPRINT: 42
   JSON    DATA: "OK"
   JSON REPRINT: "OK"
   JSON    DATA: "some"

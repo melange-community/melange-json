@@ -1,4 +1,5 @@
 type user = int [@@deriving json]
+type floaty = float [@@deriving json]
 type 'a param = 'a [@@deriving json]
 type opt = string option [@@deriving json]
 type res = (int, string) result [@@deriving json]
@@ -23,6 +24,9 @@ module Cases = struct
   type of_json = C : string * (json -> 'a) * ('a -> json) * 'a -> of_json
   let of_json_cases = [
     C ({|1|}, user_of_json, user_to_json, 1);
+    C ({|1.1|}, floaty_of_json, floaty_to_json, 1.1);
+    C ({|1.0|}, floaty_of_json, floaty_to_json, 1.0);
+    C ({|42|}, floaty_of_json, floaty_to_json, 42.0);
     C ({|"OK"|}, (param_of_json string_of_json), (param_to_json string_to_json), "OK");
     C ({|"some"|}, opt_of_json, opt_to_json, (Some "some"));
     C ({|["Ok", 1]|}, res_of_json, res_to_json, Ok 1);
