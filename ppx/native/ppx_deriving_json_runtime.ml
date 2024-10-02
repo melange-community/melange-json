@@ -31,7 +31,7 @@ module Of_json = struct
   let string_of_json = Yojson.Basic.Util.to_string
   let bool_of_json = Yojson.Basic.Util.to_bool
   let int_of_json = Yojson.Basic.Util.to_int
-  let float_of_json = Yojson.Basic.Util.to_float
+  let float_of_json = Yojson.Basic.Util.to_number
 
   let unit_of_json = function
     | `Null -> ()
