@@ -541,9 +541,9 @@
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
   $ cat <<"EOF" | run
-  > type evar = A | B [@json.as "b_aliased"] [@@deriving json]
+  > type evar = A | B [@json.name "b_aliased"] [@@deriving json]
   > EOF
-  type evar = A | B [@json.as "b_aliased"] [@@deriving json]
+  type evar = A | B [@json.name "b_aliased"] [@@deriving json]
   
   include struct
     let _ = fun (_ : evar) -> ()
@@ -570,9 +570,9 @@
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
   $ cat <<"EOF" | run
-  > type epoly = [ `a [@json.as "A_aliased"] | `b ] [@@deriving json]
+  > type epoly = [ `a [@json.name "A_aliased"] | `b ] [@@deriving json]
   > EOF
-  type epoly = [ `a [@json.as "A_aliased"] | `b ] [@@deriving json]
+  type epoly = [ `a [@json.name "A_aliased"] | `b ] [@@deriving json]
   
   include struct
     let _ = fun (_ : epoly) -> ()
@@ -823,4 +823,3 @@
   
     let _ = drop_default_option_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
-

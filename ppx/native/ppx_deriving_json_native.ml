@@ -135,11 +135,11 @@ module Of_json = struct
     match vcs with
     | Vcs_enum (n, ctx) ->
         let loc = n.loc in
-        let n = Option.value ~default:n (vcs_attr_json_as ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_name ctx) in
         [%pat? `String [%p pstring ~loc:n.loc n.txt]] --> make None
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
-        let n = Option.value ~default:n (vcs_attr_json_as t.tpl_ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
         let arity = List.length t.tpl_types in
         if arity = 0 then
           [%pat? `List [ `String [%p pstring ~loc:n.loc n.txt] ]]
@@ -151,7 +151,7 @@ module Of_json = struct
           --> make (Some (build_tuple ~loc derive xexprs t.tpl_types))
     | Vcs_record (n, t) ->
         let loc = n.loc in
-        let n = Option.value ~default:n (vcs_attr_json_as t.rcd_ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_name t.rcd_ctx) in
         let allow_extra_fields =
           match t.rcd_ctx with
           | Vcs_ctx_variant cd ->
@@ -214,18 +214,18 @@ module To_json = struct
     match vcs with
     | Vcs_enum (n, ctx) ->
         let loc = n.loc in
-        let n = Option.value ~default:n (vcs_attr_json_as ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_name ctx) in
         [%expr `String [%e estring ~loc:n.loc n.txt]]
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
-        let n = Option.value ~default:n (vcs_attr_json_as t.tpl_ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
         [%expr
           `List
             (`String [%e estring ~loc:n.loc n.txt]
             :: [%e elist ~loc (List.map2 t.tpl_types es ~f:derive)])]
     | Vcs_record (n, t) ->
         let loc = n.loc in
-        let n = Option.value ~default:n (vcs_attr_json_as t.rcd_ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_name t.rcd_ctx) in
         [%expr
           `List
             (`String [%e estring ~loc:n.loc n.txt]

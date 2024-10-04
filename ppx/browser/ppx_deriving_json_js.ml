@@ -138,14 +138,14 @@ module Of_json = struct
     match c with
     | Vcs_enum (n, ctx) ->
         let loc = n.loc in
-        let n = Option.value ~default:n (vcs_attr_json_as ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_name ctx) in
         [%expr
           if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then
             [%e make None]
           else [%e next]]
     | Vcs_record (n, r) ->
         let loc = n.loc in
-        let n = Option.value ~default:n (vcs_attr_json_as r.rcd_ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_name r.rcd_ctx) in
         [%expr
           if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then (
             [%e ensure_json_array_len ~loc 2 [%expr len]];
@@ -157,7 +157,7 @@ module Of_json = struct
           else [%e next]]
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
-        let n = Option.value ~default:n (vcs_attr_json_as t.tpl_ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
         let arity = List.length t.tpl_types in
         [%expr
           if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then (
@@ -213,18 +213,18 @@ module To_json = struct
     match c with
     | Vcs_enum (n, ctx) ->
         let loc = n.loc in
-        let n = Option.value ~default:n (vcs_attr_json_as ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_name ctx) in
         let tag = [%expr string_to_json [%e estring ~loc:n.loc n.txt]] in
         as_json ~loc tag
     | Vcs_record (n, r) ->
         let loc = n.loc in
-        let n = Option.value ~default:n (vcs_attr_json_as r.rcd_ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_name r.rcd_ctx) in
         let tag = [%expr string_to_json [%e estring ~loc:n.loc n.txt]] in
         let es = [ derive_of_record derive r es ] in
         as_json ~loc (pexp_array ~loc (tag :: es))
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
-        let n = Option.value ~default:n (vcs_attr_json_as t.tpl_ctx) in
+        let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
         let tag = [%expr string_to_json [%e estring ~loc:n.loc n.txt]] in
         let es = List.map2 t.tpl_types es ~f:derive in
         as_json ~loc (pexp_array ~loc (tag :: es))
