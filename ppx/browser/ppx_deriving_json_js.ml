@@ -101,48 +101,28 @@ module Of_json = struct
 
   let derive_of_variant _derive t body x =
     let loc = t.vrt_loc in
-    let is_enum =
-      List.for_all t.vrt_cases ~f:(function
-        | Vcs_enum _ -> true
-        | _ -> false)
-    in
-    match is_enum with
-    | true ->
-        [%expr
-          let tag =
-            Ppx_deriving_json_runtime.Primitives.string_of_json [%e x]
-          in
-          [%e body]]
-    | false ->
-        [%expr
-          if Js.Array.isArray [%e x] then
-            let array = (Obj.magic [%e x] : Js.Json.t array) in
-            let len = Js.Array.length array in
-            if Stdlib.( > ) len 0 then
-              let tag = Js.Array.unsafe_get array 0 in
-              if Stdlib.( = ) (Js.typeof tag) "string" then
-                let tag = (Obj.magic tag : string) in
-                [%e body]
-              else
-                Ppx_deriving_json_runtime.of_json_error
-                  "expected a non empty JSON array with element being a \
-                   string"
-            else
-              Ppx_deriving_json_runtime.of_json_error
-                "expected a non empty JSON array"
+    [%expr
+      if Js.Array.isArray [%e x] then
+        let array = (Obj.magic [%e x] : Js.Json.t array) in
+        let len = Js.Array.length array in
+        if Stdlib.( > ) len 0 then
+          let tag = Js.Array.unsafe_get array 0 in
+          if Stdlib.( = ) (Js.typeof tag) "string" then
+            let tag = (Obj.magic tag : string) in
+            [%e body]
           else
             Ppx_deriving_json_runtime.of_json_error
-              "expected a non empty JSON array"]
+              "expected a non empty JSON array with element being a \
+               string"
+        else
+          Ppx_deriving_json_runtime.of_json_error
+            "expected a non empty JSON array"
+      else
+        Ppx_deriving_json_runtime.of_json_error
+          "expected a non empty JSON array"]
 
   let derive_of_variant_case derive make c next =
     match c with
-    | Vcs_enum (n, ctx) ->
-        let loc = n.loc in
-        let n = Option.value ~default:n (vcs_attr_json_name ctx) in
-        [%expr
-          if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then
-            [%e make None]
-          else [%e next]]
     | Vcs_record (n, r) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name r.rcd_ctx) in
@@ -211,11 +191,6 @@ module To_json = struct
 
   let derive_of_variant_case derive c es =
     match c with
-    | Vcs_enum (n, ctx) ->
-        let loc = n.loc in
-        let n = Option.value ~default:n (vcs_attr_json_name ctx) in
-        let tag = [%expr string_to_json [%e estring ~loc:n.loc n.txt]] in
-        as_json ~loc tag
     | Vcs_record (n, r) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name r.rcd_ctx) in

@@ -133,10 +133,6 @@ module Of_json = struct
 
   let derive_of_variant_case derive make vcs =
     match vcs with
-    | Vcs_enum (n, ctx) ->
-        let loc = n.loc in
-        let n = Option.value ~default:n (vcs_attr_json_name ctx) in
-        [%pat? `String [%p pstring ~loc:n.loc n.txt]] --> make None
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
@@ -212,10 +208,6 @@ module To_json = struct
 
   let derive_of_variant_case derive vcs es =
     match vcs with
-    | Vcs_enum (n, ctx) ->
-        let loc = n.loc in
-        let n = Option.value ~default:n (vcs_attr_json_name ctx) in
-        [%expr `String [%e estring ~loc:n.loc n.txt]]
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in

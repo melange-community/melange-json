@@ -372,7 +372,8 @@
     [@@@ocaml.warning "-39-11-27"]
   
     let rec other_of_json_poly =
-      (fun x -> match x with `String "C" -> Some `C | x -> None
+      (fun x ->
+         match x with `List (`String "C" :: []) -> Some `C | x -> None
         : Yojson.Basic.t -> other option)
   
     and other_of_json =
@@ -388,7 +389,8 @@
     [@@@ocaml.warning "-39-11-27"]
   
     let rec other_to_json =
-      (fun x -> match x with `C -> `String "C" : other -> Yojson.Basic.t)
+      (fun x -> match x with `C -> `List [ `String "C" ]
+        : other -> Yojson.Basic.t)
   
     let _ = other_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -553,8 +555,8 @@
     let rec evar_of_json =
       (fun x ->
          match x with
-         | `String "A" -> A
-         | `String "b_aliased" -> B
+         | `List (`String "A" :: []) -> A
+         | `List (`String "b_aliased" :: []) -> B
          | _ -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
         : Yojson.Basic.t -> evar)
   
@@ -563,7 +565,10 @@
     [@@@ocaml.warning "-39-11-27"]
   
     let rec evar_to_json =
-      (fun x -> match x with A -> `String "A" | B -> `String "b_aliased"
+      (fun x ->
+         match x with
+         | A -> `List [ `String "A" ]
+         | B -> `List [ `String "b_aliased" ]
         : evar -> Yojson.Basic.t)
   
     let _ = evar_to_json
@@ -582,8 +587,8 @@
     let rec epoly_of_json_poly =
       (fun x ->
          match x with
-         | `String "A_aliased" -> Some `a
-         | `String "b" -> Some `b
+         | `List (`String "A_aliased" :: []) -> Some `a
+         | `List (`String "b" :: []) -> Some `b
          | x -> None
         : Yojson.Basic.t -> epoly option)
   
@@ -600,7 +605,10 @@
     [@@@ocaml.warning "-39-11-27"]
   
     let rec epoly_to_json =
-      (fun x -> match x with `a -> `String "A_aliased" | `b -> `String "b"
+      (fun x ->
+         match x with
+         | `a -> `List [ `String "A_aliased" ]
+         | `b -> `List [ `String "b" ]
         : epoly -> Yojson.Basic.t)
   
     let _ = epoly_to_json
