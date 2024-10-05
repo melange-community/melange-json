@@ -8,7 +8,9 @@ type record = { name : string; age : int } [@@deriving json]
 type record_aliased = { name : string; [@json.key "my_name"] age : int; [@json.key "my_age"] [@json.default 100] } [@@deriving json]
 type record_opt = { k : int option; [@json.option] } [@@deriving json]
 type sum = A | B of int | C of { name : string } [@@deriving json]
+type sum2 = S2 of int * string [@@deriving json]
 type other = [ `C ] [@@deriving json] type poly = [ `A | `B of int | other ] [@@deriving json]
+type poly2 = [ `P2 of int * string ] [@@deriving json]
 type 'a c = [ `C of 'a ] [@@deriving json]
 type recur = A | Fix of recur [@@deriving json]
 type polyrecur = [ `A | `Fix of polyrecur ] [@@deriving json]
@@ -36,8 +38,10 @@ module Cases = struct
     C ({|["A"]|}, sum_of_json, sum_to_json, (A : sum));
     C ({|["B", 42]|}, sum_of_json, sum_to_json, (B 42 : sum));
     C ({|["C", {"name": "cname"}]|}, sum_of_json, sum_to_json, (C {name="cname"} : sum));
-    C ({|["A"]|}, poly_of_json, poly_to_json, (`A : poly));
+    C ({|["A"]|}, sum_of_json, sum_to_json, (A : sum));
+    C ({|["S2", 42, "hello"]|}, sum2_of_json, sum2_to_json, (S2 (42, "hello")));
     C ({|["B", 42]|}, poly_of_json, poly_to_json, (`B 42 : poly));
+    C ({|["P2", 42, "hello"]|}, poly2_of_json, poly2_to_json, (`P2 (42, "hello") : poly2));
     C ({|["Fix",["Fix",["Fix",["A"]]]]|}, recur_of_json, recur_to_json, (Fix (Fix (Fix A))));
     C ({|["Fix",["Fix",["Fix",["A"]]]]|}, polyrecur_of_json, polyrecur_to_json, (`Fix (`Fix (`Fix `A))));
     C ({|"A"|}, evar_of_json, evar_to_json, (A : evar));
