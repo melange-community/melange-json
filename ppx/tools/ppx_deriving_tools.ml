@@ -115,7 +115,12 @@ let register_combined ?deps name derivings =
 module Schema = struct
   let repr_row_field field =
     match field.prf_desc with
-    | Rtag (id, _, ts) -> `Rtag (id, ts)
+    | Rtag (id, _, []) -> `Rtag (id, [])
+    | Rtag (id, _, [ { ptyp_desc = Ptyp_tuple ts; _ } ]) -> `Rtag (id, ts)
+    | Rtag (id, _, [ t ]) -> `Rtag (id, [ t ])
+    | Rtag (_, _, _ :: _) ->
+        not_supported ~loc:field.prf_loc
+          "polyvariant constructor with more than one argument"
     | Rinherit { ptyp_desc = Ptyp_constr (id, ts); _ } ->
         `Rinherit (id, ts)
     | Rinherit _ ->
