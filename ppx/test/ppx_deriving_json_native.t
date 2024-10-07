@@ -20,6 +20,29 @@
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
   $ cat <<"EOF" | run
+  > type floaty = float [@@deriving json]
+  > EOF
+  type floaty = float [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : floaty) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec floaty_of_json =
+      (fun x -> float_of_json x : Yojson.Basic.t -> floaty)
+  
+    let _ = floaty_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec floaty_to_json =
+      (fun x -> float_to_json x : floaty -> Yojson.Basic.t)
+  
+    let _ = floaty_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
   > type 'a param = 'a [@@deriving json]
   > EOF
   type 'a param = 'a [@@deriving json]
@@ -63,6 +86,31 @@
       (fun x -> (option_to_json string_to_json) x : opt -> Yojson.Basic.t)
   
     let _ = opt_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
+  > type res = (int, string) result [@@deriving json]
+  > EOF
+  type res = (int, string) result [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : res) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec res_of_json =
+      (fun x -> (result_of_json int_of_json string_of_json) x
+        : Yojson.Basic.t -> res)
+  
+    let _ = res_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec res_to_json =
+      (fun x -> (result_to_json int_to_json string_to_json) x
+        : res -> Yojson.Basic.t)
+  
+    let _ = res_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
   $ cat <<"EOF" | run
@@ -362,6 +410,38 @@
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
   $ cat <<"EOF" | run
+  > type sum2 = S2 of int * string [@@deriving json]
+  > EOF
+  type sum2 = S2 of int * string [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : sum2) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec sum2_of_json =
+      (fun x ->
+         match x with
+         | `List [ `String "S2"; x_0; x_1 ] ->
+             S2 (int_of_json x_0, string_of_json x_1)
+         | _ -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+        : Yojson.Basic.t -> sum2)
+  
+    let _ = sum2_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec sum2_to_json =
+      (fun x ->
+         match x with
+         | S2 (x_0, x_1) ->
+             `List [ `String "S2"; int_to_json x_0; string_to_json x_1 ]
+        : sum2 -> Yojson.Basic.t)
+  
+    let _ = sum2_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
   > type other = [ `C ] [@@deriving json] type poly = [ `A | `B of int | other ] [@@deriving json]
   > EOF
   type other = [ `C ] [@@deriving json]
@@ -434,6 +514,46 @@
         : poly -> Yojson.Basic.t)
   
     let _ = poly_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
+  > type poly2 = [ `P2 of int * string ] [@@deriving json]
+  > EOF
+  type poly2 = [ `P2 of int * string ] [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : poly2) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec poly2_of_json_poly =
+      (fun x ->
+         match x with
+         | `List [ `String "P2"; x_0; x_1 ] ->
+             Some (`P2 (int_of_json x_0, string_of_json x_1))
+         | x -> None
+        : Yojson.Basic.t -> poly2 option)
+  
+    and poly2_of_json =
+      (fun x ->
+         match poly2_of_json_poly x with
+         | Some x -> x
+         | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+        : Yojson.Basic.t -> poly2)
+  
+    let _ = poly2_of_json_poly
+    and _ = poly2_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec poly2_to_json =
+      (fun x ->
+         match x with
+         | `P2 (x_0, x_1) ->
+             `List [ `String "P2"; int_to_json x_0; string_to_json x_1 ]
+        : poly2 -> Yojson.Basic.t)
+  
+    let _ = poly2_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
   $ cat <<"EOF" | run

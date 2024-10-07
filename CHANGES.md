@@ -8,6 +8,9 @@
 - PPX: Drop special encoding for enumeration-like variants (variants with each
   constructor having no arguments).
   ([#26](https://github.com/melange-community/melange-json/pull/26))
+- PPX: change JSON representation of polyvariants, make it compatible with 
+  ppx_deriving_yojson and ppx_yojson_conv
+  ([#27](https://github.com/melange-community/melange-json/pull/27))
 
 ## 1.3.0 (2024-08-28)
 
