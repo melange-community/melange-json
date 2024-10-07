@@ -3,8 +3,26 @@ type t = Js.Json.t
 let to_json t = t
 let of_json t = t
 let to_string t = Js.Json.stringify t
-let of_string s = Js.Json.parseExn s
-let of_json_error msg = raise @@ Json.Decode.DecodeError msg
+
+exception Of_string_error of string
+
+let of_string s =
+  try Js.Json.parseExn s
+  with exn ->
+    let msg =
+      match Js.Exn.asJsExn exn with
+      | Some jsexn -> Js.Exn.message jsexn
+      | None -> None
+    in
+    let msg =
+      (* msg really cannot be None in browser or any sane JS runtime *)
+      Option.value msg ~default:"JSON error"
+    in
+    raise (Of_string_error msg)
+
+exception Of_json_error = Json.Decode.DecodeError
+
+let of_json_error msg = raise (Of_json_error msg)
 
 module To_json = struct
   external string_to_json : string -> t = "%identity"

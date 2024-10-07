@@ -3,11 +3,30 @@ type t = Yojson.Basic.t
 let to_json t = t
 let of_json t = t
 let to_string t = Yojson.Basic.to_string t
-let of_string s = Yojson.Basic.from_string s
+
+exception Of_string_error of string
+
+let of_string s =
+  try Yojson.Basic.from_string s
+  with Yojson.Json_error msg -> raise (Of_string_error msg)
 
 exception Of_json_error of string
 
 let of_json_error msg = raise (Of_json_error msg)
+
+let show_json_type = function
+  | `Assoc _ -> "object"
+  | `Bool _ -> "bool"
+  | `Float _ -> "float"
+  | `Int _ -> "int"
+  | `List _ -> "array"
+  | `Null -> "null"
+  | `String _ -> "string"
+
+let of_json_error_type_mismatch json expected =
+  raise
+    (Of_json_error
+       ("expected " ^ expected ^ " but got " ^ show_json_type json))
 
 module To_json = struct
   let string_to_json v = `String v
@@ -28,19 +47,43 @@ module To_json = struct
 end
 
 module Of_json = struct
-  let string_of_json = Yojson.Basic.Util.to_string
-  let bool_of_json = Yojson.Basic.Util.to_bool
-  let int_of_json = Yojson.Basic.Util.to_int
-  let float_of_json = Yojson.Basic.Util.to_number
+  let typeof = function
+    | `Assoc _ -> "object"
+    | `Bool _ -> "bool"
+    | `Float _ -> "float"
+    | `Int _ -> "int"
+    | `List _ -> "array"
+    | `Null -> "null"
+    | `String _ -> "string"
+
+  let string_of_json = function
+    | `String s -> s
+    | json -> of_json_error_type_mismatch json "string"
+
+  let bool_of_json = function
+    | `Bool b -> b
+    | json -> of_json_error_type_mismatch json "bool"
+
+  let int_of_json = function
+    | `Int i -> i
+    | json -> of_json_error_type_mismatch json "int"
+
+  let float_of_json = function
+    | `Float f -> f
+    | `Int i -> float_of_int i
+    | json -> of_json_error_type_mismatch json "float"
 
   let unit_of_json = function
     | `Null -> ()
     | _ -> of_json_error "expected null"
 
-  let option_of_json v_of_json = Yojson.Basic.Util.to_option v_of_json
+  let option_of_json v_of_json = function
+    | `Null -> None
+    | json -> Some (v_of_json json)
 
-  let list_of_json v_of_json json =
-    List.map v_of_json (Yojson.Basic.Util.to_list json)
+  let list_of_json v_of_json = function
+    | `List l -> List.map v_of_json l
+    | json -> of_json_error_type_mismatch json "array"
 
   let result_of_json ok_of_json err_of_json json =
     match json with
