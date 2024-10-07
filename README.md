@@ -283,13 +283,13 @@ let t = of_json (Json.parseOrRaise {|{"A": 42, "B": "foo"}|})
 (* t = { a = 42; b = "foo"; } *)
 ```
 
-#### `[@json.as "S"]`: customizing the representation of a variant case
+#### `[@json.name "S"]`: customizing the representation of a variant case
 
-You can specify custom representation for a variant case using the `[@json.as
+You can specify custom representation for a variant case using the `[@json.name
 E]` attribute:
 
 ```ocaml
-type t = A | B [@json.as "bbb"] [@@deriving json]
+type t = A | B [@json.name "bbb"] [@@deriving json]
 
 let json = to_json B
 (* "bbb" *)

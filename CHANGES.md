@@ -4,6 +4,7 @@
   ([#13](https://github.com/melange-community/melange-json/pull/13))
 - PPX: Add `yojson` as runtime dep for the native version
   ([#15](https://github.com/melange-community/melange-json/pull/15))
+- PPX: Rename `[@json.as]` to `[@json.name]`
 
 ## 1.3.0 (2024-08-28)
 

@@ -12,14 +12,14 @@ type other = [ `C ] [@@deriving json] type poly = [ `A | `B of int | other ] [@@
 type 'a c = [ `C of 'a ] [@@deriving json]
 type recur = A | Fix of recur [@@deriving json]
 type polyrecur = [ `A | `Fix of polyrecur ] [@@deriving json]
-type evar = A | B [@json.as "b_aliased"] [@@deriving json]
-type epoly = [ `a [@json.as "A_aliased"] | `b ] [@@deriving json]
+type evar = A | B [@json.name "b_aliased"] [@@deriving json]
+type epoly = [ `a [@json.name "A_aliased"] | `b ] [@@deriving json]
 type ('a, 'b) p2 = A of 'a | B of 'b [@@deriving json]
 type allow_extra_fields = {a: int} [@@deriving json] [@@json.allow_extra_fields]
 type allow_extra_fields2 = A of {a: int} [@json.allow_extra_fields] [@@deriving json]
 type drop_default_option = { a: int; b_opt: int option; [@option] [@json.drop_default] } [@@deriving json]
 
-module Cases = struct 
+module Cases = struct
   type json = Ppx_deriving_json_runtime.t
   type of_json = C : string * (json -> 'a) * ('a -> json) * 'a -> of_json
   let of_json_cases = [
@@ -66,4 +66,3 @@ module Cases = struct
   let run ~json_of_string ~json_to_string () =
     List.iter (run' ~json_of_string ~json_to_string) of_json_cases
 end
-
