@@ -20,6 +20,29 @@
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
   $ cat <<"EOF" | run
+  > type floaty = float [@@deriving json]
+  > EOF
+  type floaty = float [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : floaty) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec floaty_of_json =
+      (fun x -> float_of_json x : Js.Json.t -> floaty)
+  
+    let _ = floaty_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec floaty_to_json =
+      (fun x -> float_to_json x : floaty -> Js.Json.t)
+  
+    let _ = floaty_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
   > type 'a param = 'a [@@deriving json]
   > EOF
   type 'a param = 'a [@@deriving json]
@@ -63,6 +86,31 @@
       (fun x -> (option_to_json string_to_json) x : opt -> Js.Json.t)
   
     let _ = opt_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
+  > type res = (int, string) result [@@deriving json]
+  > EOF
+  type res = (int, string) result [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : res) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec res_of_json =
+      (fun x -> (result_of_json int_of_json string_of_json) x
+        : Js.Json.t -> res)
+  
+    let _ = res_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec res_to_json =
+      (fun x -> (result_to_json int_to_json string_to_json) x
+        : res -> Js.Json.t)
+  
+    let _ = res_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
   $ cat <<"EOF" | run
@@ -376,6 +424,63 @@
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
   $ cat <<"EOF" | run
+  > type sum2 = S2 of int * string [@@deriving json]
+  > EOF
+  type sum2 = S2 of int * string [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : sum2) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec sum2_of_json =
+      (fun x ->
+         if Js.Array.isArray x then
+           let array = (Obj.magic x : Js.Json.t array) in
+           let len = Js.Array.length array in
+           if Stdlib.( > ) len 0 then
+             let tag = Js.Array.unsafe_get array 0 in
+             if Stdlib.( = ) (Js.typeof tag) "string" then
+               let tag = (Obj.magic tag : string) in
+               if Stdlib.( = ) tag "S2" then (
+                 if Stdlib.( <> ) len 3 then
+                   Ppx_deriving_json_runtime.of_json_error
+                     "expected a JSON array of length 3";
+                 S2
+                   ( int_of_json (Js.Array.unsafe_get array 1),
+                     string_of_json (Js.Array.unsafe_get array 2) ))
+               else Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+             else
+               Ppx_deriving_json_runtime.of_json_error
+                 "expected a non empty JSON array with element being a \
+                  string"
+           else
+             Ppx_deriving_json_runtime.of_json_error
+               "expected a non empty JSON array"
+         else
+           Ppx_deriving_json_runtime.of_json_error
+             "expected a non empty JSON array"
+        : Js.Json.t -> sum2)
+  
+    let _ = sum2_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec sum2_to_json =
+      (fun x ->
+         match x with
+         | S2 (x_0, x_1) ->
+             (Obj.magic
+                [|
+                  string_to_json "S2"; int_to_json x_0; string_to_json x_1;
+                |]
+               : Js.Json.t)
+        : sum2 -> Js.Json.t)
+  
+    let _ = sum2_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
   > type other = [ `C ] [@@deriving json] type poly = [ `A | `B of int | other ] [@@deriving json]
   > EOF
   type other = [ `C ] [@@deriving json]
@@ -476,6 +581,72 @@
         : poly -> Js.Json.t)
   
     let _ = poly_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
+  > type poly2 = [ `P2 of int * string ] [@@deriving json]
+  > EOF
+  type poly2 = [ `P2 of int * string ] [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : poly2) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec poly2_of_json_poly =
+      (fun x ->
+         if Js.Array.isArray x then
+           let array = (Obj.magic x : Js.Json.t array) in
+           let len = Js.Array.length array in
+           if Stdlib.( > ) len 0 then
+             let tag = Js.Array.unsafe_get array 0 in
+             if Stdlib.( = ) (Js.typeof tag) "string" then
+               let tag = (Obj.magic tag : string) in
+               if Stdlib.( = ) tag "P2" then (
+                 if Stdlib.( <> ) len 3 then
+                   Ppx_deriving_json_runtime.of_json_error
+                     "expected a JSON array of length 3";
+                 Some
+                   (`P2
+                     ( int_of_json (Js.Array.unsafe_get array 1),
+                       string_of_json (Js.Array.unsafe_get array 2) )))
+               else None
+             else
+               Ppx_deriving_json_runtime.of_json_error
+                 "expected a non empty JSON array with element being a \
+                  string"
+           else
+             Ppx_deriving_json_runtime.of_json_error
+               "expected a non empty JSON array"
+         else
+           Ppx_deriving_json_runtime.of_json_error
+             "expected a non empty JSON array"
+        : Js.Json.t -> poly2 option)
+  
+    and poly2_of_json =
+      (fun x ->
+         match poly2_of_json_poly x with
+         | Some x -> x
+         | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+        : Js.Json.t -> poly2)
+  
+    let _ = poly2_of_json_poly
+    and _ = poly2_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec poly2_to_json =
+      (fun x ->
+         match x with
+         | `P2 (x_0, x_1) ->
+             (Obj.magic
+                [|
+                  string_to_json "P2"; int_to_json x_0; string_to_json x_1;
+                |]
+               : Js.Json.t)
+        : poly2 -> Js.Json.t)
+  
+    let _ = poly2_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
   $ cat <<"EOF" | run
