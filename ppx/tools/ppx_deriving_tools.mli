@@ -52,7 +52,6 @@ module Conv : sig
   type variant_case =
     | Vcs_tuple of label loc * variant_case_ctx tuple
     | Vcs_record of label loc * variant_case_ctx record
-    | Vcs_enum of label loc * variant_case_ctx
 
   and variant_case_ctx =
     | Vcs_ctx_variant of constructor_declaration

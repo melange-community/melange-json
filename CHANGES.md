@@ -5,6 +5,9 @@
 - PPX: Add `yojson` as runtime dep for the native version
   ([#15](https://github.com/melange-community/melange-json/pull/15))
 - PPX: Rename `[@json.as]` to `[@json.name]`
+- PPX: Drop special encoding for enumeration-like variants (variants with each
+  constructor having no arguments).
+  ([#26](https://github.com/melange-community/melange-json/pull/26))
 - PPX: change JSON representation of polyvariants, make it compatible with 
   ppx_deriving_yojson and ppx_yojson_conv
   ([#27](https://github.com/melange-community/melange-json/pull/27))

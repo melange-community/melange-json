@@ -406,7 +406,6 @@ module Conv = struct
   type variant_case =
     | Vcs_tuple of label loc * variant_case_ctx tuple
     | Vcs_record of label loc * variant_case_ctx record
-    | Vcs_enum of label loc * variant_case_ctx
 
   and variant_case_ctx =
     | Vcs_ctx_variant of constructor_declaration
@@ -423,28 +422,9 @@ module Conv = struct
     | Vrt_ctx_polyvariant of core_type
 
   let repr_polyvariant_cases cs =
-    let cases =
-      List.rev cs |> List.map ~f:(fun c -> c, Schema.repr_row_field c)
-    in
-    let is_enum =
-      List.for_all cases ~f:(fun (_, r) ->
-          match r with
-          | `Rtag (_, ts) -> (
-              match ts with [] -> true | _ :: _ -> false)
-          | `Rinherit _ -> false)
-    in
-    is_enum, cases
+    List.rev cs |> List.map ~f:(fun c -> c, Schema.repr_row_field c)
 
-  let repr_variant_cases cs =
-    let cs = List.rev cs in
-    let is_enum =
-      List.for_all cs ~f:(fun (c : constructor_declaration) ->
-          match c.pcd_args with
-          | Pcstr_record [] -> true
-          | Pcstr_tuple [] -> true
-          | Pcstr_record _ | Pcstr_tuple _ -> false)
-    in
-    is_enum, cs
+  let repr_variant_cases cs = List.rev cs
 
   let deriving_of ~name ~of_t ~error ~derive_of_tuple ~derive_of_record
       ~derive_of_variant ~derive_of_variant_case () =
@@ -467,7 +447,7 @@ module Conv = struct
 
         method! derive_of_polyvariant t (cs : row_field list) x =
           let loc = t.ptyp_loc in
-          let is_enum, cases = repr_polyvariant_cases cs in
+          let cases = repr_polyvariant_cases cs in
           let body, cases =
             List.fold_left cases
               ~init:([%expr None], [])
@@ -479,12 +459,10 @@ module Conv = struct
                     in
                     let ctx = Vcs_ctx_polyvariant c in
                     let case =
-                      if is_enum then Vcs_enum (n, ctx)
-                      else
-                        let t =
-                          { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
-                        in
-                        Vcs_tuple (n, t)
+                      let t =
+                        { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
+                      in
+                      Vcs_tuple (n, t)
                     in
                     let next =
                       derive_of_variant_case self#derive_of_core_type make
@@ -529,7 +507,7 @@ module Conv = struct
 
        method! derive_of_variant td cs x =
          let loc = td.ptype_loc in
-         let is_enum, cs = repr_variant_cases cs in
+         let cs = repr_variant_cases cs in
          let body, cases =
            List.fold_left cs
              ~init:(error ~loc, [])
@@ -542,12 +520,10 @@ module Conv = struct
                match c.pcd_args with
                | Pcstr_record fs ->
                    let t =
-                     if is_enum then Vcs_enum (n, ctx)
-                     else
-                       let t =
-                         { rcd_loc = loc; rcd_fields = fs; rcd_ctx = ctx }
-                       in
-                       Vcs_record (n, t)
+                     let t =
+                       { rcd_loc = loc; rcd_fields = fs; rcd_ctx = ctx }
+                     in
+                     Vcs_record (n, t)
                    in
                    let next =
                      derive_of_variant_case self#derive_of_core_type
@@ -556,12 +532,10 @@ module Conv = struct
                    next, t :: cases
                | Pcstr_tuple ts ->
                    let case =
-                     if is_enum then Vcs_enum (n, ctx)
-                     else
-                       let t =
-                         { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
-                       in
-                       Vcs_tuple (n, t)
+                     let t =
+                       { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
+                     in
+                     Vcs_tuple (n, t)
                    in
                    let next =
                      derive_of_variant_case self#derive_of_core_type
@@ -580,7 +554,7 @@ module Conv = struct
 
        method! derive_of_polyvariant t (cs : row_field list) x =
          let loc = t.ptyp_loc in
-         let is_enum, cases = repr_polyvariant_cases cs in
+         let cases = repr_polyvariant_cases cs in
          let body, cases =
            List.fold_left cases
              ~init:(error ~loc, [])
@@ -590,12 +564,10 @@ module Conv = struct
                | `Rtag (n, ts) ->
                    let make arg = pexp_variant ~loc:n.loc n.txt arg in
                    let case =
-                     if is_enum then Vcs_enum (n, ctx)
-                     else
-                       let t =
-                         { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
-                       in
-                       Vcs_tuple (n, t)
+                     let t =
+                       { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
+                     in
+                     Vcs_tuple (n, t)
                    in
                    let next =
                      derive_of_variant_case self#derive_of_core_type make
@@ -693,18 +665,16 @@ module Conv = struct
 
         method! derive_of_polyvariant t (cs : row_field list) x =
           let loc = t.ptyp_loc in
-          let is_enum, cases = repr_polyvariant_cases cs in
+          let cases = repr_polyvariant_cases cs in
           let ctors, inherits =
             List.partition_map cases ~f:(fun (c, r) ->
                 let ctx = Vcs_ctx_polyvariant c in
                 match r with
                 | `Rtag (n, ts) ->
-                    if is_enum then Left (n, Vcs_enum (n, ctx))
-                    else
-                      let t =
-                        { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
-                      in
-                      Left (n, Vcs_tuple (n, t))
+                    let t =
+                      { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
+                    in
+                    Left (n, Vcs_tuple (n, t))
                 | `Rinherit (n, ts) -> Right (n, ts))
           in
           let catch_all =
@@ -749,7 +719,7 @@ module Conv = struct
 
        method! derive_of_variant td cs x =
          let loc = td.ptype_loc in
-         let is_enum, cs = repr_variant_cases cs in
+         let cs = repr_variant_cases cs in
          let cases =
            List.fold_left cs
              ~init:[ [%pat? _] --> error ~loc ]
@@ -762,24 +732,20 @@ module Conv = struct
                match c.pcd_args with
                | Pcstr_record fs ->
                    let t =
-                     if is_enum then Vcs_enum (n, ctx)
-                     else
-                       let r =
-                         { rcd_loc = loc; rcd_fields = fs; rcd_ctx = ctx }
-                       in
-                       Vcs_record (n, r)
+                     let r =
+                       { rcd_loc = loc; rcd_fields = fs; rcd_ctx = ctx }
+                     in
+                     Vcs_record (n, r)
                    in
                    derive_of_variant_case self#derive_of_core_type
                      (make n) t
                    :: next
                | Pcstr_tuple ts ->
                    let t =
-                     if is_enum then Vcs_enum (n, ctx)
-                     else
-                       let t =
-                         { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
-                       in
-                       Vcs_tuple (n, t)
+                     let t =
+                       { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
+                     in
+                     Vcs_tuple (n, t)
                    in
                    derive_of_variant_case self#derive_of_core_type
                      (make n) t
@@ -789,18 +755,16 @@ module Conv = struct
 
        method! derive_of_polyvariant t (cs : row_field list) x =
          let loc = t.ptyp_loc in
-         let is_enum, cases = repr_polyvariant_cases cs in
+         let cases = repr_polyvariant_cases cs in
          let ctors, inherits =
            List.partition_map cases ~f:(fun (c, r) ->
                let ctx = Vcs_ctx_polyvariant c in
                match r with
                | `Rtag (n, ts) ->
-                   if is_enum then Left (n, Vcs_enum (n, ctx))
-                   else
-                     let t =
-                       { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
-                     in
-                     Left (n, Vcs_tuple (n, t))
+                   let t =
+                     { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
+                   in
+                   Left (n, Vcs_tuple (n, t))
                | `Rinherit (n, ts) -> Right (n, ts))
          in
          let catch_all =
@@ -904,7 +868,7 @@ module Conv = struct
          let ctor_pat (n : label loc) pat =
            ppat_construct ~loc:n.loc (map_loc lident n) pat
          in
-         let is_enum, cs = repr_variant_cases cs in
+         let cs = repr_variant_cases cs in
          pexp_match ~loc x
            (List.rev_map cs ~f:(fun c ->
                 let n = c.pcd_name in
@@ -916,16 +880,10 @@ module Conv = struct
                         (List.map fs ~f:(fun f -> f.pld_name))
                     in
                     let t =
-                      if is_enum then Vcs_enum (n, ctx)
-                      else
-                        let t =
-                          {
-                            rcd_loc = loc;
-                            rcd_fields = fs;
-                            rcd_ctx = ctx;
-                          }
-                        in
-                        Vcs_record (n, t)
+                      let t =
+                        { rcd_loc = loc; rcd_fields = fs; rcd_ctx = ctx }
+                      in
+                      Vcs_record (n, t)
                     in
                     ctor_pat n (Some p)
                     --> derive_of_variant_case self#derive_of_core_type t
@@ -933,12 +891,10 @@ module Conv = struct
                 | Pcstr_tuple ts ->
                     let arity = List.length ts in
                     let t =
-                      if is_enum then Vcs_enum (n, ctx)
-                      else
-                        let t =
-                          { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
-                        in
-                        Vcs_tuple (n, t)
+                      let t =
+                        { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
+                      in
+                      Vcs_tuple (n, t)
                     in
                     let p, es = gen_pat_tuple ~loc "x" arity in
                     ctor_pat n (if arity = 0 then None else Some p)
@@ -947,25 +903,22 @@ module Conv = struct
 
        method! derive_of_polyvariant t (cs : row_field list) x =
          let loc = t.ptyp_loc in
-         let is_enum, cases = repr_polyvariant_cases cs in
+         let cases = repr_polyvariant_cases cs in
          let cases =
            List.rev_map cases ~f:(fun (c, r) ->
                let ctx = Vcs_ctx_polyvariant c in
                match r with
                | `Rtag (n, []) ->
                    let t =
-                     if is_enum then Vcs_enum (n, ctx)
-                     else
-                       let t =
-                         { tpl_loc = loc; tpl_types = []; tpl_ctx = ctx }
-                       in
-                       Vcs_tuple (n, t)
+                     let t =
+                       { tpl_loc = loc; tpl_types = []; tpl_ctx = ctx }
+                     in
+                     Vcs_tuple (n, t)
                    in
                    ppat_variant ~loc n.txt None
                    --> derive_of_variant_case self#derive_of_core_type t
                          []
                | `Rtag (n, ts) ->
-                   assert (not is_enum);
                    let t =
                      { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
                    in
@@ -975,7 +928,6 @@ module Conv = struct
                          (Vcs_tuple (n, t))
                          es
                | `Rinherit (n, ts) ->
-                   assert (not is_enum);
                    [%pat? [%p ppat_type ~loc n] as x]
                    --> self#derive_of_core_type
                          (ptyp_constr ~loc:n.loc n ts)

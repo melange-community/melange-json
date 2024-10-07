@@ -492,8 +492,29 @@
   
     let rec other_of_json_poly =
       (fun x ->
-         let tag = Ppx_deriving_json_runtime.Primitives.string_of_json x in
-         if Stdlib.( = ) tag "C" then Some `C else None
+         if Js.Array.isArray x then
+           let array = (Obj.magic x : Js.Json.t array) in
+           let len = Js.Array.length array in
+           if Stdlib.( > ) len 0 then
+             let tag = Js.Array.unsafe_get array 0 in
+             if Stdlib.( = ) (Js.typeof tag) "string" then
+               let tag = (Obj.magic tag : string) in
+               if Stdlib.( = ) tag "C" then (
+                 if Stdlib.( <> ) len 1 then
+                   Ppx_deriving_json_runtime.of_json_error
+                     "expected a JSON array of length 1";
+                 Some `C)
+               else None
+             else
+               Ppx_deriving_json_runtime.of_json_error
+                 "expected a non empty JSON array with element being a \
+                  string"
+           else
+             Ppx_deriving_json_runtime.of_json_error
+               "expected a non empty JSON array"
+         else
+           Ppx_deriving_json_runtime.of_json_error
+             "expected a non empty JSON array"
         : Js.Json.t -> other option)
   
     and other_of_json =
@@ -510,7 +531,8 @@
   
     let rec other_to_json =
       (fun x ->
-         match x with `C -> (Obj.magic (string_to_json "C") : Js.Json.t)
+         match x with
+         | `C -> (Obj.magic [| string_to_json "C" |] : Js.Json.t)
         : other -> Js.Json.t)
   
     let _ = other_to_json
@@ -841,10 +863,34 @@
   
     let rec evar_of_json =
       (fun x ->
-         let tag = Ppx_deriving_json_runtime.Primitives.string_of_json x in
-         if Stdlib.( = ) tag "A" then A
-         else if Stdlib.( = ) tag "b_aliased" then B
-         else Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+         if Js.Array.isArray x then
+           let array = (Obj.magic x : Js.Json.t array) in
+           let len = Js.Array.length array in
+           if Stdlib.( > ) len 0 then
+             let tag = Js.Array.unsafe_get array 0 in
+             if Stdlib.( = ) (Js.typeof tag) "string" then
+               let tag = (Obj.magic tag : string) in
+               if Stdlib.( = ) tag "A" then (
+                 if Stdlib.( <> ) len 1 then
+                   Ppx_deriving_json_runtime.of_json_error
+                     "expected a JSON array of length 1";
+                 A)
+               else if Stdlib.( = ) tag "b_aliased" then (
+                 if Stdlib.( <> ) len 1 then
+                   Ppx_deriving_json_runtime.of_json_error
+                     "expected a JSON array of length 1";
+                 B)
+               else Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+             else
+               Ppx_deriving_json_runtime.of_json_error
+                 "expected a non empty JSON array with element being a \
+                  string"
+           else
+             Ppx_deriving_json_runtime.of_json_error
+               "expected a non empty JSON array"
+         else
+           Ppx_deriving_json_runtime.of_json_error
+             "expected a non empty JSON array"
         : Js.Json.t -> evar)
   
     let _ = evar_of_json
@@ -854,8 +900,8 @@
     let rec evar_to_json =
       (fun x ->
          match x with
-         | A -> (Obj.magic (string_to_json "A") : Js.Json.t)
-         | B -> (Obj.magic (string_to_json "b_aliased") : Js.Json.t)
+         | A -> (Obj.magic [| string_to_json "A" |] : Js.Json.t)
+         | B -> (Obj.magic [| string_to_json "b_aliased" |] : Js.Json.t)
         : evar -> Js.Json.t)
   
     let _ = evar_to_json
@@ -873,10 +919,34 @@
   
     let rec epoly_of_json_poly =
       (fun x ->
-         let tag = Ppx_deriving_json_runtime.Primitives.string_of_json x in
-         if Stdlib.( = ) tag "A_aliased" then Some `a
-         else if Stdlib.( = ) tag "b" then Some `b
-         else None
+         if Js.Array.isArray x then
+           let array = (Obj.magic x : Js.Json.t array) in
+           let len = Js.Array.length array in
+           if Stdlib.( > ) len 0 then
+             let tag = Js.Array.unsafe_get array 0 in
+             if Stdlib.( = ) (Js.typeof tag) "string" then
+               let tag = (Obj.magic tag : string) in
+               if Stdlib.( = ) tag "A_aliased" then (
+                 if Stdlib.( <> ) len 1 then
+                   Ppx_deriving_json_runtime.of_json_error
+                     "expected a JSON array of length 1";
+                 Some `a)
+               else if Stdlib.( = ) tag "b" then (
+                 if Stdlib.( <> ) len 1 then
+                   Ppx_deriving_json_runtime.of_json_error
+                     "expected a JSON array of length 1";
+                 Some `b)
+               else None
+             else
+               Ppx_deriving_json_runtime.of_json_error
+                 "expected a non empty JSON array with element being a \
+                  string"
+           else
+             Ppx_deriving_json_runtime.of_json_error
+               "expected a non empty JSON array"
+         else
+           Ppx_deriving_json_runtime.of_json_error
+             "expected a non empty JSON array"
         : Js.Json.t -> epoly option)
   
     and epoly_of_json =
@@ -894,8 +964,8 @@
     let rec epoly_to_json =
       (fun x ->
          match x with
-         | `a -> (Obj.magic (string_to_json "A_aliased") : Js.Json.t)
-         | `b -> (Obj.magic (string_to_json "b") : Js.Json.t)
+         | `a -> (Obj.magic [| string_to_json "A_aliased" |] : Js.Json.t)
+         | `b -> (Obj.magic [| string_to_json "b" |] : Js.Json.t)
         : epoly -> Js.Json.t)
   
     let _ = epoly_to_json

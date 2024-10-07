@@ -44,10 +44,6 @@ module Cases = struct
     C ({|["P2", 42, "hello"]|}, poly2_of_json, poly2_to_json, (`P2 (42, "hello") : poly2));
     C ({|["Fix",["Fix",["Fix",["A"]]]]|}, recur_of_json, recur_to_json, (Fix (Fix (Fix A))));
     C ({|["Fix",["Fix",["Fix",["A"]]]]|}, polyrecur_of_json, polyrecur_to_json, (`Fix (`Fix (`Fix `A))));
-    C ({|"A"|}, evar_of_json, evar_to_json, (A : evar));
-    C ({|"b_aliased"|}, evar_of_json, evar_to_json, (B : evar)); (* variant B repr as "b_aliased" in JSON *)
-    C ({|"b"|}, epoly_of_json, epoly_to_json, (`b : epoly));
-    C ({|"A_aliased"|}, epoly_of_json, epoly_to_json, (`a : epoly)); (* polyvariant `a aliased to "A_aliased"*)
     C ({|{"my_name":"N","my_age":1}|}, record_aliased_of_json, record_aliased_to_json, {name="N"; age=1});
     C ({|{"my_name":"N"}|}, record_aliased_of_json, record_aliased_to_json, {name="N"; age=100});
     C ({|{}|}, record_opt_of_json, record_opt_to_json, {k=None});

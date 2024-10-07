@@ -206,22 +206,6 @@ and `of_json` extension points:
 let json = [%to_json: int * string] (42, "foo")
 ```
 
-#### Enumeration-like variants
-
-Note that variants where all constructors have no arguments are treated as
-enumeration-like variants:
-
-```ocaml
-type t = A | B [@@deriving json]
-```
-
-Such variants are represented as strings in JSON:
-
-```ocaml
-let json = to_json A
-(* "A" *)
-```
-
 #### `[@json.default E]`: default values for records
 
 You can specify default values for record fields using the `[@json.default E]`
