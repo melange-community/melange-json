@@ -4,17 +4,9 @@ open Ast_builder.Default
 open StdLabels
 open Expansion_helpers
 
-exception Error of location * string
-
-let error ~loc what = raise (Error (loc, what))
-
 let not_supported ~loc what =
-  raise (Error (loc, sprintf "%s are not supported" what))
+  Location.raise_errorf ~loc "%s are not supported" what
 
-let pexp_error ~loc msg =
-  pexp_extension ~loc (Location.error_extensionf ~loc "%s" msg)
-
-let stri_error ~loc msg = [%stri [%%ocaml.error [%e estring ~loc msg]]]
 let map_loc f a_loc = { a_loc with txt = f a_loc.txt }
 
 let gen_bindings ~loc prefix n =
@@ -166,7 +158,9 @@ module Schema = struct
            match p.ptyp_desc with
            | Ptyp_var name -> ptyp_var ~loc name
            | Ptyp_any -> ptyp_any ~loc
-           | _ -> error ~loc "this cannot be a type parameter"))
+           | _ ->
+               Location.raise_errorf ~loc
+                 "this cannot be a type parameter"))
 
   class virtual deriving0 =
     object (self)
@@ -222,7 +216,9 @@ module Schema = struct
               | Ptyp_var txt -> { txt; loc = t.ptyp_loc }
               | Ptyp_any ->
                   { txt = gen_symbol ~prefix:"_" (); loc = t.ptyp_loc }
-              | _ -> error ~loc "type variable is not a variable")
+              | _ ->
+                  Location.raise_errorf ~loc
+                    "type variable is not a variable")
         in
         let expr =
           match repr_type_declaration td with
@@ -346,7 +342,9 @@ module Schema = struct
               | Ptyp_var txt -> { txt; loc = t.ptyp_loc }
               | Ptyp_any ->
                   { txt = gen_symbol ~prefix:"_" (); loc = t.ptyp_loc }
-              | _ -> error ~loc "type variable is not a variable")
+              | _ ->
+                  Location.raise_errorf ~loc
+                    "type variable is not a variable")
         in
         let x = [%expr x] in
         let expr =

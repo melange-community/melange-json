@@ -143,17 +143,8 @@ module Conv : sig
     *)
 end
 
-(** Utils for error handling. *)
-
-exception Error of location * string
-
-val error : loc:location -> string -> 'a
-
 val not_supported : loc:location -> string -> 'a
 (** [not_supported what] terminates ppx with an error message telling [what] unsupported. *)
-
-val pexp_error : loc:location -> label -> expression
-val stri_error : loc:location -> label -> structure_item
 
 val gen_tuple : loc:location -> label -> int -> pattern list * expression
 (** [let patts, expr = gen_tuple label n in ...] creates a tuple expression
