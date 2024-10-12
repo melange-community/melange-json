@@ -211,10 +211,13 @@ module To_json = struct
 end
 
 let () =
-  let _ = Ppx_deriving_tools.register Of_json.deriving in
-  let _ = Ppx_deriving_tools.register To_json.deriving in
-  let _ =
+  let of_json = Ppx_deriving_tools.register Of_json.deriving in
+  let to_json = Ppx_deriving_tools.register To_json.deriving in
+  let json =
     Ppx_deriving_tools.register_combined "json"
       [ To_json.deriving; Of_json.deriving ]
   in
+  let (_ : Deriving.t) = Of_json_string.register ~of_json () in
+  let (_ : Deriving.t) = To_json_string.register ~to_json () in
+  let (_ : Deriving.t) = Json_string.register ~json () in
   ()

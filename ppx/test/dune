@@ -2,6 +2,7 @@
  (deps
   (package melange-json)
   ./example.ml
+  ./example_json_string.ml
   ../../.ocamlformat
   ../native/ppx_deriving_json_native_test.exe
   ../browser/ppx_deriving_json_js_test.exe))
