@@ -9,10 +9,9 @@
   >   (preprocess (pps melange-json-native.ppx)))' > dune
 
   $ echo '
-  > open Example
-  > let () = Cases.run ()
-  >   ~json_to_string:Yojson.Basic.to_string
-  >   ~json_of_string:Yojson.Basic.from_string
+  > let () = Example.test ()
+  > let () = print_endline "*** json_string deriver tests ***"
+  > let () = Example_json_string.test ()
   > ' >> main.ml
 
   $ dune build ./main.exe
@@ -76,3 +75,15 @@
   JSON REPRINT: {"a":1}
   JSON    DATA: {"a":1,"b_opt":2}
   JSON REPRINT: {"a":1,"b_opt":2}
+  *** json_string deriver tests ***
+  ** To_json_string **
+  A 42 -> ["A",42]
+  B false -> ["B",false]
+  ** Of_json_string **
+  ["A", 42] = A 42 -> true
+  ["B", false] = B false -> true
+  ** Json_string **
+  A 42 -> ["A",42]
+  B false -> ["B",false]
+  ["A", 42] = A 42 -> true
+  ["B", false] = B false -> true

@@ -279,6 +279,21 @@ let json = to_json B
 (* "bbb" *)
 ```
 
+#### `[@@deriving json_string]`: a shortcut for JSON string conversion
+
+For convenience, one can use `[@@deriving json_string]` to generate converters
+directly to and from JSON strings:
+
+```ocaml
+type t = A [@@deriving json, json_string]
+
+let "\"A\"" = to_json_string A
+let A = of_json_string "\"A\""
+```
+
+Similarly, there's `[@@deriving to_json_string]` and `[@@deriving
+of_json_string]` to generate the converters separately.
+
 ## PPX for OCaml native
 
 A similar PPX is exposed in the `melange-json-native` package, which works with

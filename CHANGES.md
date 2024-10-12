@@ -13,6 +13,9 @@
   ([#27](https://github.com/melange-community/melange-json/pull/27))
 - PPX: Consistent use of exceptions in runtime.
   ([#28](https://github.com/melange-community/melange-json/pull/28))
+- PPX: add `[@@json_string]` for deriving converters to/from JSON strings
+  directly
+  ([#30](https://github.com/melange-community/melange-json/pull/30))
 
 ## 1.3.0 (2024-08-28)
 
