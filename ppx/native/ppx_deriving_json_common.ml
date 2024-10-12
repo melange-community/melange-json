@@ -74,7 +74,7 @@ let ld_drop_default ld =
   let loc = ld.pld_loc in
   match ld_attr_json_drop_default ld, ld_attr_json_option ld with
   | Some (), None ->
-      Ppx_deriving_tools.error ~loc
+      Location.raise_errorf ~loc
         "found [@drop_default] attribute without [@option]"
   | Some (), Some () -> `Drop_option
   | None, _ -> `No
