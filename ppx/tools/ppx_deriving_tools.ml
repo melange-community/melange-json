@@ -165,7 +165,8 @@ module Schema = struct
       (List.map td.ptype_params ~f:(fun (p, _) ->
            match p.ptyp_desc with
            | Ptyp_var name -> ptyp_var ~loc name
-           | _ -> failwith "this cannot be a type parameter"))
+           | Ptyp_any -> ptyp_any ~loc
+           | _ -> error ~loc "this cannot be a type parameter"))
 
   class virtual deriving0 =
     object (self)
@@ -219,7 +220,9 @@ module Schema = struct
           List.map td.ptype_params ~f:(fun (t, _) ->
               match t.ptyp_desc with
               | Ptyp_var txt -> { txt; loc = t.ptyp_loc }
-              | _ -> failwith "type variable is not a variable")
+              | Ptyp_any ->
+                  { txt = gen_symbol ~prefix:"_" (); loc = t.ptyp_loc }
+              | _ -> error ~loc "type variable is not a variable")
         in
         let expr =
           match repr_type_declaration td with
@@ -341,7 +344,9 @@ module Schema = struct
           List.rev_map td.ptype_params ~f:(fun (t, _) ->
               match t.ptyp_desc with
               | Ptyp_var txt -> { txt; loc = t.ptyp_loc }
-              | _ -> failwith "type variable is not a variable")
+              | Ptyp_any ->
+                  { txt = gen_symbol ~prefix:"_" (); loc = t.ptyp_loc }
+              | _ -> error ~loc "type variable is not a variable")
         in
         let x = [%expr x] in
         let expr =
