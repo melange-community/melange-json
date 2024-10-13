@@ -6,7 +6,7 @@
   > (library
   >  (name lib)
   >  (modes melange)
-  >  (modules example main)
+  >  (modules example example_json_string main)
   >  (flags :standard -w -37-69 -open Ppx_deriving_json_runtime.Primitives)
   >  (preprocess (pps melange.ppx melange-json.ppx)))
   > (melange.emit
@@ -17,10 +17,10 @@
   >  (module_systems commonjs))' > dune
 
   $ echo '
-  > open Example
-  > let () = Cases.run ()
-  >   ~json_to_string:Js.Json.stringify
-  >   ~json_of_string:Js.Json.parseExn
+  > let () = print_endline "*** json deriver tests ***"
+  > let () = Example.test ()
+  > let () = print_endline "*** json_string deriver tests ***"
+  > let () = Example_json_string.test ()
   > ' >> main.ml
 
   $ dune build @js
