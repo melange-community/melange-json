@@ -292,7 +292,7 @@ let A = of_json_string "\"A\""
 ```
 
 Similarly, there's `[@@deriving to_json_string]` and `[@@deriving
-of_json_string]` to generate only one of the converters.
+of_json_string]` to generate the converters separately.
 
 ## PPX for OCaml native
 
