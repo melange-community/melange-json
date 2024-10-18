@@ -1,18 +1,19 @@
 ## Unpublished
 
+- **[breaking]** PPX: Rename `[@json.as]` to `[@json.name]`
+  ([#23](https://github.com/melange-community/melange-json/pull/23))
+- **[breaking]** PPX: Drop special encoding for enumeration-like variants (variants with each
+  constructor having no arguments).
+  ([#26](https://github.com/melange-community/melange-json/pull/26))
+- **[breaking]** PPX: change JSON representation of polyvariants, make it compatible with 
+  ppx_deriving_yojson and ppx_yojson_conv
+  ([#27](https://github.com/melange-community/melange-json/pull/27))
+- **[breaking]** PPX: Consistent use of exceptions in runtime.
+  ([#28](https://github.com/melange-community/melange-json/pull/28))
 - PPX: Add runtime for `result`
   ([#13](https://github.com/melange-community/melange-json/pull/13))
 - PPX: Add `yojson` as runtime dep for the native version
   ([#15](https://github.com/melange-community/melange-json/pull/15))
-- PPX: Rename `[@json.as]` to `[@json.name]`
-- PPX: Drop special encoding for enumeration-like variants (variants with each
-  constructor having no arguments).
-  ([#26](https://github.com/melange-community/melange-json/pull/26))
-- PPX: change JSON representation of polyvariants, make it compatible with 
-  ppx_deriving_yojson and ppx_yojson_conv
-  ([#27](https://github.com/melange-community/melange-json/pull/27))
-- PPX: Consistent use of exceptions in runtime.
-  ([#28](https://github.com/melange-community/melange-json/pull/28))
 - PPX: add `[@@json_string]` for deriving converters to/from JSON strings
   directly
   ([#30](https://github.com/melange-community/melange-json/pull/30))
