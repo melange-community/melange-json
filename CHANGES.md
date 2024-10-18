@@ -11,6 +11,8 @@
 - PPX: change JSON representation of polyvariants, make it compatible with 
   ppx_deriving_yojson and ppx_yojson_conv
   ([#27](https://github.com/melange-community/melange-json/pull/27))
+- PPX: Consistent use of exceptions in runtime.
+  ([#28](https://github.com/melange-community/melange-json/pull/28))
 
 ## 1.3.0 (2024-08-28)
 
