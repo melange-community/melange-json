@@ -11,11 +11,16 @@ class virtual deriving : object
     loc:location -> path:label -> core_type -> expression
   (** a deriver can be applied to as type expression as extension node. *)
 
-  method virtual generator :
+  method virtual str_type_decl :
     ctxt:Expansion_context.Deriver.t ->
     rec_flag * type_declaration list ->
     structure
   (** or it can be attached to a type declaration. *)
+
+  method virtual sig_type_decl :
+    ctxt:Expansion_context.Deriver.t ->
+    rec_flag * type_declaration list ->
+    signature
 end
 
 val register : ?deps:Deriving.t list -> deriving -> Deriving.t
