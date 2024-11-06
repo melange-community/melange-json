@@ -82,27 +82,38 @@ class virtual deriving =
     method virtual extension
         : loc:location -> path:label -> core_type -> expression
 
-    method virtual generator
+    method virtual str_type_decl
         : ctxt:Expansion_context.Deriver.t ->
           rec_flag * type_declaration list ->
           structure
+
+    method virtual sig_type_decl
+        : ctxt:Expansion_context.Deriver.t ->
+          rec_flag * type_declaration list ->
+          signature
   end
 
 let register ?deps deriving =
-  Deriving.add deriving#name
-    ~str_type_decl:
-      (Deriving.Generator.V2.make ?deps Deriving.Args.empty
-         deriving#generator)
-    ~extension:deriving#extension
+  let args = Deriving.Args.empty in
+  let str_type_decl = deriving#str_type_decl in
+  let sig_type_decl = deriving#sig_type_decl in
+  Deriving.add deriving#name ~extension:deriving#extension
+    ~str_type_decl:(Deriving.Generator.V2.make ?deps args str_type_decl)
+    ~sig_type_decl:(Deriving.Generator.V2.make ?deps args sig_type_decl)
 
 let register_combined ?deps name derivings =
-  let generator ~ctxt bindings =
+  let args = Deriving.Args.empty in
+  let str_type_decl ~ctxt bindings =
     List.fold_left derivings ~init:[] ~f:(fun str d ->
-        d#generator ~ctxt bindings @ str)
+        d#str_type_decl ~ctxt bindings @ str)
+  in
+  let sig_type_decl ~ctxt bindings =
+    List.fold_left derivings ~init:[] ~f:(fun str d ->
+        d#sig_type_decl ~ctxt bindings @ str)
   in
   Deriving.add name
-    ~str_type_decl:
-      (Deriving.Generator.V2.make ?deps Deriving.Args.empty generator)
+    ~str_type_decl:(Deriving.Generator.V2.make ?deps args str_type_decl)
+    ~sig_type_decl:(Deriving.Generator.V2.make ?deps args sig_type_decl)
 
 module Schema = struct
   let repr_row_field field =
@@ -161,6 +172,30 @@ module Schema = struct
            | _ ->
                Location.raise_errorf ~loc
                  "this cannot be a type parameter"))
+
+  let derive_sig_type_decl ~derive_t ~derive_label ~ctxt (_rec_flag, tds)
+      =
+    let loc = Expansion_context.Deriver.derived_item_loc ctxt in
+    List.map tds ~f:(fun td ->
+        let name = td.ptype_name in
+        let type_ = derive_t ~loc name (gen_type_ascription td) in
+        let type_ =
+          List.fold_left (List.rev td.ptype_params) ~init:type_
+            ~f:(fun acc (t, _) ->
+              let loc = t.ptyp_loc in
+              let name =
+                match t.ptyp_desc with
+                | Ptyp_var txt -> { txt; loc }
+                | _ ->
+                    Location.raise_errorf ~loc
+                      "type variable is not a variable"
+              in
+              let t = derive_t ~loc name t in
+              ptyp_arrow ~loc Nolabel t acc)
+        in
+        psig_value ~loc
+          (value_description ~loc ~prim:[] ~name:(derive_label name)
+             ~type_))
 
   class virtual deriving1 =
     object (self)
@@ -276,7 +311,7 @@ module Schema = struct
           let loc = ty.ptyp_loc in
           as_fun ~loc (self#derive_of_core_type' ty)
 
-      method generator
+      method str_type_decl
           : ctxt:Expansion_context.Deriver.t ->
             rec_flag * type_declaration list ->
             structure =
@@ -289,6 +324,13 @@ module Schema = struct
             [@@@ocaml.warning "-39-11-27"]
 
             [%%i pstr_value ~loc Recursive bindings]]
+
+      method sig_type_decl
+          : ctxt:Expansion_context.Deriver.t ->
+            rec_flag * type_declaration list ->
+            signature =
+        derive_sig_type_decl ~derive_t:self#t
+          ~derive_label:self#derive_type_decl_label
     end
 end
 
