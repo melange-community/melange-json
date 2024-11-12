@@ -32,6 +32,7 @@ module To_json = struct
   let string_to_json v = `String v
   let bool_to_json v = `Bool v
   let int_to_json v = `Int v
+  let int64_to_json v = `String (Int64.to_string v)
   let float_to_json v = `Float v
   let unit_to_json () = `Null
   let list_to_json v_to_json vs = `List (List.map v_to_json vs)
@@ -67,6 +68,13 @@ module Of_json = struct
   let int_of_json = function
     | `Int i -> i
     | json -> of_json_error_type_mismatch json "int"
+
+  let int64_of_json = function
+    | `String i as json -> (
+        match Int64.of_string_opt i with
+        | Some v -> v
+        | None -> of_json_error_type_mismatch json "string")
+    | json -> of_json_error_type_mismatch json "string"
 
   let float_of_json = function
     | `Float f -> f

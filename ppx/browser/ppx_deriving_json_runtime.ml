@@ -28,6 +28,9 @@ module To_json = struct
   external string_to_json : string -> t = "%identity"
   external bool_to_json : bool -> t = "%identity"
   external int_to_json : int -> t = "%identity"
+
+  let int64_to_json : int64 -> t = fun v -> Obj.magic (Int64.to_string v)
+
   external float_to_json : float -> t = "%identity"
 
   let unit_to_json () : t = Obj.magic Js.null
@@ -67,6 +70,14 @@ module Of_json = struct
       if is_int v then (Obj.magic v : int)
       else of_json_error "expected an integer"
     else of_json_error "expected an integer"
+
+  let int64_of_json (json : t) : int64 =
+    if Js.typeof json = "string" then
+      let v = (Obj.magic json : string) in
+      match Int64.of_string_opt v with
+      | Some v -> v
+      | None -> of_json_error "expected an int64"
+    else of_json_error "expected a string"
 
   let float_of_json (json : t) : float =
     if Js.typeof json = "number" then (Obj.magic json : float)
