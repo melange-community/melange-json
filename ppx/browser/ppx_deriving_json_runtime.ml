@@ -76,8 +76,8 @@ module Of_json = struct
       let v = (Obj.magic json : string) in
       match Int64.of_string_opt v with
       | Some v -> v
-      | None -> of_json_error "expected an int64"
-    else of_json_error "expected a string"
+      | None -> of_json_error "expected int64 as string"
+    else of_json_error "expected int64 as string"
 
   let float_of_json (json : t) : float =
     if Js.typeof json = "number" then (Obj.magic json : float)

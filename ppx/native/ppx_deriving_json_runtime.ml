@@ -73,8 +73,8 @@ module Of_json = struct
     | `String i as json -> (
         match Int64.of_string_opt i with
         | Some v -> v
-        | None -> of_json_error_type_mismatch json "string")
-    | json -> of_json_error_type_mismatch json "string"
+        | None -> of_json_error_type_mismatch json "int64 as string")
+    | json -> of_json_error_type_mismatch json "int64 as string"
 
   let float_of_json = function
     | `Float f -> f
