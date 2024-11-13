@@ -17,6 +17,8 @@
 - PPX: add `[@@json_string]` for deriving converters to/from JSON strings
   directly
   ([#30](https://github.com/melange-community/melange-json/pull/30))
+- PPX: add support for `int64` in the runtime
+  ([#33](https://github.com/melange-community/melange-json/pull/33))
 
 ## 1.3.0 (2024-08-28)
 

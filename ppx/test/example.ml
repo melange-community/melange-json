@@ -1,4 +1,5 @@
 type user = int [@@deriving json]
+type userid = int64 [@@deriving json]
 type floaty = float [@@deriving json]
 type 'a param = 'a [@@deriving json]
 type opt = string option [@@deriving json]
@@ -25,6 +26,7 @@ type json = Ppx_deriving_json_runtime.t
 type of_json = C : string * (json -> 'a) * ('a -> json) * 'a -> of_json
 let of_json_cases = [
   C ({|1|}, user_of_json, user_to_json, 1);
+  C ({|"9223372036854775807"|}, userid_of_json, userid_to_json, 9223372036854775807L);
   C ({|1.1|}, floaty_of_json, floaty_to_json, 1.1);
   C ({|1.0|}, floaty_of_json, floaty_to_json, 1.0);
   C ({|42|}, floaty_of_json, floaty_to_json, 42.0);
