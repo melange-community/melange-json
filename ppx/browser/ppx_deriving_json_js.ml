@@ -194,21 +194,13 @@ module To_json = struct
     | Vcs_record (n, r) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name r.rcd_ctx) in
-        let tag =
-          [%expr
-            Ppx_deriving_json_runtime.Primitives.string_to_json
-              [%e estring ~loc:n.loc n.txt]]
-        in
+        let tag = [%expr (Obj.magic [%e estring ~loc:n.loc n.txt]: Js.Json.t)] in
         let es = [ derive_of_record derive r es ] in
         as_json ~loc (pexp_array ~loc (tag :: es))
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
-        let tag =
-          [%expr
-            Ppx_deriving_json_runtime.Primitives.string_to_json
-              [%e estring ~loc:n.loc n.txt]]
-        in
+        let tag = [%expr (Obj.magic [%e estring ~loc:n.loc n.txt]: Js.Json.t)] in
         let es = List.map2 t.tpl_types es ~f:derive in
         as_json ~loc (pexp_array ~loc (tag :: es))
 
