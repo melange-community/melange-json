@@ -21,9 +21,6 @@
   > let json = sum_to_json A
   > ' >> main.ml
 
+Can build without having to open Ppx_deriving_json_runtime.Primitives
+
   $ dune build @js
-  File "main.ml", line 2, characters 11-12:
-  2 | type sum = A [@@deriving json]
-                 ^
-  Error: Unbound value string_to_json
-  [1]
