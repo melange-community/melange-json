@@ -61,6 +61,8 @@
   JSON REPRINT: ["S2",42,"hello"]
   JSON    DATA: ["B", 42]
   JSON REPRINT: ["B",42]
+  JSON    DATA: ["C"]
+  JSON REPRINT: ["C"]
   JSON    DATA: ["P2", 42, "hello"]
   JSON REPRINT: ["P2",42,"hello"]
   JSON    DATA: ["Fix",["Fix",["Fix",["A"]]]]

@@ -20,9 +20,16 @@ let of_string s =
     in
     raise (Of_string_error msg)
 
+type error = Json.Decode.error =
+  | Json_error of string
+  | Unexpected_variant of string
+
 exception Of_json_error = Json.Decode.DecodeError
 
-let of_json_error msg = raise (Of_json_error msg)
+let of_json_error msg = raise (Of_json_error (Json_error msg))
+
+let unexpected_variant_error tag =
+  raise (Of_json_error (Unexpected_variant tag))
 
 module To_json = struct
   external string_to_json : string -> t = "%identity"

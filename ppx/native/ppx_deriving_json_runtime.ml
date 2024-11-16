@@ -10,9 +10,11 @@ let of_string s =
   try Yojson.Basic.from_string s
   with Yojson.Json_error msg -> raise (Of_string_error msg)
 
-exception Of_json_error of string
+type error = Json_error of string | Unexpected_variant of string
 
-let of_json_error msg = raise (Of_json_error msg)
+exception Of_json_error of error
+
+let of_json_error msg = raise (Of_json_error (Json_error msg))
 
 let show_json_type = function
   | `Assoc _ -> "object"
@@ -24,9 +26,8 @@ let show_json_type = function
   | `String _ -> "string"
 
 let of_json_error_type_mismatch json expected =
-  raise
-    (Of_json_error
-       ("expected " ^ expected ^ " but got " ^ show_json_type json))
+  of_json_error
+    ("expected " ^ expected ^ " but got " ^ show_json_type json)
 
 module To_json = struct
   let string_to_json v = `String v

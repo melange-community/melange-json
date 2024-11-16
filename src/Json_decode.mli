@@ -13,7 +13,11 @@ third-party libraries.
 type 'a decoder = Js.Json.t -> 'a
 (** The type of a decoder combinator *)
 
-exception DecodeError of string
+type error = Json_error of string | Unexpected_variant of string
+
+val error_to_string : error -> string
+
+exception DecodeError of error
 
 val id : Js.Json.t decoder
 (** Identity decoder.
