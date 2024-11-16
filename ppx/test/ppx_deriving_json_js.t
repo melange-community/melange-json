@@ -406,14 +406,14 @@
     let rec sum_to_json =
       (fun x ->
          match x with
-         | A -> (Obj.magic [| string_to_json "A" |] : Js.Json.t)
+         | A -> (Obj.magic [| (Obj.magic "A" : Js.Json.t) |] : Js.Json.t)
          | B x_0 ->
-             (Obj.magic [| string_to_json "B"; int_to_json x_0 |]
+             (Obj.magic [| (Obj.magic "B" : Js.Json.t); int_to_json x_0 |]
                : Js.Json.t)
          | C { name = x_name } ->
              (Obj.magic
                 [|
-                  string_to_json "C";
+                  (Obj.magic "C" : Js.Json.t);
                   (Obj.magic [%mel.obj { name = string_to_json x_name }]
                     : Js.Json.t);
                 |]
@@ -472,7 +472,9 @@
          | S2 (x_0, x_1) ->
              (Obj.magic
                 [|
-                  string_to_json "S2"; int_to_json x_0; string_to_json x_1;
+                  (Obj.magic "S2" : Js.Json.t);
+                  int_to_json x_0;
+                  string_to_json x_1;
                 |]
                : Js.Json.t)
         : sum2 -> Js.Json.t)
@@ -532,7 +534,7 @@
     let rec other_to_json =
       (fun x ->
          match x with
-         | `C -> (Obj.magic [| string_to_json "C" |] : Js.Json.t)
+         | `C -> (Obj.magic [| (Obj.magic "C" : Js.Json.t) |] : Js.Json.t)
         : other -> Js.Json.t)
   
     let _ = other_to_json
@@ -595,9 +597,9 @@
     let rec poly_to_json =
       (fun x ->
          match x with
-         | `A -> (Obj.magic [| string_to_json "A" |] : Js.Json.t)
+         | `A -> (Obj.magic [| (Obj.magic "A" : Js.Json.t) |] : Js.Json.t)
          | `B x_0 ->
-             (Obj.magic [| string_to_json "B"; int_to_json x_0 |]
+             (Obj.magic [| (Obj.magic "B" : Js.Json.t); int_to_json x_0 |]
                : Js.Json.t)
          | #other as x -> other_to_json x
         : poly -> Js.Json.t)
@@ -663,7 +665,9 @@
          | `P2 (x_0, x_1) ->
              (Obj.magic
                 [|
-                  string_to_json "P2"; int_to_json x_0; string_to_json x_1;
+                  (Obj.magic "P2" : Js.Json.t);
+                  int_to_json x_0;
+                  string_to_json x_1;
                 |]
                : Js.Json.t)
         : poly2 -> Js.Json.t)
@@ -721,7 +725,8 @@
      fun x ->
       match x with
       | `C x_0 ->
-          (Obj.magic [| string_to_json "C"; a_to_json x_0 |] : Js.Json.t)
+          (Obj.magic [| (Obj.magic "C" : Js.Json.t); a_to_json x_0 |]
+            : Js.Json.t)
   
     let _ = c_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -775,9 +780,10 @@
     let rec recur_to_json =
       (fun x ->
          match x with
-         | A -> (Obj.magic [| string_to_json "A" |] : Js.Json.t)
+         | A -> (Obj.magic [| (Obj.magic "A" : Js.Json.t) |] : Js.Json.t)
          | Fix x_0 ->
-             (Obj.magic [| string_to_json "Fix"; recur_to_json x_0 |]
+             (Obj.magic
+                [| (Obj.magic "Fix" : Js.Json.t); recur_to_json x_0 |]
                : Js.Json.t)
         : recur -> Js.Json.t)
   
@@ -842,9 +848,10 @@
     let rec polyrecur_to_json =
       (fun x ->
          match x with
-         | `A -> (Obj.magic [| string_to_json "A" |] : Js.Json.t)
+         | `A -> (Obj.magic [| (Obj.magic "A" : Js.Json.t) |] : Js.Json.t)
          | `Fix x_0 ->
-             (Obj.magic [| string_to_json "Fix"; polyrecur_to_json x_0 |]
+             (Obj.magic
+                [| (Obj.magic "Fix" : Js.Json.t); polyrecur_to_json x_0 |]
                : Js.Json.t)
         : polyrecur -> Js.Json.t)
   
@@ -900,8 +907,10 @@
     let rec evar_to_json =
       (fun x ->
          match x with
-         | A -> (Obj.magic [| string_to_json "A" |] : Js.Json.t)
-         | B -> (Obj.magic [| string_to_json "b_aliased" |] : Js.Json.t)
+         | A -> (Obj.magic [| (Obj.magic "A" : Js.Json.t) |] : Js.Json.t)
+         | B ->
+             (Obj.magic [| (Obj.magic "b_aliased" : Js.Json.t) |]
+               : Js.Json.t)
         : evar -> Js.Json.t)
   
     let _ = evar_to_json
@@ -964,8 +973,10 @@
     let rec epoly_to_json =
       (fun x ->
          match x with
-         | `a -> (Obj.magic [| string_to_json "A_aliased" |] : Js.Json.t)
-         | `b -> (Obj.magic [| string_to_json "b" |] : Js.Json.t)
+         | `a ->
+             (Obj.magic [| (Obj.magic "A_aliased" : Js.Json.t) |]
+               : Js.Json.t)
+         | `b -> (Obj.magic [| (Obj.magic "b" : Js.Json.t) |] : Js.Json.t)
         : epoly -> Js.Json.t)
   
     let _ = epoly_to_json
@@ -1019,9 +1030,11 @@
      fun x ->
       match x with
       | A x_0 ->
-          (Obj.magic [| string_to_json "A"; a_to_json x_0 |] : Js.Json.t)
+          (Obj.magic [| (Obj.magic "A" : Js.Json.t); a_to_json x_0 |]
+            : Js.Json.t)
       | B x_0 ->
-          (Obj.magic [| string_to_json "B"; b_to_json x_0 |] : Js.Json.t)
+          (Obj.magic [| (Obj.magic "B" : Js.Json.t); b_to_json x_0 |]
+            : Js.Json.t)
   
     let _ = p2_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -1147,7 +1160,7 @@
          | A { a = x_a } ->
              (Obj.magic
                 [|
-                  string_to_json "A";
+                  (Obj.magic "A" : Js.Json.t);
                   (Obj.magic [%mel.obj { a = int_to_json x_a }] : Js.Json.t);
                 |]
                : Js.Json.t)
