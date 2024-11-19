@@ -19,6 +19,10 @@
   ([#30](https://github.com/melange-community/melange-json/pull/30))
 - PPX: add support for `int64` in the runtime
   ([#33](https://github.com/melange-community/melange-json/pull/33))
+- PPX: remove `string_to_json` usage on js side
+  ([#35](https://github.com/melange-community/melange-json/pull/35))
+- PPX: Add array functions to native runtime
+  ([#37](https://github.com/melange-community/melange-json/pull/37))
 
 ## 1.3.0 (2024-08-28)
 
