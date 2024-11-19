@@ -37,6 +37,9 @@ module To_json = struct
   let unit_to_json () = `Null
   let list_to_json v_to_json vs = `List (List.map v_to_json vs)
 
+  let array_to_json v_to_json vs =
+    `List (Array.to_list (Array.map v_to_json vs))
+
   let option_to_json v_to_json = function
     | None -> `Null
     | Some v -> v_to_json v
@@ -91,6 +94,10 @@ module Of_json = struct
 
   let list_of_json v_of_json = function
     | `List l -> List.map v_of_json l
+    | json -> of_json_error_type_mismatch json "array"
+
+  let array_of_json v_of_json = function
+    | `List l -> Array.map v_of_json (Array.of_list l)
     | json -> of_json_error_type_mismatch json "array"
 
   let result_of_json ok_of_json err_of_json json =
