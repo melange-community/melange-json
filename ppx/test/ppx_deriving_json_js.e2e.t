@@ -87,6 +87,8 @@
   JSON REPRINT: {"a":1}
   JSON    DATA: {"a":1,"b_opt":2}
   JSON REPRINT: {"a":1,"b_opt":2}
+  JSON    DATA: {"a":[1],"b":[2]}
+  JSON REPRINT: {"a":[1],"b":[2]}
   *** json_string deriver tests ***
   ** To_json_string **
   A 42 -> ["A",42]
