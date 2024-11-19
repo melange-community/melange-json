@@ -21,6 +21,7 @@ type ('a, 'b) p2 = A of 'a | B of 'b [@@deriving json]
 type allow_extra_fields = {a: int} [@@deriving json] [@@json.allow_extra_fields]
 type allow_extra_fields2 = A of {a: int} [@json.allow_extra_fields] [@@deriving json]
 type drop_default_option = { a: int; b_opt: int option; [@option] [@json.drop_default] } [@@deriving json]
+type array_list = { a: int array; b: int list} [@@deriving json]
 
 type json = Ppx_deriving_json_runtime.t
 type of_json = C : string * (json -> 'a) * ('a -> json) * 'a -> of_json
@@ -55,6 +56,7 @@ let of_json_cases = [
   C ({|["A",{"a":1,"b":2}]|}, allow_extra_fields2_of_json, allow_extra_fields2_to_json, A {a=1});
   C ({|{"a":1}|}, drop_default_option_of_json, drop_default_option_to_json, {a=1; b_opt=None});
   C ({|{"a":1,"b_opt":2}|}, drop_default_option_of_json, drop_default_option_to_json, {a=1; b_opt=Some 2});
+  C ({|{"a":[1],"b":[2]}|}, array_list_of_json, array_list_to_json, {a=[|1|]; b=[2]});
 ]
 let run' (C (data, of_json, to_json, v)) =
   print_endline (Printf.sprintf "JSON    DATA: %s" data);
