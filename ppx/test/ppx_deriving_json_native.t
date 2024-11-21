@@ -951,3 +951,109 @@
   
     let _ = drop_default_option_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
+  > type one = [ `C ] [@@deriving json] type other = [ `C ] [@@deriving json]  type poly = [ one | other ] [@@deriving json]
+  > EOF
+  type one = [ `C ] [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : one) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec one_of_json_poly =
+      (fun x ->
+         match x with `List (`String "C" :: []) -> Some `C | x -> None
+        : Yojson.Basic.t -> one option)
+  
+    and one_of_json =
+      (fun x ->
+         match one_of_json_poly x with
+         | Some x -> x
+         | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+        : Yojson.Basic.t -> one)
+  
+    let _ = one_of_json_poly
+    and _ = one_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec one_to_json =
+      (fun x -> match x with `C -> `List [ `String "C" ]
+        : one -> Yojson.Basic.t)
+  
+    let _ = one_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+  
+  type other = [ `C ] [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : other) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec other_of_json_poly =
+      (fun x ->
+         match x with `List (`String "C" :: []) -> Some `C | x -> None
+        : Yojson.Basic.t -> other option)
+  
+    and other_of_json =
+      (fun x ->
+         match other_of_json_poly x with
+         | Some x -> x
+         | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+        : Yojson.Basic.t -> other)
+  
+    let _ = other_of_json_poly
+    and _ = other_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec other_to_json =
+      (fun x -> match x with `C -> `List [ `String "C" ]
+        : other -> Yojson.Basic.t)
+  
+    let _ = other_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+  
+  type poly = [ one | other ] [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : poly) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec poly_of_json_poly =
+      (fun x ->
+         match x with
+         | x -> (
+             match other_of_json_poly x with
+             | Some x -> (Some x :> [ one | other ] option)
+             | None -> (
+                 match one_of_json_poly x with
+                 | Some x -> (Some x :> [ one | other ] option)
+                 | None -> None))
+        : Yojson.Basic.t -> poly option)
+  
+    and poly_of_json =
+      (fun x ->
+         match poly_of_json_poly x with
+         | Some x -> x
+         | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+        : Yojson.Basic.t -> poly)
+  
+    let _ = poly_of_json_poly
+    and _ = poly_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec poly_to_json =
+      (fun x ->
+         match x with
+         | #one as x -> one_to_json x
+         | #other as x -> other_to_json x
+        : poly -> Yojson.Basic.t)
+  
+    let _ = poly_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
