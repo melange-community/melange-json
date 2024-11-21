@@ -108,7 +108,6 @@ module Of_json = struct
         if Stdlib.( > ) len 0 then
           let tag = Js.Array.unsafe_get array 0 in
           if Stdlib.( = ) (Js.typeof tag) "string" then
-            let tag = (Obj.magic tag : string) in
             [%e body]
           else
             Ppx_deriving_json_runtime.of_json_error
@@ -127,6 +126,7 @@ module Of_json = struct
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name r.rcd_ctx) in
         [%expr
+          let tag = (Obj.magic tag : string) in
           if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then (
             [%e ensure_json_array_len ~loc 2 [%expr len]];
             let fs = Js.Array.unsafe_get array 1 in
@@ -140,6 +140,7 @@ module Of_json = struct
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
         let arity = List.length t.tpl_types in
         [%expr
+          let tag = (Obj.magic tag : string) in
           if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then (
             [%e ensure_json_array_len ~loc (arity + 1) [%expr len]];
             [%e

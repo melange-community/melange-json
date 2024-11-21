@@ -23,6 +23,8 @@
   ([#35](https://github.com/melange-community/melange-json/pull/35))
 - PPX: Add array functions to native runtime
   ([#37](https://github.com/melange-community/melange-json/pull/37))
+- PPX: Fix `unused-var` warning with polyvars without own cases
+  ([#38](https://github.com/melange-community/melange-json/pull/38))
 
 ## 1.3.0 (2024-08-28)
 
