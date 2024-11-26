@@ -384,7 +384,8 @@
          | _ ->
              raise
                (Ppx_deriving_json_runtime.Of_json_error
-                  (Unexpected_variant "unexpected variant"))
+                  (Ppx_deriving_json_runtime.Unexpected_variant
+                     "unexpected variant"))
         : Yojson.Basic.t -> sum)
   
     let _ = sum_of_json
@@ -430,7 +431,8 @@
          | _ ->
              raise
                (Ppx_deriving_json_runtime.Of_json_error
-                  (Unexpected_variant "unexpected variant"))
+                  (Ppx_deriving_json_runtime.Unexpected_variant
+                     "unexpected variant"))
         : Yojson.Basic.t -> sum2)
   
     let _ = sum2_of_json
@@ -464,7 +466,8 @@
          | x ->
              raise
                (Ppx_deriving_json_runtime.Of_json_error
-                  (Unexpected_variant "unexpected variant"))
+                  (Ppx_deriving_json_runtime.Unexpected_variant
+                     "unexpected variant"))
         : Yojson.Basic.t -> other)
   
     let _ = other_of_json
@@ -498,7 +501,8 @@
                    (Ppx_deriving_json_runtime.Unexpected_variant _) ->
                  raise
                    (Ppx_deriving_json_runtime.Of_json_error
-                      (Unexpected_variant "unexpected variant")))
+                      (Ppx_deriving_json_runtime.Unexpected_variant
+                         "unexpected variant")))
         : Yojson.Basic.t -> poly)
   
     let _ = poly_of_json
@@ -534,7 +538,8 @@
          | x ->
              raise
                (Ppx_deriving_json_runtime.Of_json_error
-                  (Unexpected_variant "unexpected variant"))
+                  (Ppx_deriving_json_runtime.Unexpected_variant
+                     "unexpected variant"))
         : Yojson.Basic.t -> poly2)
   
     let _ = poly2_of_json
@@ -568,7 +573,8 @@
       | x ->
           raise
             (Ppx_deriving_json_runtime.Of_json_error
-               (Unexpected_variant "unexpected variant"))
+               (Ppx_deriving_json_runtime.Unexpected_variant
+                  "unexpected variant"))
   
     let _ = c_of_json
   
@@ -598,7 +604,8 @@
          | _ ->
              raise
                (Ppx_deriving_json_runtime.Of_json_error
-                  (Unexpected_variant "unexpected variant"))
+                  (Ppx_deriving_json_runtime.Unexpected_variant
+                     "unexpected variant"))
         : Yojson.Basic.t -> recur)
   
     let _ = recur_of_json
@@ -633,7 +640,8 @@
          | x ->
              raise
                (Ppx_deriving_json_runtime.Of_json_error
-                  (Unexpected_variant "unexpected variant"))
+                  (Ppx_deriving_json_runtime.Unexpected_variant
+                     "unexpected variant"))
         : Yojson.Basic.t -> polyrecur)
   
     let _ = polyrecur_of_json
@@ -668,7 +676,8 @@
          | _ ->
              raise
                (Ppx_deriving_json_runtime.Of_json_error
-                  (Unexpected_variant "unexpected variant"))
+                  (Ppx_deriving_json_runtime.Unexpected_variant
+                     "unexpected variant"))
         : Yojson.Basic.t -> evar)
   
     let _ = evar_of_json
@@ -703,7 +712,8 @@
          | x ->
              raise
                (Ppx_deriving_json_runtime.Of_json_error
-                  (Unexpected_variant "unexpected variant"))
+                  (Ppx_deriving_json_runtime.Unexpected_variant
+                     "unexpected variant"))
         : Yojson.Basic.t -> epoly)
   
     let _ = epoly_of_json
@@ -738,7 +748,8 @@
       | _ ->
           raise
             (Ppx_deriving_json_runtime.Of_json_error
-               (Unexpected_variant "unexpected variant"))
+               (Ppx_deriving_json_runtime.Unexpected_variant
+                  "unexpected variant"))
   
     let _ = p2_of_json
   
@@ -845,7 +856,8 @@
          | _ ->
              raise
                (Ppx_deriving_json_runtime.Of_json_error
-                  (Unexpected_variant "unexpected variant"))
+                  (Ppx_deriving_json_runtime.Unexpected_variant
+                     "unexpected variant"))
         : Yojson.Basic.t -> allow_extra_fields2)
   
     let _ = allow_extra_fields2_of_json

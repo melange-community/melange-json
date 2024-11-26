@@ -509,7 +509,8 @@
                else
                  raise
                    (Ppx_deriving_json_runtime.Of_json_error
-                      (Unexpected_variant "unexpected variant"))
+                      (Ppx_deriving_json_runtime.Unexpected_variant
+                         "unexpected variant"))
              else
                Ppx_deriving_json_runtime.of_json_error
                  "expected a non empty JSON array with element being a \
@@ -566,10 +567,11 @@
                  | e -> (e :> [ `A | `B of int | other ])
                  | exception
                      Ppx_deriving_json_runtime.Of_json_error
-                       (Unexpected_variant _) ->
+                       (Ppx_deriving_json_runtime.Unexpected_variant _) ->
                      raise
                        (Ppx_deriving_json_runtime.Of_json_error
-                          (Unexpected_variant "unexpected variant"))
+                          (Ppx_deriving_json_runtime.Unexpected_variant
+                             "unexpected variant"))
              else
                Ppx_deriving_json_runtime.of_json_error
                  "expected a non empty JSON array with element being a \
@@ -628,7 +630,8 @@
                else
                  raise
                    (Ppx_deriving_json_runtime.Of_json_error
-                      (Unexpected_variant "unexpected variant"))
+                      (Ppx_deriving_json_runtime.Unexpected_variant
+                         "unexpected variant"))
              else
                Ppx_deriving_json_runtime.of_json_error
                  "expected a non empty JSON array with element being a \
@@ -688,7 +691,8 @@
             else
               raise
                 (Ppx_deriving_json_runtime.Of_json_error
-                   (Unexpected_variant "unexpected variant"))
+                   (Ppx_deriving_json_runtime.Unexpected_variant
+                      "unexpected variant"))
           else
             Ppx_deriving_json_runtime.of_json_error
               "expected a non empty JSON array with element being a string"
@@ -804,7 +808,8 @@
                else
                  raise
                    (Ppx_deriving_json_runtime.Of_json_error
-                      (Unexpected_variant "unexpected variant"))
+                      (Ppx_deriving_json_runtime.Unexpected_variant
+                         "unexpected variant"))
              else
                Ppx_deriving_json_runtime.of_json_error
                  "expected a non empty JSON array with element being a \
@@ -924,7 +929,8 @@
                else
                  raise
                    (Ppx_deriving_json_runtime.Of_json_error
-                      (Unexpected_variant "unexpected variant"))
+                      (Ppx_deriving_json_runtime.Unexpected_variant
+                         "unexpected variant"))
              else
                Ppx_deriving_json_runtime.of_json_error
                  "expected a non empty JSON array with element being a \

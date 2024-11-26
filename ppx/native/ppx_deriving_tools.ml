@@ -437,7 +437,8 @@ module Conv = struct
                ( [%expr
                    raise
                      (Ppx_deriving_json_runtime.Of_json_error
-                        (Unexpected_variant "unexpected variant"))],
+                        (Ppx_deriving_json_runtime.Unexpected_variant
+                           "unexpected variant"))],
                  [] )
              ~f:(fun (next, cases) (c, r) ->
                let ctx = Vcs_ctx_polyvariant c in
@@ -466,7 +467,8 @@ module Conv = struct
                        | e -> (e :> [%t t])
                        | exception
                            Ppx_deriving_json_runtime.Of_json_error
-                             (Unexpected_variant _) ->
+                             (Ppx_deriving_json_runtime.Unexpected_variant
+                               _) ->
                            [%e next]]
                    in
                    next, cases)
@@ -510,7 +512,8 @@ module Conv = struct
                  --> [%expr
                        raise
                          (Ppx_deriving_json_runtime.Of_json_error
-                            (Unexpected_variant "unexpected variant"))];
+                            (Ppx_deriving_json_runtime.Unexpected_variant
+                               "unexpected variant"))];
                ]
              ~f:(fun next (c : constructor_declaration) ->
                let ctx = Vcs_ctx_variant c in
@@ -563,7 +566,8 @@ module Conv = struct
                    [%expr
                      raise
                        (Ppx_deriving_json_runtime.Of_json_error
-                          (Unexpected_variant "unexpected variant"))]
+                          (Ppx_deriving_json_runtime.Unexpected_variant
+                             "unexpected variant"))]
                  ~f:(fun next (n, ts) ->
                    let maybe =
                      self#derive_type_ref ~loc self#name n ts x
