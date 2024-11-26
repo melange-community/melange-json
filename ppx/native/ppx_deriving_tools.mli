@@ -126,7 +126,6 @@ module Conv : sig
   val deriving_of_match :
     name:label ->
     of_t:(loc:location -> core_type) ->
-    error:(loc:location -> expression) ->
     derive_of_tuple:
       (derive_of_core_type -> core_type tuple -> expression -> expression) ->
     derive_of_record:

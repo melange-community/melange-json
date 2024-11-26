@@ -482,8 +482,8 @@ module Conv = struct
      end
       :> deriving)
 
-  let deriving_of_match ~name ~of_t ~error:_ ~derive_of_tuple
-      ~derive_of_record ~derive_of_variant_case () =
+  let deriving_of_match ~name ~of_t ~derive_of_tuple ~derive_of_record
+      ~derive_of_variant_case () =
     (object (self)
        inherit Schema.deriving1
        method name = name
