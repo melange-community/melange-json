@@ -10,27 +10,18 @@ type record_aliased = { name : string; [@json.key "my_name"] age : int; [@json.k
 type record_opt = { k : int option; [@json.option] } [@@deriving json]
 type sum = A | B of int | C of { name : string } [@@deriving json]
 type sum2 = S2 of int * string [@@deriving json]
-type other = [ `C ] [@@deriving json] type poly = [ `A | `B of int | other ] [@@deriving json]
+type other = [ `C ] [@@deriving json]
+type poly = [ `A | `B of int | other ] [@@deriving json]
 type poly2 = [ `P2 of int * string ] [@@deriving json]
 type 'a c = [ `C of 'a ] [@@deriving json]
 type recur = A | Fix of recur [@@deriving json]
 type polyrecur = [ `A | `Fix of polyrecur ] [@@deriving json]
 type evar = A | B [@json.name "b_aliased"] [@@deriving json]
-type epoly = [ `a [@json.name "A_aliased"] | `b ] [@@deriving json]
 type ('a, 'b) p2 = A of 'a | B of 'b [@@deriving json]
 type allow_extra_fields = {a: int} [@@deriving json] [@@json.allow_extra_fields]
 type allow_extra_fields2 = A of {a: int} [@json.allow_extra_fields] [@@deriving json]
 type drop_default_option = { a: int; b_opt: int option; [@option] [@json.drop_default] } [@@deriving json]
 type array_list = { a: int array; b: int list} [@@deriving json]
-
-(*module Polyvar : sig*)
-(*  type t = [`A | `B] [@@deriving json]*)
-(*end = struct*)
-(*  type t = [`A | `B] [@@deriving json]*)
-(*end*)
-(**)
-(*type polyvar = [Polyvar.t|`C] [@@deriving json]*)
-
 type json = Ppx_deriving_json_runtime.t
 type of_json = C : string * (json -> 'a) * ('a -> json) * 'a -> of_json
 let of_json_cases = [
