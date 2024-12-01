@@ -303,11 +303,8 @@ We can extend aliased polyvariants:
   ["A"]
   ["C"]
   === stdout:js ===
-  File ".lib.objs/melange/_unknown_", line 1, characters 0-0:
-  melc: internal error, uncaught exception:
-        Not_found
-        
-  [1]
+  ["A"]
+  ["C"]
 
 We can extend poly variants which are placed behind signatures:
   $ echo '
@@ -522,8 +519,5 @@ We can extend poly variants which are placed behind signatures:
   ["A"]
   ["C"]
   === stdout:js ===
-  File ".lib.objs/melange/_unknown_", line 1, characters 0-0:
-  melc: internal error, uncaught exception:
-        Not_found
-        
-  [1]
+  ["A"]
+  ["C"]
