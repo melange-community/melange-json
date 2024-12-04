@@ -37,7 +37,10 @@
   ppxlib
   (opam-check-npm-deps :with-test) ; todo: use with-dev-setup once opam 2.2 is out
   (ocaml-lsp-server :with-test)
-  (ocamlformat :with-test)))
+  (ocamlformat
+   (and
+    (>= "0.27.0")
+    :with-test))))
 
 (package
  (name melange-json-native)
