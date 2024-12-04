@@ -59,6 +59,14 @@
   JSON REPRINT: ["Fix",["Fix",["Fix",["A"]]]]
   JSON    DATA: ["Fix",["Fix",["Fix",["A"]]]]
   JSON REPRINT: ["Fix",["Fix",["Fix",["A"]]]]
+  JSON    DATA: ["A"]
+  JSON REPRINT: ["A"]
+  JSON    DATA: ["b_aliased"]
+  JSON REPRINT: ["b_aliased"]
+  JSON    DATA: ["b"]
+  JSON REPRINT: ["b"]
+  JSON    DATA: ["A_aliased"]
+  JSON REPRINT: ["A_aliased"]
   JSON    DATA: {"my_name":"N","my_age":1}
   JSON REPRINT: {"my_name":"N","my_age":1}
   JSON    DATA: {"my_name":"N"}
