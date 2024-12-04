@@ -492,7 +492,7 @@
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec other_of_json_poly =
+    let rec other_of_json =
       (fun x ->
          if Js.Array.isArray x then
            let array = (Obj.magic x : Js.Json.t array) in
@@ -505,8 +505,12 @@
                  if Stdlib.( <> ) len 1 then
                    Ppx_deriving_json_runtime.of_json_error
                      "expected a JSON array of length 1";
-                 Some `C)
-               else None
+                 `C)
+               else
+                 raise
+                   (Ppx_deriving_json_runtime.Of_json_error
+                      (Ppx_deriving_json_runtime.Unexpected_variant
+                         "unexpected variant"))
              else
                Ppx_deriving_json_runtime.of_json_error
                  "expected a non empty JSON array with element being a \
@@ -517,17 +521,9 @@
          else
            Ppx_deriving_json_runtime.of_json_error
              "expected a non empty JSON array"
-        : Js.Json.t -> other option)
-  
-    and other_of_json =
-      (fun x ->
-         match other_of_json_poly x with
-         | Some x -> x
-         | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
         : Js.Json.t -> other)
   
-    let _ = other_of_json_poly
-    and _ = other_of_json
+    let _ = other_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
@@ -547,7 +543,7 @@
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec poly_of_json_poly =
+    let rec poly_of_json =
       (fun x ->
          if Js.Array.isArray x then
            let array = (Obj.magic x : Js.Json.t array) in
@@ -560,16 +556,22 @@
                  if Stdlib.( <> ) len 1 then
                    Ppx_deriving_json_runtime.of_json_error
                      "expected a JSON array of length 1";
-                 Some `A)
+                 `A)
                else if Stdlib.( = ) tag "B" then (
                  if Stdlib.( <> ) len 2 then
                    Ppx_deriving_json_runtime.of_json_error
                      "expected a JSON array of length 2";
-                 Some (`B (int_of_json (Js.Array.unsafe_get array 1))))
+                 `B (int_of_json (Js.Array.unsafe_get array 1)))
                else
-                 match other_of_json_poly x with
-                 | Some x -> (Some x :> [ `A | `B of int | other ] option)
-                 | None -> None
+                 match other_of_json x with
+                 | e -> (e :> [ `A | `B of int | other ])
+                 | exception
+                     Ppx_deriving_json_runtime.Of_json_error
+                       (Ppx_deriving_json_runtime.Unexpected_variant _) ->
+                     raise
+                       (Ppx_deriving_json_runtime.Of_json_error
+                          (Ppx_deriving_json_runtime.Unexpected_variant
+                             "unexpected variant"))
              else
                Ppx_deriving_json_runtime.of_json_error
                  "expected a non empty JSON array with element being a \
@@ -580,17 +582,9 @@
          else
            Ppx_deriving_json_runtime.of_json_error
              "expected a non empty JSON array"
-        : Js.Json.t -> poly option)
-  
-    and poly_of_json =
-      (fun x ->
-         match poly_of_json_poly x with
-         | Some x -> x
-         | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
         : Js.Json.t -> poly)
   
-    let _ = poly_of_json_poly
-    and _ = poly_of_json
+    let _ = poly_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
@@ -617,7 +611,7 @@
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec poly2_of_json_poly =
+    let rec poly2_of_json =
       (fun x ->
          if Js.Array.isArray x then
            let array = (Obj.magic x : Js.Json.t array) in
@@ -630,11 +624,14 @@
                  if Stdlib.( <> ) len 3 then
                    Ppx_deriving_json_runtime.of_json_error
                      "expected a JSON array of length 3";
-                 Some
-                   (`P2
-                     ( int_of_json (Js.Array.unsafe_get array 1),
-                       string_of_json (Js.Array.unsafe_get array 2) )))
-               else None
+                 `P2
+                   ( int_of_json (Js.Array.unsafe_get array 1),
+                     string_of_json (Js.Array.unsafe_get array 2) ))
+               else
+                 raise
+                   (Ppx_deriving_json_runtime.Of_json_error
+                      (Ppx_deriving_json_runtime.Unexpected_variant
+                         "unexpected variant"))
              else
                Ppx_deriving_json_runtime.of_json_error
                  "expected a non empty JSON array with element being a \
@@ -645,17 +642,9 @@
          else
            Ppx_deriving_json_runtime.of_json_error
              "expected a non empty JSON array"
-        : Js.Json.t -> poly2 option)
-  
-    and poly2_of_json =
-      (fun x ->
-         match poly2_of_json_poly x with
-         | Some x -> x
-         | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
         : Js.Json.t -> poly2)
   
-    let _ = poly2_of_json_poly
-    and _ = poly2_of_json
+    let _ = poly2_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
@@ -685,7 +674,7 @@
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec c_of_json_poly a_of_json : Js.Json.t -> 'a c option =
+    let rec c_of_json a_of_json : Js.Json.t -> 'a c =
      fun x ->
       if Js.Array.isArray x then
         let array = (Obj.magic x : Js.Json.t array) in
@@ -698,8 +687,12 @@
               if Stdlib.( <> ) len 2 then
                 Ppx_deriving_json_runtime.of_json_error
                   "expected a JSON array of length 2";
-              Some (`C (a_of_json (Js.Array.unsafe_get array 1))))
-            else None
+              `C (a_of_json (Js.Array.unsafe_get array 1)))
+            else
+              raise
+                (Ppx_deriving_json_runtime.Of_json_error
+                   (Ppx_deriving_json_runtime.Unexpected_variant
+                      "unexpected variant"))
           else
             Ppx_deriving_json_runtime.of_json_error
               "expected a non empty JSON array with element being a string"
@@ -710,14 +703,7 @@
         Ppx_deriving_json_runtime.of_json_error
           "expected a non empty JSON array"
   
-    and c_of_json a_of_json : Js.Json.t -> 'a c =
-     fun x ->
-      match (c_of_json_poly a_of_json) x with
-      | Some x -> x
-      | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
-  
-    let _ = c_of_json_poly
-    and _ = c_of_json
+    let _ = c_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
@@ -800,7 +786,7 @@
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec polyrecur_of_json_poly =
+    let rec polyrecur_of_json =
       (fun x ->
          if Js.Array.isArray x then
            let array = (Obj.magic x : Js.Json.t array) in
@@ -813,14 +799,17 @@
                  if Stdlib.( <> ) len 1 then
                    Ppx_deriving_json_runtime.of_json_error
                      "expected a JSON array of length 1";
-                 Some `A)
+                 `A)
                else if Stdlib.( = ) tag "Fix" then (
                  if Stdlib.( <> ) len 2 then
                    Ppx_deriving_json_runtime.of_json_error
                      "expected a JSON array of length 2";
-                 Some
-                   (`Fix (polyrecur_of_json (Js.Array.unsafe_get array 1))))
-               else None
+                 `Fix (polyrecur_of_json (Js.Array.unsafe_get array 1)))
+               else
+                 raise
+                   (Ppx_deriving_json_runtime.Of_json_error
+                      (Ppx_deriving_json_runtime.Unexpected_variant
+                         "unexpected variant"))
              else
                Ppx_deriving_json_runtime.of_json_error
                  "expected a non empty JSON array with element being a \
@@ -831,17 +820,9 @@
          else
            Ppx_deriving_json_runtime.of_json_error
              "expected a non empty JSON array"
-        : Js.Json.t -> polyrecur option)
-  
-    and polyrecur_of_json =
-      (fun x ->
-         match polyrecur_of_json_poly x with
-         | Some x -> x
-         | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
         : Js.Json.t -> polyrecur)
   
-    let _ = polyrecur_of_json_poly
-    and _ = polyrecur_of_json
+    let _ = polyrecur_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
@@ -926,7 +907,7 @@
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec epoly_of_json_poly =
+    let rec epoly_of_json =
       (fun x ->
          if Js.Array.isArray x then
            let array = (Obj.magic x : Js.Json.t array) in
@@ -939,13 +920,17 @@
                  if Stdlib.( <> ) len 1 then
                    Ppx_deriving_json_runtime.of_json_error
                      "expected a JSON array of length 1";
-                 Some `a)
+                 `a)
                else if Stdlib.( = ) tag "b" then (
                  if Stdlib.( <> ) len 1 then
                    Ppx_deriving_json_runtime.of_json_error
                      "expected a JSON array of length 1";
-                 Some `b)
-               else None
+                 `b)
+               else
+                 raise
+                   (Ppx_deriving_json_runtime.Of_json_error
+                      (Ppx_deriving_json_runtime.Unexpected_variant
+                         "unexpected variant"))
              else
                Ppx_deriving_json_runtime.of_json_error
                  "expected a non empty JSON array with element being a \
@@ -956,17 +941,9 @@
          else
            Ppx_deriving_json_runtime.of_json_error
              "expected a non empty JSON array"
-        : Js.Json.t -> epoly option)
-  
-    and epoly_of_json =
-      (fun x ->
-         match epoly_of_json_poly x with
-         | Some x -> x
-         | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
         : Js.Json.t -> epoly)
   
-    let _ = epoly_of_json_poly
-    and _ = epoly_of_json
+    let _ = epoly_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   

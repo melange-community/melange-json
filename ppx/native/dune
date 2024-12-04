@@ -37,6 +37,3 @@
   (with-stdout-to
    %{target}
    (run echo "let () = Ppxlib.Driver.standalone ()"))))
-
-(copy_files#
- (files ../tools/ppx_deriving_tools.{ml,mli}))

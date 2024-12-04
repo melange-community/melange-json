@@ -11,11 +11,16 @@ class virtual deriving : object
     loc:location -> path:label -> core_type -> expression
   (** a deriver can be applied to as type expression as extension node. *)
 
-  method virtual generator :
+  method virtual str_type_decl :
     ctxt:Expansion_context.Deriver.t ->
     rec_flag * type_declaration list ->
     structure
   (** or it can be attached to a type declaration. *)
+
+  method virtual sig_type_decl :
+    ctxt:Expansion_context.Deriver.t ->
+    rec_flag * type_declaration list ->
+    signature
 end
 
 val register : ?deps:Deriving.t list -> deriving -> Deriving.t
@@ -121,7 +126,6 @@ module Conv : sig
   val deriving_of_match :
     name:label ->
     of_t:(loc:location -> core_type) ->
-    error:(loc:location -> expression) ->
     derive_of_tuple:
       (derive_of_core_type -> core_type tuple -> expression -> expression) ->
     derive_of_record:

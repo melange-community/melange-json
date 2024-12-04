@@ -161,8 +161,6 @@ module Of_json = struct
   let deriving : Ppx_deriving_tools.deriving =
     deriving_of_match () ~name:"of_json"
       ~of_t:(fun ~loc -> [%type: Yojson.Basic.t])
-      ~error:(fun ~loc ->
-        [%expr Ppx_deriving_json_runtime.of_json_error "invalid JSON"])
       ~derive_of_tuple ~derive_of_record ~derive_of_variant_case
 end
 

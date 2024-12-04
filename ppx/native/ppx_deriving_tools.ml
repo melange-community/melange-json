@@ -82,27 +82,38 @@ class virtual deriving =
     method virtual extension
         : loc:location -> path:label -> core_type -> expression
 
-    method virtual generator
+    method virtual str_type_decl
         : ctxt:Expansion_context.Deriver.t ->
           rec_flag * type_declaration list ->
           structure
+
+    method virtual sig_type_decl
+        : ctxt:Expansion_context.Deriver.t ->
+          rec_flag * type_declaration list ->
+          signature
   end
 
 let register ?deps deriving =
-  Deriving.add deriving#name
-    ~str_type_decl:
-      (Deriving.Generator.V2.make ?deps Deriving.Args.empty
-         deriving#generator)
-    ~extension:deriving#extension
+  let args = Deriving.Args.empty in
+  let str_type_decl = deriving#str_type_decl in
+  let sig_type_decl = deriving#sig_type_decl in
+  Deriving.add deriving#name ~extension:deriving#extension
+    ~str_type_decl:(Deriving.Generator.V2.make ?deps args str_type_decl)
+    ~sig_type_decl:(Deriving.Generator.V2.make ?deps args sig_type_decl)
 
 let register_combined ?deps name derivings =
-  let generator ~ctxt bindings =
+  let args = Deriving.Args.empty in
+  let str_type_decl ~ctxt bindings =
     List.fold_left derivings ~init:[] ~f:(fun str d ->
-        d#generator ~ctxt bindings @ str)
+        d#str_type_decl ~ctxt bindings @ str)
+  in
+  let sig_type_decl ~ctxt bindings =
+    List.fold_left derivings ~init:[] ~f:(fun str d ->
+        d#sig_type_decl ~ctxt bindings @ str)
   in
   Deriving.add name
-    ~str_type_decl:
-      (Deriving.Generator.V2.make ?deps Deriving.Args.empty generator)
+    ~str_type_decl:(Deriving.Generator.V2.make ?deps args str_type_decl)
+    ~sig_type_decl:(Deriving.Generator.V2.make ?deps args sig_type_decl)
 
 module Schema = struct
   let repr_row_field field =
@@ -144,12 +155,6 @@ module Schema = struct
     | Ptype_record fs, _ -> `Ptype_record fs
     | Ptype_open, _ -> not_supported ~loc "open types"
 
-  let repr_type_declaration_is_poly td =
-    match repr_type_declaration td with
-    | `Ptype_core_type ({ ptyp_desc = Ptyp_variant _; _ } as t) ->
-        `Ptyp_variant t
-    | _ -> `Other
-
   let gen_type_ascription (td : type_declaration) =
     let loc = td.ptype_loc in
     ptyp_constr ~loc
@@ -161,6 +166,30 @@ module Schema = struct
            | _ ->
                Location.raise_errorf ~loc
                  "this cannot be a type parameter"))
+
+  let derive_sig_type_decl ~derive_t ~derive_label ~ctxt (_rec_flag, tds)
+      =
+    let loc = Expansion_context.Deriver.derived_item_loc ctxt in
+    List.map tds ~f:(fun td ->
+        let name = td.ptype_name in
+        let type_ = derive_t ~loc name (gen_type_ascription td) in
+        let type_ =
+          List.fold_left (List.rev td.ptype_params) ~init:type_
+            ~f:(fun acc (t, _) ->
+              let loc = t.ptyp_loc in
+              let name =
+                match t.ptyp_desc with
+                | Ptyp_var txt -> { txt; loc }
+                | _ ->
+                    Location.raise_errorf ~loc
+                      "type variable is not a variable"
+              in
+              let t = derive_t ~loc name t in
+              ptyp_arrow ~loc Nolabel t acc)
+        in
+        psig_value ~loc
+          (value_description ~loc ~prim:[] ~name:(derive_label name)
+             ~type_))
 
   class virtual deriving1 =
     object (self)
@@ -276,7 +305,7 @@ module Schema = struct
           let loc = ty.ptyp_loc in
           as_fun ~loc (self#derive_of_core_type' ty)
 
-      method generator
+      method str_type_decl
           : ctxt:Expansion_context.Deriver.t ->
             rec_flag * type_declaration list ->
             structure =
@@ -289,6 +318,13 @@ module Schema = struct
             [@@@ocaml.warning "-39-11-27"]
 
             [%%i pstr_value ~loc Recursive bindings]]
+
+      method sig_type_decl
+          : ctxt:Expansion_context.Deriver.t ->
+            rec_flag * type_declaration list ->
+            signature =
+        derive_sig_type_decl ~derive_t:self#t
+          ~derive_label:self#derive_type_decl_label
     end
 end
 
@@ -330,70 +366,8 @@ module Conv = struct
 
   let deriving_of ~name ~of_t ~error ~derive_of_tuple ~derive_of_record
       ~derive_of_variant ~derive_of_variant_case () =
-    let poly_name = sprintf "%s_poly" name in
-    let poly =
-      object (self)
-        inherit Schema.deriving1
-        method name = name
-        method t ~loc _name t = [%type: [%t of_t ~loc] -> [%t t] option]
-
-        method! derive_type_decl_label name =
-          map_loc (derive_of_label poly_name) name
-
-        method! derive_of_tuple t ts x =
-          let t = { tpl_loc = t.ptyp_loc; tpl_types = ts; tpl_ctx = t } in
-          derive_of_tuple self#derive_of_core_type t x
-
-        method! derive_of_record _ _ _ = assert false
-        method! derive_of_variant _ _ _ = assert false
-
-        method! derive_of_polyvariant t (cs : row_field list) x =
-          let loc = t.ptyp_loc in
-          let cases = repr_polyvariant_cases cs in
-          let body, cases =
-            List.fold_left cases
-              ~init:([%expr None], [])
-              ~f:(fun (next, cases) (c, r) ->
-                match r with
-                | `Rtag (n, ts) ->
-                    let make arg =
-                      [%expr Some [%e pexp_variant ~loc:n.loc n.txt arg]]
-                    in
-                    let ctx = Vcs_ctx_polyvariant c in
-                    let case =
-                      let t =
-                        { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
-                      in
-                      Vcs_tuple (n, t)
-                    in
-                    let next =
-                      derive_of_variant_case self#derive_of_core_type make
-                        case next
-                    in
-                    next, case :: cases
-                | `Rinherit (id, ts) ->
-                    let x = self#derive_type_ref ~loc poly_name id ts x in
-                    let t = ptyp_variant ~loc cs Closed None in
-                    let next =
-                      [%expr
-                        match [%e x] with
-                        | Some x -> (Some x :> [%t t] option)
-                        | None -> [%e next]]
-                    in
-                    next, cases)
-          in
-          let t =
-            {
-              vrt_loc = loc;
-              vrt_cases = cases;
-              vrt_ctx = Vrt_ctx_polyvariant t;
-            }
-          in
-          derive_of_variant self#derive_of_core_type t body x
-      end
-    in
     (object (self)
-       inherit Schema.deriving1 as super
+       inherit Schema.deriving1
        method name = name
        method t ~loc _name t = [%type: [%t of_t ~loc] -> [%t t]]
 
@@ -459,7 +433,13 @@ module Conv = struct
          let cases = repr_polyvariant_cases cs in
          let body, cases =
            List.fold_left cases
-             ~init:(error ~loc, [])
+             ~init:
+               ( [%expr
+                   raise
+                     (Ppx_deriving_json_runtime.Of_json_error
+                        (Ppx_deriving_json_runtime.Unexpected_variant
+                           "unexpected variant"))],
+                 [] )
              ~f:(fun (next, cases) (c, r) ->
                let ctx = Vcs_ctx_polyvariant c in
                match r with
@@ -478,14 +458,18 @@ module Conv = struct
                    next, case :: cases
                | `Rinherit (n, ts) ->
                    let maybe_e =
-                     poly#derive_type_ref ~loc poly_name n ts x
+                     self#derive_type_ref ~loc self#name n ts x
                    in
                    let t = ptyp_variant ~loc cs Closed None in
                    let next =
                      [%expr
                        match [%e maybe_e] with
-                       | Some e -> (e :> [%t t])
-                       | None -> [%e next]]
+                       | e -> (e :> [%t t])
+                       | exception
+                           Ppx_deriving_json_runtime.Of_json_error
+                             (Ppx_deriving_json_runtime.Unexpected_variant
+                               _) ->
+                           [%e next]]
                    in
                    next, cases)
          in
@@ -497,115 +481,13 @@ module Conv = struct
            }
          in
          derive_of_variant self#derive_of_core_type t body x
-
-       method! derive_of_type_declaration td =
-         match Schema.repr_type_declaration_is_poly td with
-         | `Ptyp_variant _ ->
-             let str =
-               let loc = td.ptype_loc in
-               let decl_name = td.ptype_name in
-               let params =
-                 List.map td.ptype_params ~f:(fun (t, _) ->
-                     match t.ptyp_desc with
-                     | Ptyp_var txt -> t, { txt; loc = t.ptyp_loc }
-                     | _ -> assert false)
-               in
-               let expr =
-                 let x = [%expr x] in
-                 let init =
-                   poly#derive_type_ref ~loc poly_name
-                     (map_loc lident decl_name)
-                     (List.map params ~f:fst) x
-                 in
-                 let init =
-                   [%expr
-                     (fun x ->
-                        match [%e init] with
-                        | Some x -> x
-                        | None -> [%e error ~loc]
-                       : [%t
-                           self#t ~loc decl_name
-                             (Schema.gen_type_ascription td)])]
-                 in
-                 List.fold_left params ~init ~f:(fun body (_, param) ->
-                     pexp_fun ~loc Nolabel None
-                       (ppat_var ~loc
-                          (map_loc (derive_of_label name) param))
-                       body)
-               in
-               [
-                 value_binding ~loc
-                   ~pat:
-                     (ppat_var ~loc
-                        (map_loc (derive_of_label self#name) decl_name))
-                   ~expr;
-               ]
-             in
-             poly#derive_of_type_declaration td @ str
-         | `Other -> super#derive_of_type_declaration td
      end
       :> deriving)
 
-  let deriving_of_match ~name ~of_t ~error ~derive_of_tuple
-      ~derive_of_record ~derive_of_variant_case () =
-    let poly_name = sprintf "%s_poly" name in
-    let poly =
-      object (self)
-        inherit Schema.deriving1
-        method name = name
-        method t ~loc _name t = [%type: [%t of_t ~loc] -> [%t t] option]
-
-        method! derive_type_decl_label name =
-          map_loc (derive_of_label poly_name) name
-
-        method! derive_of_tuple t ts x =
-          let t = { tpl_loc = t.ptyp_loc; tpl_types = ts; tpl_ctx = t } in
-          derive_of_tuple self#derive_of_core_type t x
-
-        method! derive_of_record _ _ _ = assert false
-        method! derive_of_variant _ _ _ = assert false
-
-        method! derive_of_polyvariant t (cs : row_field list) x =
-          let loc = t.ptyp_loc in
-          let cases = repr_polyvariant_cases cs in
-          let ctors, inherits =
-            List.partition_map cases ~f:(fun (c, r) ->
-                let ctx = Vcs_ctx_polyvariant c in
-                match r with
-                | `Rtag (n, ts) ->
-                    let t =
-                      { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
-                    in
-                    Left (n, Vcs_tuple (n, t))
-                | `Rinherit (n, ts) -> Right (n, ts))
-          in
-          let catch_all =
-            [%pat? x]
-            --> List.fold_left (List.rev inherits) ~init:[%expr None]
-                  ~f:(fun next (n, ts) ->
-                    let maybe =
-                      self#derive_type_ref ~loc poly_name n ts [%expr x]
-                    in
-                    let t = ptyp_variant ~loc cs Closed None in
-                    [%expr
-                      match [%e maybe] with
-                      | Some x -> (Some x :> [%t t] option)
-                      | None -> [%e next]])
-          in
-          let cases =
-            List.fold_left ctors ~init:[ catch_all ]
-              ~f:(fun next (n, case) ->
-                let make arg =
-                  [%expr Some [%e pexp_variant ~loc:n.loc n.txt arg]]
-                in
-                derive_of_variant_case self#derive_of_core_type make case
-                :: next)
-          in
-          pexp_match ~loc x cases
-      end
-    in
+  let deriving_of_match ~name ~of_t ~derive_of_tuple ~derive_of_record
+      ~derive_of_variant_case () =
     (object (self)
-       inherit Schema.deriving1 as super
+       inherit Schema.deriving1
        method name = name
        method t ~loc _name t = [%type: [%t of_t ~loc] -> [%t t]]
 
@@ -624,7 +506,15 @@ module Conv = struct
          let cs = repr_variant_cases cs in
          let cases =
            List.fold_left cs
-             ~init:[ [%pat? _] --> error ~loc ]
+             ~init:
+               [
+                 [%pat? _]
+                 --> [%expr
+                       raise
+                         (Ppx_deriving_json_runtime.Of_json_error
+                            (Ppx_deriving_json_runtime.Unexpected_variant
+                               "unexpected variant"))];
+               ]
              ~f:(fun next (c : constructor_declaration) ->
                let ctx = Vcs_ctx_variant c in
                let make (n : label loc) arg =
@@ -671,16 +561,26 @@ module Conv = struct
          in
          let catch_all =
            [%pat? x]
-           --> List.fold_left (List.rev inherits) ~init:(error ~loc)
+           --> List.fold_left (List.rev inherits)
+                 ~init:
+                   [%expr
+                     raise
+                       (Ppx_deriving_json_runtime.Of_json_error
+                          (Ppx_deriving_json_runtime.Unexpected_variant
+                             "unexpected variant"))]
                  ~f:(fun next (n, ts) ->
                    let maybe =
-                     poly#derive_type_ref ~loc poly_name n ts x
+                     self#derive_type_ref ~loc self#name n ts x
                    in
                    let t = ptyp_variant ~loc cs Closed None in
                    [%expr
                      match [%e maybe] with
-                     | Some x -> (x :> [%t t])
-                     | None -> [%e next]])
+                     | x -> (x :> [%t t])
+                     | exception
+                         Ppx_deriving_json_runtime.Of_json_error
+                           (Ppx_deriving_json_runtime.Unexpected_variant
+                             _) ->
+                         [%e next]])
          in
          let cases =
            List.fold_left ctors ~init:[ catch_all ]
@@ -690,52 +590,6 @@ module Conv = struct
                :: next)
          in
          pexp_match ~loc x cases
-
-       method! derive_of_type_declaration td =
-         match Schema.repr_type_declaration_is_poly td with
-         | `Ptyp_variant _ ->
-             let str =
-               let loc = td.ptype_loc in
-               let decl_name = td.ptype_name in
-               let params =
-                 List.map td.ptype_params ~f:(fun (t, _) ->
-                     match t.ptyp_desc with
-                     | Ptyp_var txt -> t, { txt; loc = t.ptyp_loc }
-                     | _ -> assert false)
-               in
-               let expr =
-                 let x = [%expr x] in
-                 let init =
-                   poly#derive_type_ref ~loc poly_name
-                     (map_loc lident decl_name)
-                     (List.map params ~f:fst) x
-                 in
-                 let init =
-                   [%expr
-                     (fun x ->
-                        match [%e init] with
-                        | Some x -> x
-                        | None -> [%e error ~loc]
-                       : [%t
-                           self#t ~loc decl_name
-                             (Schema.gen_type_ascription td)])]
-                 in
-                 List.fold_left params ~init ~f:(fun body (_, param) ->
-                     pexp_fun ~loc Nolabel None
-                       (ppat_var ~loc
-                          (map_loc (derive_of_label name) param))
-                       body)
-               in
-               [
-                 value_binding ~loc
-                   ~pat:
-                     (ppat_var ~loc
-                        (map_loc (derive_of_label self#name) decl_name))
-                   ~expr;
-               ]
-             in
-             poly#derive_of_type_declaration td @ str
-         | `Other -> super#derive_of_type_declaration td
      end
       :> deriving)
 

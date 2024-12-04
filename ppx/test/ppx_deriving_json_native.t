@@ -381,7 +381,11 @@
                        Ppx_deriving_json_runtime.of_json_error
                          "missing field \"name\"");
                }
-         | _ -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+         | _ ->
+             raise
+               (Ppx_deriving_json_runtime.Of_json_error
+                  (Ppx_deriving_json_runtime.Unexpected_variant
+                     "unexpected variant"))
         : Yojson.Basic.t -> sum)
   
     let _ = sum_of_json
@@ -424,7 +428,11 @@
          match x with
          | `List [ `String "S2"; x_0; x_1 ] ->
              S2 (int_of_json x_0, string_of_json x_1)
-         | _ -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+         | _ ->
+             raise
+               (Ppx_deriving_json_runtime.Of_json_error
+                  (Ppx_deriving_json_runtime.Unexpected_variant
+                     "unexpected variant"))
         : Yojson.Basic.t -> sum2)
   
     let _ = sum2_of_json
@@ -451,20 +459,18 @@
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec other_of_json_poly =
+    let rec other_of_json =
       (fun x ->
-         match x with `List (`String "C" :: []) -> Some `C | x -> None
-        : Yojson.Basic.t -> other option)
-  
-    and other_of_json =
-      (fun x ->
-         match other_of_json_poly x with
-         | Some x -> x
-         | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+         match x with
+         | `List (`String "C" :: []) -> `C
+         | x ->
+             raise
+               (Ppx_deriving_json_runtime.Of_json_error
+                  (Ppx_deriving_json_runtime.Unexpected_variant
+                     "unexpected variant"))
         : Yojson.Basic.t -> other)
   
-    let _ = other_of_json_poly
-    and _ = other_of_json
+    let _ = other_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
@@ -482,26 +488,24 @@
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec poly_of_json_poly =
+    let rec poly_of_json =
       (fun x ->
          match x with
-         | `List (`String "A" :: []) -> Some `A
-         | `List [ `String "B"; x_0 ] -> Some (`B (int_of_json x_0))
+         | `List (`String "A" :: []) -> `A
+         | `List [ `String "B"; x_0 ] -> `B (int_of_json x_0)
          | x -> (
-             match other_of_json_poly x with
-             | Some x -> (Some x :> [ `A | `B of int | other ] option)
-             | None -> None)
-        : Yojson.Basic.t -> poly option)
-  
-    and poly_of_json =
-      (fun x ->
-         match poly_of_json_poly x with
-         | Some x -> x
-         | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+             match other_of_json x with
+             | x -> (x :> [ `A | `B of int | other ])
+             | exception
+                 Ppx_deriving_json_runtime.Of_json_error
+                   (Ppx_deriving_json_runtime.Unexpected_variant _) ->
+                 raise
+                   (Ppx_deriving_json_runtime.Of_json_error
+                      (Ppx_deriving_json_runtime.Unexpected_variant
+                         "unexpected variant")))
         : Yojson.Basic.t -> poly)
   
-    let _ = poly_of_json_poly
-    and _ = poly_of_json
+    let _ = poly_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
@@ -526,23 +530,19 @@
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec poly2_of_json_poly =
+    let rec poly2_of_json =
       (fun x ->
          match x with
          | `List [ `String "P2"; x_0; x_1 ] ->
-             Some (`P2 (int_of_json x_0, string_of_json x_1))
-         | x -> None
-        : Yojson.Basic.t -> poly2 option)
-  
-    and poly2_of_json =
-      (fun x ->
-         match poly2_of_json_poly x with
-         | Some x -> x
-         | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+             `P2 (int_of_json x_0, string_of_json x_1)
+         | x ->
+             raise
+               (Ppx_deriving_json_runtime.Of_json_error
+                  (Ppx_deriving_json_runtime.Unexpected_variant
+                     "unexpected variant"))
         : Yojson.Basic.t -> poly2)
   
-    let _ = poly2_of_json_poly
-    and _ = poly2_of_json
+    let _ = poly2_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
@@ -566,20 +566,17 @@
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec c_of_json_poly a_of_json : Yojson.Basic.t -> 'a c option =
+    let rec c_of_json a_of_json : Yojson.Basic.t -> 'a c =
      fun x ->
       match x with
-      | `List [ `String "C"; x_0 ] -> Some (`C (a_of_json x_0))
-      | x -> None
+      | `List [ `String "C"; x_0 ] -> `C (a_of_json x_0)
+      | x ->
+          raise
+            (Ppx_deriving_json_runtime.Of_json_error
+               (Ppx_deriving_json_runtime.Unexpected_variant
+                  "unexpected variant"))
   
-    and c_of_json a_of_json : Yojson.Basic.t -> 'a c =
-     fun x ->
-      match (c_of_json_poly a_of_json) x with
-      | Some x -> x
-      | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
-  
-    let _ = c_of_json_poly
-    and _ = c_of_json
+    let _ = c_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
@@ -604,7 +601,11 @@
          match x with
          | `List (`String "A" :: []) -> A
          | `List [ `String "Fix"; x_0 ] -> Fix (recur_of_json x_0)
-         | _ -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+         | _ ->
+             raise
+               (Ppx_deriving_json_runtime.Of_json_error
+                  (Ppx_deriving_json_runtime.Unexpected_variant
+                     "unexpected variant"))
         : Yojson.Basic.t -> recur)
   
     let _ = recur_of_json
@@ -631,24 +632,19 @@
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec polyrecur_of_json_poly =
+    let rec polyrecur_of_json =
       (fun x ->
          match x with
-         | `List (`String "A" :: []) -> Some `A
-         | `List [ `String "Fix"; x_0 ] ->
-             Some (`Fix (polyrecur_of_json x_0))
-         | x -> None
-        : Yojson.Basic.t -> polyrecur option)
-  
-    and polyrecur_of_json =
-      (fun x ->
-         match polyrecur_of_json_poly x with
-         | Some x -> x
-         | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+         | `List (`String "A" :: []) -> `A
+         | `List [ `String "Fix"; x_0 ] -> `Fix (polyrecur_of_json x_0)
+         | x ->
+             raise
+               (Ppx_deriving_json_runtime.Of_json_error
+                  (Ppx_deriving_json_runtime.Unexpected_variant
+                     "unexpected variant"))
         : Yojson.Basic.t -> polyrecur)
   
-    let _ = polyrecur_of_json_poly
-    and _ = polyrecur_of_json
+    let _ = polyrecur_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
@@ -677,7 +673,11 @@
          match x with
          | `List (`String "A" :: []) -> A
          | `List (`String "b_aliased" :: []) -> B
-         | _ -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+         | _ ->
+             raise
+               (Ppx_deriving_json_runtime.Of_json_error
+                  (Ppx_deriving_json_runtime.Unexpected_variant
+                     "unexpected variant"))
         : Yojson.Basic.t -> evar)
   
     let _ = evar_of_json
@@ -704,23 +704,19 @@
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec epoly_of_json_poly =
+    let rec epoly_of_json =
       (fun x ->
          match x with
-         | `List (`String "A_aliased" :: []) -> Some `a
-         | `List (`String "b" :: []) -> Some `b
-         | x -> None
-        : Yojson.Basic.t -> epoly option)
-  
-    and epoly_of_json =
-      (fun x ->
-         match epoly_of_json_poly x with
-         | Some x -> x
-         | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+         | `List (`String "A_aliased" :: []) -> `a
+         | `List (`String "b" :: []) -> `b
+         | x ->
+             raise
+               (Ppx_deriving_json_runtime.Of_json_error
+                  (Ppx_deriving_json_runtime.Unexpected_variant
+                     "unexpected variant"))
         : Yojson.Basic.t -> epoly)
   
-    let _ = epoly_of_json_poly
-    and _ = epoly_of_json
+    let _ = epoly_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
@@ -749,7 +745,11 @@
       match x with
       | `List [ `String "A"; x_0 ] -> A (a_of_json x_0)
       | `List [ `String "B"; x_0 ] -> B (b_of_json x_0)
-      | _ -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+      | _ ->
+          raise
+            (Ppx_deriving_json_runtime.Of_json_error
+               (Ppx_deriving_json_runtime.Unexpected_variant
+                  "unexpected variant"))
   
     let _ = p2_of_json
   
@@ -853,7 +853,11 @@
                        Ppx_deriving_json_runtime.of_json_error
                          "missing field \"a\"");
                }
-         | _ -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+         | _ ->
+             raise
+               (Ppx_deriving_json_runtime.Of_json_error
+                  (Ppx_deriving_json_runtime.Unexpected_variant
+                     "unexpected variant"))
         : Yojson.Basic.t -> allow_extra_fields2)
   
     let _ = allow_extra_fields2_of_json
