@@ -2,7 +2,10 @@
 
 (* prints ["foo", "bar"] *)
 let _ =
-  [| "foo"; "bar" |] |> Json.Encode.stringArray |> Json.stringify |> Js.log
+  [| "foo"; "bar" |]
+  |> Json.Encode.stringArray
+  |> Json.stringify
+  |> Js.log
 
 (* prints ["foo", "bar"] *)
 let _ =
@@ -13,7 +16,8 @@ let _ =
   |> Js.log
 
 (* prints { x: 42, foo: 'bar' } *)
-let _ = Json.Encode.(object_ [ ("x", int 42); ("foo", string "bar") ] |> Js.log)
+let _ =
+  Json.Encode.(object_ [ "x", int 42; "foo", string "bar" ] |> Js.log)
 
 (* Advanced example: encode a record *)
 type line = { start : point; end_ : point; thickness : int option }
@@ -22,15 +26,16 @@ and point = { x : float; y : float }
 module Encode = struct
   let point r =
     let open! Json.Encode in
-    object_ [ ("x", float r.x); ("y", float r.y) ]
+    object_ [ "x", float r.x; "y", float r.y ]
 
   let line r =
     Json.Encode.(
       object_
         [
-          ("start", point r.start);
-          ("end", point r.end_);
-          ("thickness", match r.thickness with Some x -> int x | None -> null);
+          "start", point r.start;
+          "end", point r.end_;
+          ( "thickness",
+            match r.thickness with Some x -> int x | None -> null );
         ])
 end
 
@@ -41,7 +46,4 @@ let data =
     thickness = Some 2;
   }
 
-let _ =
-  data
-  |> Encode.line
-  |> Js.log
+let _ = data |> Encode.line |> Js.log

@@ -198,38 +198,38 @@ module Schema = struct
       method virtual t
           : loc:location -> label loc -> core_type -> core_type
 
-      method derive_of_tuple
-          : core_type -> core_type list -> expression -> expression =
+      method derive_of_tuple :
+          core_type -> core_type list -> expression -> expression =
         fun t _ _ ->
           let loc = t.ptyp_loc in
           not_supported "tuple types" ~loc
 
-      method derive_of_record
-          : type_declaration ->
-            label_declaration list ->
-            expression ->
-            expression =
+      method derive_of_record :
+          type_declaration ->
+          label_declaration list ->
+          expression ->
+          expression =
         fun td _ _ ->
           let loc = td.ptype_loc in
           not_supported "record types" ~loc
 
-      method derive_of_variant
-          : type_declaration ->
-            constructor_declaration list ->
-            expression ->
-            expression =
+      method derive_of_variant :
+          type_declaration ->
+          constructor_declaration list ->
+          expression ->
+          expression =
         fun td _ _ ->
           let loc = td.ptype_loc in
           not_supported "variant types" ~loc
 
-      method derive_of_polyvariant
-          : core_type -> row_field list -> expression -> expression =
+      method derive_of_polyvariant :
+          core_type -> row_field list -> expression -> expression =
         fun t _ _ ->
           let loc = t.ptyp_loc in
           not_supported "polyvariant types" ~loc
 
-      method private derive_type_ref_name
-          : label -> longident loc -> expression =
+      method private derive_type_ref_name :
+          label -> longident loc -> expression =
         fun name n -> ederiver name n
 
       method private derive_type_ref' ~loc name n ts =
@@ -299,16 +299,16 @@ module Schema = struct
             ~expr;
         ]
 
-      method extension
-          : loc:location -> path:label -> core_type -> expression =
+      method extension :
+          loc:location -> path:label -> core_type -> expression =
         fun ~loc:_ ~path:_ ty ->
           let loc = ty.ptyp_loc in
           as_fun ~loc (self#derive_of_core_type' ty)
 
-      method str_type_decl
-          : ctxt:Expansion_context.Deriver.t ->
-            rec_flag * type_declaration list ->
-            structure =
+      method str_type_decl :
+          ctxt:Expansion_context.Deriver.t ->
+          rec_flag * type_declaration list ->
+          structure =
         fun ~ctxt (_rec_flag, tds) ->
           let loc = Expansion_context.Deriver.derived_item_loc ctxt in
           let bindings =
@@ -319,10 +319,10 @@ module Schema = struct
 
             [%%i pstr_value ~loc Recursive bindings]]
 
-      method sig_type_decl
-          : ctxt:Expansion_context.Deriver.t ->
-            rec_flag * type_declaration list ->
-            signature =
+      method sig_type_decl :
+          ctxt:Expansion_context.Deriver.t ->
+          rec_flag * type_declaration list ->
+          signature =
         derive_sig_type_decl ~derive_t:self#t
           ~derive_label:self#derive_type_decl_label
     end
@@ -468,7 +468,7 @@ module Conv = struct
                        | exception
                            Ppx_deriving_json_runtime.Of_json_error
                              (Ppx_deriving_json_runtime.Unexpected_variant
-                               _) ->
+                                _) ->
                            [%e next]]
                    in
                    next, cases)
@@ -578,8 +578,8 @@ module Conv = struct
                      | x -> (x :> [%t t])
                      | exception
                          Ppx_deriving_json_runtime.Of_json_error
-                           (Ppx_deriving_json_runtime.Unexpected_variant
-                             _) ->
+                           (Ppx_deriving_json_runtime.Unexpected_variant _)
+                       ->
                          [%e next]])
          in
          let cases =

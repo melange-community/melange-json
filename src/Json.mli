@@ -99,32 +99,31 @@ let _ =
     |} 
   )
 ]}
-*) 
-
-module Decode : sig
-(** Provides a set of low level combinator primitives to decode Js.Json.t data
-structures
-A decoder combinator will return the decoded value if successful, or raise a 
-[DecodeError of string] if unsuccessful, where the string argument contains the
-error message.
-Decoders are designed to be combined to produce more complex decoders that can
-decode arbitrary data structures, though the emphasis for this library is for
-it to be {i possible} to decode any given data structure, not necessarily for
-it to be {i convenient}. For convenience you should look towards opinionated
-third-party libraries.
 *)
 
-type 'a decoder = Js.Json.t -> 'a
-(** The type of a decoder combinator *)
+module Decode : sig
+  (** Provides a set of low level combinator primitives to decode
+      Js.Json.t data structures A decoder combinator will return the
+      decoded value if successful, or raise a [DecodeError of string] if
+      unsuccessful, where the string argument contains the error message.
+      Decoders are designed to be combined to produce more complex
+      decoders that can decode arbitrary data structures, though the
+      emphasis for this library is for it to be {i possible} to decode any
+      given data structure, not necessarily for it to be {i convenient}.
+      For convenience you should look towards opinionated third-party
+      libraries. *)
 
-type error = Json_error of string | Unexpected_variant of string
+  type 'a decoder = Js.Json.t -> 'a
+  (** The type of a decoder combinator *)
 
-val error_to_string : error -> string
+  type error = Json_error of string | Unexpected_variant of string
 
-exception DecodeError of error
+  val error_to_string : error -> string
 
-val id : Js.Json.t decoder
-(** Identity decoder.
+  exception DecodeError of error
+
+  val id : Js.Json.t decoder
+  (** Identity decoder.
 
     {b Returns} the input JSON value.
 
@@ -140,8 +139,8 @@ val id : Js.Json.t decoder
       let _ = Decode.(int json, id json)
     ]} *)
 
-val bool : bool decoder
-(** Decodes a JSON value into a [bool]
+  val bool : bool decoder
+  (** Decodes a JSON value into a [bool]
     
 {b Returns} a [bool] if the JSON value is a [true] or [false].
 
@@ -160,8 +159,8 @@ val bool : bool decoder
 ]}
 *)
 
-val float : float decoder
-(** Decodes a JSON value into a [float]
+  val float : float decoder
+  (** Decodes a JSON value into a [float]
     
 {b Returns} a [float] if the JSON value is a number.
 
@@ -180,8 +179,8 @@ val float : float decoder
 ]}
 *)
 
-val int : int decoder
-(** Decodes a JSON value into an [int]
+  val int : int decoder
+  (** Decodes a JSON value into an [int]
     
 {b Returns} an [int] if the JSON value is a number.
 
@@ -200,8 +199,8 @@ val int : int decoder
 ]}
 *)
 
-val string : string decoder
-(** Decodes a JSON value into a [string]
+  val string : string decoder
+  (** Decodes a JSON value into a [string]
     
 {b Returns} a [string] if the JSON value is a string.
 
@@ -218,8 +217,8 @@ val string : string decoder
 ]}
 *)
 
-val char : char decoder
-(** Decodes a JSON value into a [char]
+  val char : char decoder
+  (** Decodes a JSON value into a [char]
 
 {b Returns} a [char] if the JSON value is a single-character string.
 
@@ -236,16 +235,16 @@ val char : char decoder
 ]}
 *)
 
-val date : Js.Date.t decoder
-(** Decodes an ISO8601-formatted JSON string into a [Js.Date.t]
-    
-{b Returns} a [Js.Date.t] if the JSON value is an IS8601-formatted string.
+  val date : Js.Date.t decoder
+  (** Decodes an ISO8601-formatted JSON string into a [Js.Date.t]
 
-@raise [DecodeError] if unsuccessful 
-*)
+      {b Returns} a [Js.Date.t] if the JSON value is an IS8601-formatted
+      string.
 
-val nullable : 'a decoder -> 'a Js.null decoder
-(** Decodes a JSON value into an ['a Js.null]
+      @raise [DecodeError] if unsuccessful *)
+
+  val nullable : 'a decoder -> 'a Js.null decoder
+  (** Decodes a JSON value into an ['a Js.null]
     
 {b Returns} [Js.null] if the JSON value is [null], or an ['a Js.null] if the
 given decoder succeeds,
@@ -263,8 +262,8 @@ given decoder succeeds,
 ]}
 *)
 
-val nullAs : 'a -> 'a decoder
-(** Returns the given value if the JSON value is [null]
+  val nullAs : 'a -> 'a decoder
+  (** Returns the given value if the JSON value is [null]
     
 {b Returns} an ['a] if the JSON value is [null].
 
@@ -281,8 +280,8 @@ val nullAs : 'a -> 'a decoder
 ]}
 *)
 
-val array : 'a decoder -> 'a array decoder
-(** Decodes a JSON array into an ['a array] using the given decoder on each element
+  val array : 'a decoder -> 'a array decoder
+  (** Decodes a JSON array into an ['a array] using the given decoder on each element
     
 {b Returns} an ['a array] if the JSON value is a JSON array and all its
 elements are successfully decoded.
@@ -302,8 +301,8 @@ elements are successfully decoded.
 ]}
 *)
 
-val list : 'a decoder -> 'a list decoder
-(** Decodes a JSON array into an ['a list] using the given decoder on each element
+  val list : 'a decoder -> 'a list decoder
+  (** Decodes a JSON array into an ['a list] using the given decoder on each element
     
 {b Returns} an ['a list] if the JSON value is a JSON array and all its
 elements are successfully decoded.
@@ -323,8 +322,8 @@ elements are successfully decoded.
 ]}
 *)
 
-val pair : 'a decoder -> 'b decoder -> ('a * 'b) decoder
-(** Decodes a JSON array with two elements into an ['a * 'b] tuple using
+  val pair : 'a decoder -> 'b decoder -> ('a * 'b) decoder
+  (** Decodes a JSON array with two elements into an ['a * 'b] tuple using
     each of the given decoders in order.
 
 {b Returns} an ['a * 'b] if the JSON value is a JSON array of length 2 and both
@@ -343,8 +342,8 @@ val pair : 'a decoder -> 'b decoder -> ('a * 'b) decoder
 ]}
 *)
 
-val tuple2 : 'a decoder -> 'b decoder -> ('a * 'b) decoder
-(** Decodes a JSON array with two elements into an ['a * 'b] tuple using
+  val tuple2 : 'a decoder -> 'b decoder -> ('a * 'b) decoder
+  (** Decodes a JSON array with two elements into an ['a * 'b] tuple using
     each of the given decoders in order.
 
 {b Alias of [pair]}
@@ -365,28 +364,32 @@ val tuple2 : 'a decoder -> 'b decoder -> ('a * 'b) decoder
 ]}
 *)
 
-val tuple3 : 'a decoder -> 'b decoder -> 'c decoder -> ('a * 'b * 'c) decoder
-(** Decodes a JSON array with three elements into an ['a * 'b * 'c] tuple using
-    each of the given decoders in order.
+  val tuple3 :
+    'a decoder -> 'b decoder -> 'c decoder -> ('a * 'b * 'c) decoder
+  (** Decodes a JSON array with three elements into an ['a * 'b * 'c]
+      tuple using each of the given decoders in order.
 
-{b Returns} an ['a * 'b * 'c] if the JSON value is a JSON array of length 3 and
-    all its elements are successfully decoded.
+      {b Returns} an ['a * 'b * 'c] if the JSON value is a JSON array of
+      length 3 and all its elements are successfully decoded.
 
-@raise [DecodeError] if unsuccessful
-*)
+      @raise [DecodeError] if unsuccessful *)
 
-val tuple4 : 'a decoder -> 'b decoder -> 'c decoder -> 'd decoder -> ('a * 'b * 'c * 'd) decoder
-(** Decodes a JSON array with four elements into an ['a * 'b * 'c * 'd] tuple
-    using each of the given decoders in order.
+  val tuple4 :
+    'a decoder ->
+    'b decoder ->
+    'c decoder ->
+    'd decoder ->
+    ('a * 'b * 'c * 'd) decoder
+  (** Decodes a JSON array with four elements into an ['a * 'b * 'c * 'd]
+      tuple using each of the given decoders in order.
 
-{b Returns} an ['a * 'b * 'c * 'd] if the JSON value is a JSON array of length 4
-    and all its elements are successfully decoded.
+      {b Returns} an ['a * 'b * 'c * 'd] if the JSON value is a JSON array
+      of length 4 and all its elements are successfully decoded.
 
-@raise [DecodeError] if unsuccessful
-*)
+      @raise [DecodeError] if unsuccessful *)
 
-val dict : 'a decoder -> 'a Js.Dict.t decoder
-(** Decodes a JSON object into a dict using the given decoder on each of its values
+  val dict : 'a decoder -> 'a Js.Dict.t decoder
+  (** Decodes a JSON object into a dict using the given decoder on each of its values
     
 {b Returns} an ['a Js.Dict.t] if the JSON value is a JSON object and all its
 values are successfully decoded.
@@ -406,8 +409,8 @@ values are successfully decoded.
 ]}
 *)
 
-val field : string -> 'a decoder -> 'a decoder
-(** Decodes a JSON object with a specific field into the value of that field
+  val field : string -> 'a decoder -> 'a decoder
+  (** Decodes a JSON object with a specific field into the value of that field
     
 {b Returns} an ['a] if the JSON value is a JSON object with the given field
 and a value that is successfully decoded with the given decoder.
@@ -429,8 +432,8 @@ and a value that is successfully decoded with the given decoder.
 ]}
 *)
 
-val at : string list -> 'a decoder -> 'a decoder
-(** Same as [field] but takes a top level field and a list of nested fields for decoding nested values.
+  val at : string list -> 'a decoder -> 'a decoder
+  (** Same as [field] but takes a top level field and a list of nested fields for decoding nested values.
     
 {b Returns} an ['a] if the JSON value is a JSON object with the given field
 and a value that is successfully decoded with the given decoder.
@@ -447,8 +450,8 @@ and a value that is successfully decoded with the given decoder.
 ]}
 *)
 
-val optional : 'a decoder -> 'a option decoder
-(** Maps a decoder [result] to an option
+  val optional : 'a decoder -> 'a option decoder
+  (** Maps a decoder [result] to an option
     
 {b Returns} [Some of 'a] if the given decoder is successful, [None] if
 it is not.
@@ -481,8 +484,8 @@ a composite decoder, and is useful to decode optional JSON object fields.
 ]}
 *)
 
-val oneOf : 'a decoder list -> 'a decoder
-(** Tries each [decoder] in order, retunring the result of the first that succeeds
+  val oneOf : 'a decoder list -> 'a decoder
+  (** Tries each [decoder] in order, retunring the result of the first that succeeds
 
 {b Returns} an ['a] if one of the decoders succeed.
 
@@ -499,8 +502,8 @@ val oneOf : 'a decoder list -> 'a decoder
 ]}
 *)
 
-val either : 'a decoder -> 'a decoder -> 'a decoder
-(** Tries each [decoder] in order, retunring the result of the first that succeeds
+  val either : 'a decoder -> 'a decoder -> 'a decoder
+  (** Tries each [decoder] in order, retunring the result of the first that succeeds
 
 {b Returns} an ['a] if one of the decoders succeed.
 
@@ -517,8 +520,8 @@ val either : 'a decoder -> 'a decoder -> 'a decoder
 ]}
 *)
 
-val withDefault : 'a -> 'a decoder -> 'a decoder
-(** Tries the given [decoder] and returns its result if it succeeds, or the
+  val withDefault : 'a -> 'a decoder -> 'a decoder
+  (** Tries the given [decoder] and returns its result if it succeeds, or the
 given default value if it fails.
 
 {b Returns} an ['a].
@@ -534,8 +537,8 @@ given default value if it fails.
 ]}
 *)
 
-val map : ('a -> 'b) -> 'a decoder -> 'b decoder
-(** Returns a decoder that maps the result of the given decoder if successful
+  val map : ('a -> 'b) -> 'a decoder -> 'b decoder
+  (** Returns a decoder that maps the result of the given decoder if successful
 
 {b Returns} a ['b] if the given decoder succeeds.
 
@@ -546,8 +549,8 @@ val map : ('a -> 'b) -> 'a decoder -> 'b decoder
 ]}
 *)
 
-val andThen : ('a -> 'b decoder) -> 'a decoder -> 'b decoder
-(** Returns a decoder that maps the result of the given decoder if successful
+  val andThen : ('a -> 'b decoder) -> 'a decoder -> 'b decoder
+  (** Returns a decoder that maps the result of the given decoder if successful
 
 {b Returns} an ['a] if both decoders succeed.
 
@@ -604,99 +607,112 @@ val andThen : ('a -> 'b decoder) -> 'a decoder -> 'b decoder
 end
 
 module Encode : sig
-(** Provides functions for encoding a JSON data structure *)
+  (** Provides functions for encoding a JSON data structure *)
 
-type 'a encoder = 'a -> Js.Json.t
-(** The type of a encoder combinator *)
+  type 'a encoder = 'a -> Js.Json.t
+  (** The type of a encoder combinator *)
 
-external null : Js.Json.t = "null"
+  external null : Js.Json.t = "null"
 
-(** [null] is the singleton null JSON value *)
+  (** [null] is the singleton null JSON value *)
 
-external string : string -> Js.Json.t = "%identity"
-(** [string s] makes a JSON string of the [string] [s] *)
+  external string : string -> Js.Json.t = "%identity"
+  (** [string s] makes a JSON string of the [string] [s] *)
 
-external float : float -> Js.Json.t = "%identity"
-(** [float n] makes a JSON number of the [float] [n] *)
+  external float : float -> Js.Json.t = "%identity"
+  (** [float n] makes a JSON number of the [float] [n] *)
 
-external int : int -> Js.Json.t = "%identity"
-(** [int n] makes a JSON number of the [int] [n] *)
+  external int : int -> Js.Json.t = "%identity"
+  (** [int n] makes a JSON number of the [int] [n] *)
 
-external bool : bool -> Js.Json.t = "%identity"
-(** [bool b] makes a JSON boolean of the [bool] [b] *)
+  external bool : bool -> Js.Json.t = "%identity"
+  (** [bool b] makes a JSON boolean of the [bool] [b] *)
 
-val char : char -> Js.Json.t
-(** [char c] makes a JSON string of the [char] [c] *)
+  val char : char -> Js.Json.t
+  (** [char c] makes a JSON string of the [char] [c] *)
 
-val date : Js.Date.t -> Js.Json.t
-(** [date d] makes an ISO 8601 JSON string of the [Js.Date.t] [d] *)
+  val date : Js.Date.t -> Js.Json.t
+  (** [date d] makes an ISO 8601 JSON string of the [Js.Date.t] [d] *)
 
-val nullable : 'a encoder -> 'a option -> Js.Json.t
-(** [nullable encoder option] returns either the encoded value or [null] *)
+  val nullable : 'a encoder -> 'a option -> Js.Json.t
+  (** [nullable encoder option] returns either the encoded value or [null]
+  *)
 
-val withDefault : Js.Json.t -> 'a encoder -> 'a option -> Js.Json.t
-(** [withDefault default encoder option] returns the encoded value if present, oterwise [default] *)
+  val withDefault : Js.Json.t -> 'a encoder -> 'a option -> Js.Json.t
+  (** [withDefault default encoder option] returns the encoded value if
+      present, oterwise [default] *)
 
-val pair : 'a encoder -> 'b encoder -> 'a * 'b -> Js.Json.t
-(** [pair encoder encoder tuple] creates a JSON array from a tuple of size 2 *)
+  val pair : 'a encoder -> 'b encoder -> 'a * 'b -> Js.Json.t
+  (** [pair encoder encoder tuple] creates a JSON array from a tuple of
+      size 2 *)
 
-val tuple2 : 'a encoder -> 'b encoder -> 'a * 'b -> Js.Json.t
-(** [tuple2 encoder encoder tuple] creates a JSON array from a tuple of size 2. Alias of [pair] *)
+  val tuple2 : 'a encoder -> 'b encoder -> 'a * 'b -> Js.Json.t
+  (** [tuple2 encoder encoder tuple] creates a JSON array from a tuple of
+      size 2. Alias of [pair] *)
 
-val tuple3 : 'a encoder -> 'b encoder -> 'c encoder -> 'a * 'b * 'c -> Js.Json.t
-(** [tuple3 enc enc enc tuple] creates a JSON array from a tuple of size 3 *)
+  val tuple3 :
+    'a encoder -> 'b encoder -> 'c encoder -> 'a * 'b * 'c -> Js.Json.t
+  (** [tuple3 enc enc enc tuple] creates a JSON array from a tuple of size
+      3 *)
 
-val tuple4 :
-  'a encoder ->
-  'b encoder ->
-  'c encoder ->
-  'd encoder ->
-  'a * 'b * 'c * 'd ->
-  Js.Json.t
-(** [tuple4 enc enc enc enc tuple] creates a JSON array from a tuple of size 4 *)
+  val tuple4 :
+    'a encoder ->
+    'b encoder ->
+    'c encoder ->
+    'd encoder ->
+    'a * 'b * 'c * 'd ->
+    Js.Json.t
+  (** [tuple4 enc enc enc enc tuple] creates a JSON array from a tuple of
+      size 4 *)
 
-external jsonDict : Js.Json.t Js.Dict.t -> Js.Json.t = "%identity"
-(** [jsonDict d] makes a JSON object of the [Js.Dict.t] [d] *)
+  external jsonDict : Js.Json.t Js.Dict.t -> Js.Json.t = "%identity"
+  (** [jsonDict d] makes a JSON object of the [Js.Dict.t] [d] *)
 
-val dict : 'a encoder -> 'a Js.Dict.t encoder
-(** [dict encoder d] makes a JSON object of the [Js.Dict.t] [d] with the given [encoder] *)
+  val dict : 'a encoder -> 'a Js.Dict.t encoder
+  (** [dict encoder d] makes a JSON object of the [Js.Dict.t] [d] with the
+      given [encoder] *)
 
-val object_ : (string * Js.Json.t) list -> Js.Json.t
-(** [object_ props] makes a JSON object of the [props] list of properties *)
+  val object_ : (string * Js.Json.t) list -> Js.Json.t
+  (** [object_ props] makes a JSON object of the [props] list of
+      properties *)
 
-val array : 'a encoder -> 'a array encoder
-(** [array encoder l] makes a JSON array of the [list] [l] using the given [encoder]
- *  NOTE: This will be renamed `array` once the existing and deprecated `array` function
- *  has been removed.
- *)
+  val array : 'a encoder -> 'a array encoder
+  (** [array encoder l] makes a JSON array of the [list] [l] using the
+      given [encoder] * NOTE: This will be renamed `array` once the
+      existing and deprecated `array` function * has been removed. *)
 
-val list : 'a encoder -> 'a list encoder
-(** [list encoder a] makes a JSON array of the [array] [a] using the given [encoder] *)
+  val list : 'a encoder -> 'a list encoder
+  (** [list encoder a] makes a JSON array of the [array] [a] using the
+      given [encoder] *)
 
-(** The functions below are specialized for specific array type which
-    happened to be already JSON object in the BuckleScript runtime. Therefore
-    they are more efficient (constant time rather than linear conversion). *)
+  (** The functions below are specialized for specific array type which
+      happened to be already JSON object in the BuckleScript runtime.
+      Therefore they are more efficient (constant time rather than linear
+      conversion). *)
 
-external jsonArray : Js.Json.t array -> Js.Json.t = "%identity"
-(** [jsonArray a] makes a JSON array of the [Js.Json.t array] [a] *)
+  external jsonArray : Js.Json.t array -> Js.Json.t = "%identity"
+  (** [jsonArray a] makes a JSON array of the [Js.Json.t array] [a] *)
 
-external stringArray : string array -> Js.Json.t = "%identity"
-(** [stringArray a] makes a JSON array of the [string array] [a] *)
+  external stringArray : string array -> Js.Json.t = "%identity"
+  (** [stringArray a] makes a JSON array of the [string array] [a] *)
 
-external numberArray : float array -> Js.Json.t = "%identity"
-(** [numberArray a] makes a JSON array of the [float array] [a] *)
+  external numberArray : float array -> Js.Json.t = "%identity"
+  (** [numberArray a] makes a JSON array of the [float array] [a] *)
 
-external boolArray : bool array -> Js.Json.t = "%identity"
-(** [boolArray] makes a JSON array of the [bool array] [a] *)
+  external boolArray : bool array -> Js.Json.t = "%identity"
+  (** [boolArray] makes a JSON array of the [bool array] [a] *)
 end
 
 exception ParseError of string
 
-val parse: string -> Js.Json.t option
-(** [parse s] returns [Some json] if s is a valid json string, [None] otherwise *)
+val parse : string -> Js.Json.t option
+(** [parse s] returns [Some json] if s is a valid json string, [None]
+    otherwise *)
 
-val parseOrRaise: string -> Js.Json.t
-(** [parse s] returns a [Js.Json.t] if s is a valid json string, raises [ParseError] otherwise *)
+val parseOrRaise : string -> Js.Json.t
+(** [parse s] returns a [Js.Json.t] if s is a valid json string, raises
+    [ParseError] otherwise *)
 
-val stringify: Js.Json.t -> string
-(** [stringify json] returns the [string] representation of the given [Js.Json.t] value *)
+val stringify : Js.Json.t -> string
+(** [stringify json] returns the [string] representation of the given
+    [Js.Json.t] value *)

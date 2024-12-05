@@ -44,7 +44,8 @@ let () =
   describe "bool" (fun () ->
       let open Json in
       let open Decode in
-      test "bool" (fun () -> expect @@ bool (Encode.bool true) |> toEqual true);
+      test "bool" (fun () ->
+          expect @@ bool (Encode.bool true) |> toEqual true);
       test "bool - false" (fun () ->
           expect @@ bool (Encode.bool false) |> toEqual false);
 
@@ -55,7 +56,8 @@ let () =
       let open! Decode in
       test "float" (fun () ->
           expect @@ float (Encode.float 1.23) |> toEqual 1.23);
-      test "int" (fun () -> expect @@ float (Encode.int 23) |> toEqual 23.);
+      test "int" (fun () ->
+          expect @@ float (Encode.int 23) |> toEqual 23.);
 
       Test.throws float [ Bool; String; Null; Array; Object; Char ]);
 
@@ -73,7 +75,10 @@ let () =
           try
             let (_ : int) = int (Encode.int inf) in
             fail "should throw"
-          with Decode.DecodeError Json_error "Expected integer, got null" -> pass);
+          with
+          | Decode.DecodeError (Json_error "Expected integer, got null")
+          ->
+            pass);
 
       Test.throws int [ Bool; Float; String; Null; Array; Object; Char ]);
 
@@ -111,7 +116,9 @@ let () =
             let (_ : char) = char (Encode.string "") in
             fail "should throw"
           with
-          | Decode.DecodeError Json_error "Expected single-character string, got \"\"" ->
+          | Decode.DecodeError
+              (Json_error "Expected single-character string, got \"\"")
+          ->
             pass);
 
       test "multiple-character string" (fun () ->
@@ -119,7 +126,8 @@ let () =
             let (_ : char) = char (Encode.string "abc") in
             fail "should throw"
           with
-          | Decode.DecodeError Json_error "Expected single-character string, got \"abc\""
+          | Decode.DecodeError
+              (Json_error "Expected single-character string, got \"abc\"")
           ->
             pass);
 
@@ -144,9 +152,11 @@ let () =
           expect @@ nullable string (Encode.string "test")
           |> toEqual (Js.Null.return "test"));
       test "null -> null" (fun () ->
-          expect @@ nullable (nullAs Js.null) Encode.null |> toEqual Js.null);
+          expect @@ nullable (nullAs Js.null) Encode.null
+          |> toEqual Js.null);
 
-      Test.throws (nullable int) [ Bool; Float; String; Array; Object; Char ];
+      Test.throws (nullable int)
+        [ Bool; Float; String; Array; Object; Char ];
       Test.throws (nullable bool) [ Int ]);
 
   describe "nullAs" (fun () ->
@@ -162,7 +172,8 @@ let () =
       test "as Some _" (fun () ->
           expect (nullAs (Some "foo") Encode.null) |> toEqual (Some "foo"));
 
-      Test.throws (nullAs 0) [ Bool; Float; Int; String; Array; Object; Char ]);
+      Test.throws (nullAs 0)
+        [ Bool; Float; Int; String; Array; Object; Char ]);
 
   describe "array" (fun () ->
       let open Json in
@@ -184,7 +195,8 @@ let () =
           |> toEqual [| "a"; "b"; "c" |]);
       test "nullAs" (fun () ->
           expect
-          @@ array (nullAs Js.null) (parseOrRaise {| [null, null, null] |})
+          @@ array (nullAs Js.null)
+               (parseOrRaise {| [null, null, null] |})
           |> toEqual [| Js.null; Js.null; Js.null |]);
 
       test "array int -> array boolean" (fun () ->
@@ -193,18 +205,23 @@ let () =
               (array bool) (parseOrRaise {| [1, 2, 3] |})
             in
             fail "should throw"
-          with DecodeError Json_error "Expected boolean, got 1\n\tin array at index 0" ->
+          with
+          | DecodeError
+              (Json_error "Expected boolean, got 1\n\tin array at index 0")
+          ->
             pass);
       test "non-DecodeError exceptions in decoder should pass through"
         (fun () ->
           try
             let (_ : _ array) =
-              (array (fun _ -> raise Foo)) (Encode.array Encode.int [| 1 |])
+              (array (fun _ -> raise Foo))
+                (Encode.array Encode.int [| 1 |])
             in
             fail "should throw"
           with Foo -> pass);
 
-      Test.throws (array int) [ Bool; Float; Int; String; Null; Object; Char ]);
+      Test.throws (array int)
+        [ Bool; Float; Int; String; Null; Object; Char ]);
 
   describe "list" (fun () ->
       let open Json in
@@ -231,9 +248,14 @@ let () =
 
       test "array int -> list boolean" (fun () ->
           try
-            let (_ : bool list) = (list bool) (parseOrRaise {| [1, 2, 3] |}) in
+            let (_ : bool list) =
+              (list bool) (parseOrRaise {| [1, 2, 3] |})
+            in
             fail "should throw"
-          with DecodeError Json_error "Expected boolean, got 1\n\tin array at index 0" ->
+          with
+          | DecodeError
+              (Json_error "Expected boolean, got 1\n\tin array at index 0")
+          ->
             pass);
       test "non-DecodeError exceptions in decoder should pass through"
         (fun () ->
@@ -244,7 +266,8 @@ let () =
             fail "should throw"
           with Foo -> pass);
 
-      Test.throws (list int) [ Bool; Float; Int; String; Null; Object; Char ]);
+      Test.throws (list int)
+        [ Bool; Float; Int; String; Null; Object; Char ]);
 
   describe "pair" (fun () ->
       let open Json in
@@ -253,13 +276,19 @@ let () =
           expect @@ pair string int (parseOrRaise {| ["a", 3] |})
           |> toEqual ("a", 3));
       test "int int" (fun () ->
-          expect @@ pair int int (parseOrRaise {| [4, 3] |}) |> toEqual (4, 3));
+          expect @@ pair int int (parseOrRaise {| [4, 3] |})
+          |> toEqual (4, 3));
       test "too small" (fun () ->
           try
-            let (_ : int * int) = (pair int int) (parseOrRaise {| [4] |}) in
+            let (_ : int * int) =
+              (pair int int) (parseOrRaise {| [4] |})
+            in
             fail "should throw"
           with
-          | DecodeError Json_error "Expected array of length 2, got array of length 1" ->
+          | DecodeError
+              (Json_error
+                 "Expected array of length 2, got array of length 1")
+          ->
             pass);
       test "too large" (fun () ->
           try
@@ -268,7 +297,10 @@ let () =
             in
             fail "should throw"
           with
-          | DecodeError Json_error "Expected array of length 2, got array of length 3" ->
+          | DecodeError
+              (Json_error
+                 "Expected array of length 2, got array of length 3")
+          ->
             pass);
       test "bad type a" (fun () ->
           try
@@ -276,7 +308,10 @@ let () =
               (pair int int) (parseOrRaise {| ["3", 4] |})
             in
             fail "should throw"
-          with DecodeError Json_error "Expected number, got \"3\"\n\tin pair/tuple2" ->
+          with
+          | DecodeError
+              (Json_error "Expected number, got \"3\"\n\tin pair/tuple2")
+          ->
             pass);
       test "bad type b" (fun () ->
           try
@@ -284,12 +319,16 @@ let () =
               (pair string string) (parseOrRaise {| ["3", 4] |})
             in
             fail "should throw"
-          with DecodeError Json_error "Expected string, got 4\n\tin pair/tuple2" -> pass);
+          with
+          | DecodeError
+              (Json_error "Expected string, got 4\n\tin pair/tuple2")
+          ->
+            pass);
       test "not array" (fun () ->
           try
             let (_ : int * int) = (pair int int) (parseOrRaise {| 4 |}) in
             fail "should throw"
-          with DecodeError Json_error "Expected array, got 4" -> pass);
+          with DecodeError (Json_error "Expected array, got 4") -> pass);
       test "non-DecodeError exceptions in decoder should pass through"
         (fun () ->
           try
@@ -307,10 +346,15 @@ let () =
           |> toEqual ("a", 3));
       test "too small" (fun () ->
           try
-            let (_ : int * int) = (tuple2 int int) (parseOrRaise {| [4] |}) in
+            let (_ : int * int) =
+              (tuple2 int int) (parseOrRaise {| [4] |})
+            in
             fail "should throw"
           with
-          | DecodeError Json_error "Expected array of length 2, got array of length 1" ->
+          | DecodeError
+              (Json_error
+                 "Expected array of length 2, got array of length 1")
+          ->
             pass);
       test "too large" (fun () ->
           try
@@ -319,7 +363,10 @@ let () =
             in
             fail "should throw"
           with
-          | DecodeError Json_error "Expected array of length 2, got array of length 3" ->
+          | DecodeError
+              (Json_error
+                 "Expected array of length 2, got array of length 3")
+          ->
             pass);
       test "bad type a" (fun () ->
           try
@@ -327,7 +374,10 @@ let () =
               (tuple2 int int) (parseOrRaise {| ["3", 4] |})
             in
             fail "should throw"
-          with DecodeError Json_error "Expected number, got \"3\"\n\tin pair/tuple2" ->
+          with
+          | DecodeError
+              (Json_error "Expected number, got \"3\"\n\tin pair/tuple2")
+          ->
             pass);
       test "bad type b" (fun () ->
           try
@@ -335,17 +385,24 @@ let () =
               (tuple2 string string) (parseOrRaise {| ["3", 4] |})
             in
             fail "should throw"
-          with DecodeError Json_error "Expected string, got 4\n\tin pair/tuple2" -> pass);
+          with
+          | DecodeError
+              (Json_error "Expected string, got 4\n\tin pair/tuple2")
+          ->
+            pass);
       test "not array" (fun () ->
           try
-            let (_ : int * int) = (tuple2 int int) (parseOrRaise {| 4 |}) in
+            let (_ : int * int) =
+              (tuple2 int int) (parseOrRaise {| 4 |})
+            in
             fail "should throw"
-          with DecodeError Json_error "Expected array, got 4" -> pass);
+          with DecodeError (Json_error "Expected array, got 4") -> pass);
       test "non-DecodeError exceptions in decoder should pass through"
         (fun () ->
           try
             let (_ : 'a * int) =
-              (tuple2 (fun _ -> raise Foo) int) (parseOrRaise {| [4, 3] |})
+              (tuple2 (fun _ -> raise Foo) int)
+                (parseOrRaise {| [4, 3] |})
             in
             fail "should throw"
           with Foo -> pass));
@@ -354,7 +411,8 @@ let () =
       let open Json in
       let open! Decode in
       test "heterogenous" (fun () ->
-          expect @@ tuple3 string int float (parseOrRaise {| ["a", 3, 4.5] |})
+          expect
+          @@ tuple3 string int float (parseOrRaise {| ["a", 3, 4.5] |})
           |> toEqual ("a", 3, 4.5));
       test "too small" (fun () ->
           try
@@ -363,7 +421,10 @@ let () =
             in
             fail "should throw"
           with
-          | DecodeError Json_error "Expected array of length 3, got array of length 1" ->
+          | DecodeError
+              (Json_error
+                 "Expected array of length 3, got array of length 1")
+          ->
             pass);
       test "too large" (fun () ->
           try
@@ -372,7 +433,10 @@ let () =
             in
             fail "should throw"
           with
-          | DecodeError Json_error "Expected array of length 3, got array of length 5" ->
+          | DecodeError
+              (Json_error
+                 "Expected array of length 3, got array of length 5")
+          ->
             pass);
       test "bad type a" (fun () ->
           try
@@ -380,21 +444,29 @@ let () =
               (tuple3 int int int) (parseOrRaise {| ["3", 4, 5] |})
             in
             fail "should throw"
-          with DecodeError Json_error "Expected number, got \"3\"\n\tin tuple3" -> pass);
+          with
+          | DecodeError
+              (Json_error "Expected number, got \"3\"\n\tin tuple3")
+          ->
+            pass);
       test "bad type b" (fun () ->
           try
             let (_ : string * string * string) =
-              (tuple3 string string string) (parseOrRaise {| ["3", 4, "5"] |})
+              (tuple3 string string string)
+                (parseOrRaise {| ["3", 4, "5"] |})
             in
             fail "should throw"
-          with DecodeError Json_error "Expected string, got 4\n\tin tuple3" -> pass);
+          with
+          | DecodeError (Json_error "Expected string, got 4\n\tin tuple3")
+          ->
+            pass);
       test "not array" (fun () ->
           try
             let (_ : int * int * int) =
               (tuple3 int int int) (parseOrRaise {| 4 |})
             in
             fail "should throw"
-          with DecodeError Json_error "Expected array, got 4" -> pass);
+          with DecodeError (Json_error "Expected array, got 4") -> pass);
       test "non-DecodeError exceptions in decoder should pass through"
         (fun () ->
           try
@@ -420,16 +492,23 @@ let () =
             in
             fail "should throw"
           with
-          | DecodeError Json_error "Expected array of length 4, got array of length 1" ->
+          | DecodeError
+              (Json_error
+                 "Expected array of length 4, got array of length 1")
+          ->
             pass);
       test "too large" (fun () ->
           try
             let (_ : int * int * int * int) =
-              (tuple4 int int int int) (parseOrRaise {| [3, 4, 5, 6, 7, 8] |})
+              (tuple4 int int int int)
+                (parseOrRaise {| [3, 4, 5, 6, 7, 8] |})
             in
             fail "should throw"
           with
-          | DecodeError Json_error "Expected array of length 4, got array of length 6" ->
+          | DecodeError
+              (Json_error
+                 "Expected array of length 4, got array of length 6")
+          ->
             pass);
       test "bad type a" (fun () ->
           try
@@ -437,7 +516,11 @@ let () =
               (tuple4 int int int int) (parseOrRaise {| ["3", 4, 5, 6] |})
             in
             fail "should throw"
-          with DecodeError Json_error "Expected number, got \"3\"\n\tin tuple4" -> pass);
+          with
+          | DecodeError
+              (Json_error "Expected number, got \"3\"\n\tin tuple4")
+          ->
+            pass);
       test "bad type b" (fun () ->
           try
             let (_ : string * string * string * string) =
@@ -445,14 +528,17 @@ let () =
                 (parseOrRaise {| ["3", 4, "5", "6"] |})
             in
             fail "should throw"
-          with DecodeError Json_error "Expected string, got 4\n\tin tuple4" -> pass);
+          with
+          | DecodeError (Json_error "Expected string, got 4\n\tin tuple4")
+          ->
+            pass);
       test "not array" (fun () ->
           try
             let (_ : int * int * int * int) =
               (tuple4 int int int int) (parseOrRaise {| 4 |})
             in
             fail "should throw"
-          with DecodeError Json_error "Expected array, got 4" -> pass);
+          with DecodeError (Json_error "Expected array, got 4") -> pass);
       test "non-DecodeError exceptions in decoder should pass through"
         (fun () ->
           try
@@ -467,10 +553,12 @@ let () =
       let open Json in
       let open! Decode in
       test "object" (fun () ->
-          expect @@ dict int (Encode.object_ []) |> toEqual (Js.Dict.empty ()));
+          expect @@ dict int (Encode.object_ [])
+          |> toEqual (Js.Dict.empty ()));
 
       test "boolean" (fun () ->
-          expect @@ dict bool (parseOrRaise {| { "a": true, "b": false } |})
+          expect
+          @@ dict bool (parseOrRaise {| { "a": true, "b": false } |})
           |> toEqual (Obj.magic [%obj { a = true; b = false }]));
       test "float" (fun () ->
           expect @@ dict float (parseOrRaise {| { "a": 1.2, "b": 2.3 } |})
@@ -479,11 +567,13 @@ let () =
           expect @@ dict int (parseOrRaise {| { "a": 1, "b": 2 } |})
           |> toEqual (Obj.magic [%obj { a = 1; b = 2 }]));
       test "string" (fun () ->
-          expect @@ dict string (parseOrRaise {| { "a": "x", "b": "y" } |})
+          expect
+          @@ dict string (parseOrRaise {| { "a": "x", "b": "y" } |})
           |> toEqual (Obj.magic [%obj { a = "x"; b = "y" }]));
       test "nullAs" (fun () ->
           expect
-          @@ dict (nullAs Js.null) (parseOrRaise {| { "a": null, "b": null } |})
+          @@ dict (nullAs Js.null)
+               (parseOrRaise {| { "a": null, "b": null } |})
           |> toEqual (Obj.magic [%obj { a = Js.null; b = Js.null }]));
       test "null -> dict string" (fun () ->
           try
@@ -491,7 +581,11 @@ let () =
               (dict string) (parseOrRaise {| { "a": null, "b": null } |})
             in
             fail "should throw"
-          with DecodeError Json_error "Expected string, got null\n\tin dict" -> pass);
+          with
+          | DecodeError
+              (Json_error "Expected string, got null\n\tin dict")
+          ->
+            pass);
       test "non-DecodeError exceptions in decoder should pass through"
         (fun () ->
           try
@@ -501,7 +595,8 @@ let () =
             fail "should throw"
           with Foo -> pass);
 
-      Test.throws (dict int) [ Bool; Float; Int; String; Null; Array; Char ]);
+      Test.throws (dict int)
+        [ Bool; Float; Int; String; Null; Array; Char ]);
 
   describe "field" (fun () ->
       let open Json in
@@ -511,13 +606,15 @@ let () =
           @@ field "b" bool (parseOrRaise {| { "a": true, "b": false } |})
           |> toEqual false);
       test "float" (fun () ->
-          expect @@ field "b" float (parseOrRaise {| { "a": 1.2, "b": 2.3 } |})
+          expect
+          @@ field "b" float (parseOrRaise {| { "a": 1.2, "b": 2.3 } |})
           |> toEqual 2.3);
       test "int" (fun () ->
           expect @@ field "b" int (parseOrRaise {| { "a": 1, "b": 2 } |})
           |> toEqual 2);
       test "string" (fun () ->
-          expect @@ field "b" string (parseOrRaise {| { "a": "x", "b": "y" } |})
+          expect
+          @@ field "b" string (parseOrRaise {| { "a": "x", "b": "y" } |})
           |> toEqual "y");
       test "nullAs" (fun () ->
           expect
@@ -527,23 +624,30 @@ let () =
       test "missing key" (fun () ->
           try
             let (_ : string) =
-              (field "c" string) (parseOrRaise {| { "a": null, "b": null } |})
+              (field "c" string)
+                (parseOrRaise {| { "a": null, "b": null } |})
             in
             fail "should throw"
-          with DecodeError Json_error "Expected field 'c'" -> pass);
+          with DecodeError (Json_error "Expected field 'c'") -> pass);
       test "decoder error" (fun () ->
           try
             let (_ : string) =
-              (field "b" string) (parseOrRaise {| { "a": null, "b": null } |})
+              (field "b" string)
+                (parseOrRaise {| { "a": null, "b": null } |})
             in
             fail "should throw"
-          with DecodeError Json_error "Expected string, got null\n\tat field 'b'" -> pass);
+          with
+          | DecodeError
+              (Json_error "Expected string, got null\n\tat field 'b'")
+          ->
+            pass);
 
       test "non-DecodeError exceptions in decoder should pass through"
         (fun () ->
           try
             let _ =
-              (field "a" (fun _ -> raise Foo)) (parseOrRaise {| { "a": 0 } |})
+              (field "a" (fun _ -> raise Foo))
+                (parseOrRaise {| { "a": 0 } |})
             in
             fail "should throw"
           with Foo -> pass);
@@ -584,7 +688,10 @@ let () =
            } |})
             in
             fail "should throw"
-          with DecodeError Json_error "Expected field 'y'\n\tat field 'a'" -> pass);
+          with
+          | DecodeError (Json_error "Expected field 'y'\n\tat field 'a'")
+          ->
+            pass);
       test "decoder error" (fun () ->
           try
             let (_ : 'a Js.null) =
@@ -598,10 +705,11 @@ let () =
             fail "should throw"
           with
           | DecodeError
-              Json_error "Expected null, got \"foo\"\n\
-               \tat field 'y'\n\
-               \tat field 'x'\n\
-               \tat field 'a'"
+              (Json_error
+                 "Expected null, got \"foo\"\n\
+                  \tat field 'y'\n\
+                  \tat field 'x'\n\
+                  \tat field 'a'")
           ->
             pass);
       test "empty list of keys should raise Invalid_argument" (fun () ->
@@ -637,9 +745,11 @@ let () =
           expect @@ (optional int) (Encode.object_ []) |> toEqual None);
 
       test "boolean -> boolean " (fun () ->
-          expect @@ optional bool (Encode.bool true) |> toEqual (Some true));
+          expect @@ optional bool (Encode.bool true)
+          |> toEqual (Some true));
       test "float -> float" (fun () ->
-          expect @@ optional float (Encode.float 1.23) |> toEqual (Some 1.23));
+          expect @@ optional float (Encode.float 1.23)
+          |> toEqual (Some 1.23));
       test "string -> string" (fun () ->
           expect @@ optional string (Encode.string "test")
           |> toEqual (Some "test"));
@@ -650,19 +760,24 @@ let () =
           expect @@ (optional bool) (Encode.int 1) |> toEqual None);
 
       test "optional field" (fun () ->
-          expect @@ optional (field "x" int) (parseOrRaise {| { "x": 2} |})
+          expect
+          @@ optional (field "x" int) (parseOrRaise {| { "x": 2} |})
           |> toEqual (Some 2));
       test "optional field - incorrect type" (fun () ->
-          expect @@ optional (field "x" int) (parseOrRaise {| { "x": 2.3} |})
+          expect
+          @@ optional (field "x" int) (parseOrRaise {| { "x": 2.3} |})
           |> toEqual None);
       test "optional field - no such field" (fun () ->
-          expect @@ optional (field "y" int) (parseOrRaise {| { "x": 2} |})
+          expect
+          @@ optional (field "y" int) (parseOrRaise {| { "x": 2} |})
           |> toEqual None);
       test "field optional" (fun () ->
-          expect @@ field "x" (optional int) (parseOrRaise {| { "x": 2} |})
+          expect
+          @@ field "x" (optional int) (parseOrRaise {| { "x": 2} |})
           |> toEqual (Some 2));
       test "field optional - incorrect type" (fun () ->
-          expect @@ field "x" (optional int) (parseOrRaise {| { "x": 2.3} |})
+          expect
+          @@ field "x" (optional int) (parseOrRaise {| { "x": 2.3} |})
           |> toEqual None);
       test "field optional - no such field" (fun () ->
           try
@@ -670,12 +785,14 @@ let () =
               (field "y" (optional int)) (parseOrRaise {| { "x": 2} |})
             in
             fail "should throw"
-          with DecodeError Json_error "Expected field 'y'" -> pass);
+          with DecodeError (Json_error "Expected field 'y'") -> pass);
 
       test "non-DecodeError exceptions in decoder should pass through"
         (fun () ->
           try
-            let (_ : 'a option) = (optional (fun _ -> raise Foo)) Encode.null in
+            let (_ : 'a option) =
+              (optional (fun _ -> raise Foo)) Encode.null
+            in
             fail "should throw"
           with Foo -> pass));
 
@@ -687,7 +804,8 @@ let () =
           @@ (oneOf [ int; field "x" int ]) (parseOrRaise {| { "x": 2} |})
           |> toEqual 2);
       test "int" (fun () ->
-          expect @@ (oneOf [ int; field "x" int ]) (Encode.int 23) |> toEqual 23);
+          expect @@ (oneOf [ int; field "x" int ]) (Encode.int 23)
+          |> toEqual 23);
 
       test "non-DecodeError exceptions in decoder should pass through"
         (fun () ->
@@ -704,10 +822,12 @@ let () =
       let open Json in
       let open! Decode in
       test "object with field" (fun () ->
-          expect @@ (either int (field "x" int)) (parseOrRaise {| { "x": 2} |})
+          expect
+          @@ (either int (field "x" int)) (parseOrRaise {| { "x": 2} |})
           |> toEqual 2);
       test "int" (fun () ->
-          expect @@ (either int (field "x" int)) (Encode.int 23) |> toEqual 23);
+          expect @@ (either int (field "x" int)) (Encode.int 23)
+          |> toEqual 23);
 
       Test.throws
         (either int (field "x" int))
@@ -723,11 +843,13 @@ let () =
       test "int" (fun () ->
           expect @@ (withDefault 0 int) (Encode.int 23) |> toEqual 23);
       test "string" (fun () ->
-          expect @@ (withDefault 0 int) (Encode.string "test") |> toEqual 0);
+          expect @@ (withDefault 0 int) (Encode.string "test")
+          |> toEqual 0);
       test "null" (fun () ->
           expect @@ (withDefault 0 int) Encode.null |> toEqual 0);
       test "array" (fun () ->
-          expect @@ (withDefault 0 int) (Encode.jsonArray [||]) |> toEqual 0);
+          expect @@ (withDefault 0 int) (Encode.jsonArray [||])
+          |> toEqual 0);
       test "object" (fun () ->
           expect @@ (withDefault 0 int) (Encode.object_ []) |> toEqual 0);
 
@@ -770,7 +892,9 @@ let () =
       Test.throws ~name:"float andThen int "
         (float |> andThen (fun _ -> int))
         [ Float ];
-      Test.throws ~name:"int to " (int |> andThen (fun _ -> float)) [ Float ]);
+      Test.throws ~name:"int to "
+        (int |> andThen (fun _ -> float))
+        [ Float ]);
 
   describe "composite expressions" (fun () ->
       let open Json in
@@ -779,7 +903,8 @@ let () =
           expect
           @@ dict
                (array (array int))
-               (parseOrRaise {| { "a": [[1, 2], [3]], "b": [[4], [5, 6]] } |})
+               (parseOrRaise
+                  {| { "a": [[1, 2], [3]], "b": [[4], [5, 6]] } |})
           |> toEqual
                (Obj.magic
                   [%obj
@@ -797,25 +922,32 @@ let () =
             fail "should throw"
           with
           | DecodeError
-              Json_error "Expected number, got true\n\
-               \tin array at index 0\n\
-               \tin array at index 1\n\
-               \tin dict"
+              (Json_error
+                 "Expected number, got true\n\
+                  \tin array at index 0\n\
+                  \tin array at index 1\n\
+                  \tin dict")
           ->
             pass);
       test "dict array array int - heterogenous structure 2" (fun () ->
           try
             let (_ : int array array Js.Dict.t) =
               (dict (array (array int)))
-                (parseOrRaise {| { "a": [[1, 2], "foo"], "b": [[4], [5, 6]] } |})
+                (parseOrRaise
+                   {| { "a": [[1, 2], "foo"], "b": [[4], [5, 6]] } |})
             in
             fail "should throw"
           with
           | DecodeError
-              Json_error "Expected array, got \"foo\"\n\tin array at index 1\n\tin dict"
+              (Json_error
+                 "Expected array, got \"foo\"\n\
+                  \tin array at index 1\n\
+                  \tin dict")
           ->
             pass);
       test "field" (fun () ->
-          let json = parseOrRaise {| { "foo": [1, 2, 3], "bar": "baz" } |} in
+          let json =
+            parseOrRaise {| { "foo": [1, 2, 3], "bar": "baz" } |}
+          in
           expect @@ (field "foo" (array int) json, field "bar" string json)
           |> toEqual ([| 1; 2; 3 |], "baz")))

@@ -3,7 +3,8 @@ let mapJsonObjectString f decoder (encoder : int -> Js.Json.t) str =
   let json = Json.parseOrRaise str in
   Json.Decode.(dict decoder json)
   |> Js.Dict.map ~f:(fun [@u] v -> f v)
-  |> Json.Encode.dict encoder |> Json.stringify
+  |> Json.Encode.dict encoder
+  |> Json.stringify
 
 let sum = Array.fold_left ( + ) 0
 
@@ -25,4 +26,5 @@ let _ =
   let json = {|{ "y": 42 } |} |> Json.parseOrRaise in
   match Json.Decode.(field "x" int json) with
   | x -> Js.log x
-  | exception Json.Decode.DecodeError err -> Js.log ("Error:" ^ Json.Decode.error_to_string err)
+  | exception Json.Decode.DecodeError err ->
+      Js.log ("Error:" ^ Json.Decode.error_to_string err)
