@@ -1,3 +1,4 @@
+[@@@alert "-deprecated"]
 type t = Js.Json.t
 
 let to_json t = t

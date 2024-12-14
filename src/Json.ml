@@ -331,6 +331,13 @@ end
 
 module Decode = struct
   type 'a decoder = 'a of_json
+  type error = Json_error of string | Unexpected_variant of string
+
+  let error_to_string = function
+    | Json_error msg -> msg
+    | Unexpected_variant tag -> "unexpected variant: " ^ tag
+
+  exception DecodeError of error
 
   let id json = json
   let bool = Of_json.bool

@@ -263,6 +263,12 @@ module Decode : sig
   type 'a decoder = 'a of_json [@@deprecated "Use `of_json` instead"]
   (** The type of a decoder combinator *)
 
+  type error = Json_error of string | Unexpected_variant of string
+
+  val error_to_string : error -> string
+
+  exception DecodeError of error
+
   val id : t of_json [@@deprecated "Use `of_json` instead"]
   val bool : bool of_json [@@deprecated "Use `Of_json.bool` instead"]
   val float : float of_json [@@deprecated "Use `Of_json.float` instead"]
