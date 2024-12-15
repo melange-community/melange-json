@@ -49,7 +49,7 @@ module Of_json = struct
       if String.length s = 1 then String.get s 0
       else
         of_json_error
-          ("Expected a single-character string, got "
+          ("Expected single-character string, got "
           ^ Js.Json.stringify json)
     else of_json_error "expected a string"
 

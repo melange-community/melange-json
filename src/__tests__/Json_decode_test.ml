@@ -118,7 +118,7 @@ let () =
             fail "should throw"
           with
           | Of_json_error
-              (Json_error "Expected a single-character string, got \"\"")
+              (Json_error "Expected single-character string, got \"\"")
           ->
             pass);
 
@@ -128,8 +128,7 @@ let () =
             fail "should throw"
           with
           | Of_json_error
-              (Json_error
-                 "Expected a single-character string, got \"abc\"")
+              (Json_error "Expected single-character string, got \"abc\"")
           ->
             pass);
 
