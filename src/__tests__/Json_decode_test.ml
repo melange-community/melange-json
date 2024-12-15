@@ -33,7 +33,7 @@ module Test = struct
         try
           let _ = decoder value in
           fail "should throw"
-        with Json.Of_json_error _ -> pass)
+        with Of_json_error _ -> pass)
 end
 
 let () =
@@ -78,8 +78,7 @@ let () =
             let (_ : int) = int (Encode.int inf) in
             fail "should throw"
           with
-          | Json.Of_json_error (Json_error "Expected integer, got null")
-          ->
+          | Of_json_error (Json_error "Expected integer, got null") ->
             pass);
 
       Test.throws int [ Bool; Float; String; Null; Array; Object; Char ]);
@@ -118,7 +117,7 @@ let () =
             let (_ : char) = char (Encode.string "") in
             fail "should throw"
           with
-          | Json.Of_json_error
+          | Of_json_error
               (Json_error "Expected a single-character string, got \"\"")
           ->
             pass);
@@ -128,7 +127,7 @@ let () =
             let (_ : char) = char (Encode.string "abc") in
             fail "should throw"
           with
-          | Json.Of_json_error
+          | Of_json_error
               (Json_error
                  "Expected a single-character string, got \"abc\"")
           ->
@@ -209,7 +208,7 @@ let () =
             in
             fail "should throw"
           with
-          | Json.Of_json_error
+          | Of_json_error
               (Json_error "Expected boolean, got 1\n\tin array at index 0")
           ->
             pass);
@@ -256,7 +255,7 @@ let () =
             in
             fail "should throw"
           with
-          | Json.Of_json_error
+          | Of_json_error
               (Json_error "Expected boolean, got 1\n\tin array at index 0")
           ->
             pass);
@@ -288,7 +287,7 @@ let () =
             in
             fail "should throw"
           with
-          | Json.Of_json_error
+          | Of_json_error
               (Json_error
                  "Expected array of length 2, got array of length 1")
           ->
@@ -300,7 +299,7 @@ let () =
             in
             fail "should throw"
           with
-          | Json.Of_json_error
+          | Of_json_error
               (Json_error
                  "Expected array of length 2, got array of length 3")
           ->
@@ -312,7 +311,7 @@ let () =
             in
             fail "should throw"
           with
-          | Json.Of_json_error
+          | Of_json_error
               (Json_error "Expected number, got \"3\"\n\tin pair/tuple2")
           ->
             pass);
@@ -323,7 +322,7 @@ let () =
             in
             fail "should throw"
           with
-          | Json.Of_json_error
+          | Of_json_error
               (Json_error "Expected string, got 4\n\tin pair/tuple2")
           ->
             pass);
@@ -355,7 +354,7 @@ let () =
             in
             fail "should throw"
           with
-          | Json.Of_json_error
+          | Of_json_error
               (Json_error
                  "Expected array of length 2, got array of length 1")
           ->
@@ -367,7 +366,7 @@ let () =
             in
             fail "should throw"
           with
-          | Json.Of_json_error
+          | Of_json_error
               (Json_error
                  "Expected array of length 2, got array of length 3")
           ->
@@ -379,7 +378,7 @@ let () =
             in
             fail "should throw"
           with
-          | Json.Of_json_error
+          | Of_json_error
               (Json_error "Expected number, got \"3\"\n\tin pair/tuple2")
           ->
             pass);
@@ -390,7 +389,7 @@ let () =
             in
             fail "should throw"
           with
-          | Json.Of_json_error
+          | Of_json_error
               (Json_error "Expected string, got 4\n\tin pair/tuple2")
           ->
             pass);
@@ -426,7 +425,7 @@ let () =
             in
             fail "should throw"
           with
-          | Json.Of_json_error
+          | Of_json_error
               (Json_error
                  "Expected array of length 3, got array of length 1")
           ->
@@ -438,7 +437,7 @@ let () =
             in
             fail "should throw"
           with
-          | Json.Of_json_error
+          | Of_json_error
               (Json_error
                  "Expected array of length 3, got array of length 5")
           ->
@@ -450,7 +449,7 @@ let () =
             in
             fail "should throw"
           with
-          | Json.Of_json_error
+          | Of_json_error
               (Json_error "Expected number, got \"3\"\n\tin tuple3")
           ->
             pass);
@@ -462,7 +461,7 @@ let () =
             in
             fail "should throw"
           with
-          | Json.Of_json_error
+          | Of_json_error
               (Json_error "Expected string, got 4\n\tin tuple3")
           ->
             pass);
@@ -499,7 +498,7 @@ let () =
             in
             fail "should throw"
           with
-          | Json.Of_json_error
+          | Of_json_error
               (Json_error
                  "Expected array of length 4, got array of length 1")
           ->
@@ -512,7 +511,7 @@ let () =
             in
             fail "should throw"
           with
-          | Json.Of_json_error
+          | Of_json_error
               (Json_error
                  "Expected array of length 4, got array of length 6")
           ->
@@ -524,7 +523,7 @@ let () =
             in
             fail "should throw"
           with
-          | Json.Of_json_error
+          | Of_json_error
               (Json_error "Expected number, got \"3\"\n\tin tuple4")
           ->
             pass);
@@ -536,7 +535,7 @@ let () =
             in
             fail "should throw"
           with
-          | Json.Of_json_error
+          | Of_json_error
               (Json_error "Expected string, got 4\n\tin tuple4")
           ->
             pass);
@@ -591,7 +590,7 @@ let () =
             in
             fail "should throw"
           with
-          | Json.Of_json_error
+          | Of_json_error
               (Json_error
                  "Expected string, got null\n\tin object at key 'a'")
           ->
@@ -699,7 +698,7 @@ let () =
             in
             fail "should throw"
           with
-          | Json.Of_json_error
+          | Of_json_error
               (Json_error "Expected field 'y'\n\tat field 'a'")
           ->
             pass);
@@ -715,7 +714,7 @@ let () =
             in
             fail "should throw"
           with
-          | Json.Of_json_error
+          | Of_json_error
               (Json_error
                  "Expected null\n\
                   \tat field 'y'\n\
