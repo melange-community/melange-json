@@ -37,8 +37,6 @@ let of_string s =
     raise (Of_string_error msg)
 
 module Of_json = struct
-  external _stringify : Js.Json.t -> string = "JSON.stringify"
-
   let string (json : t) : string =
     if Js.typeof json = "string" then (Obj.magic json : string)
     else of_json_error ("Expected string, got " ^ Js.Json.stringify json)
@@ -51,7 +49,7 @@ module Of_json = struct
         of_json_error
           ("Expected single-character string, got "
           ^ Js.Json.stringify json)
-    else of_json_error "expected a string"
+    else of_json_error ("Expected string, got " ^ Js.Json.stringify json)
 
   let bool (json : t) : bool =
     if Js.typeof json = "boolean" then (Obj.magic json : bool)
@@ -73,16 +71,22 @@ module Of_json = struct
       let v = (Obj.magic json : string) in
       match Int64.of_string_opt v with
       | Some v -> v
-      | None -> of_json_error "expected int64 as string"
-    else of_json_error "expected int64 as string"
+      | None ->
+          of_json_error
+            ("Expected int64 as string, got " ^ Js.Json.stringify json)
+    else
+      of_json_error
+        ("Expected int64 as string, got " ^ Js.Json.stringify json)
 
   let float (json : t) : float =
     if Js.typeof json = "number" then (Obj.magic json : float)
-    else of_json_error "expected a float"
+    else of_json_error ("Expected number, got " ^ Js.Json.stringify json)
 
   let unit (json : t) : unit =
     if (Obj.magic json : 'a Js.null) == Js.null then ()
-    else of_json_error "expected null"
+    else
+      of_json_error
+        ("Expected null as unit, got " ^ Js.Json.stringify json)
 
   let array v_of_json (json : t) =
     if Js.Array.isArray json then (
@@ -128,8 +132,10 @@ module Of_json = struct
       else
         let length = Js.String.make length in
         of_json_error
-          {j|Expected array of length 2, got array of length $length|j}
-    else of_json_error ("Expected array, got " ^ _stringify json)
+          {j|Expected array of length 2 as tuple, got array of length $length|j}
+    else
+      of_json_error
+        ("Expected array as tuple, got " ^ Js.Json.stringify json)
 
   let tuple3 decodeA decodeB decodeC json : _ * _ * _ =
     if Js.Array.isArray json then
@@ -145,8 +151,10 @@ module Of_json = struct
       else
         let length = Js.String.make length in
         of_json_error
-          {j|Expected array of length 3, got array of length $length|j}
-    else of_json_error ("Expected array, got " ^ _stringify json)
+          {j|Expected array of length 3 as tuple, got array of length $length|j}
+    else
+      of_json_error
+        ("Expected array as tuple, got " ^ Js.Json.stringify json)
 
   let tuple4 decodeA decodeB decodeC decodeD json : _ * _ * _ * _ =
     if Js.Array.isArray json then
@@ -163,8 +171,10 @@ module Of_json = struct
       else
         let length = Js.String.make length in
         of_json_error
-          {j|Expected array of length 4, got array of length $length|j}
-    else of_json_error ("Expected array, got " ^ _stringify json)
+          {j|Expected array of length 4 as tuple, got array of length $length|j}
+    else
+      of_json_error
+        ("Expected array as tuple, got " ^ Js.Json.stringify json)
 
   let js_dict decode json : _ Js.Dict.t =
     if
@@ -190,7 +200,9 @@ module Of_json = struct
         Js.Dict.set target key value
       done;
       target)
-    else of_json_error ("Expected object, got " ^ _stringify json)
+    else
+      of_json_error
+        ("Expected object as dict, got " ^ Js.Json.stringify json)
 
   let result ok_of_json err_of_json (json : t) : (_, _) result =
     if Js.Array.isArray json then
@@ -202,18 +214,27 @@ module Of_json = struct
           let tag = (Obj.magic tag : string) in
           if Stdlib.( = ) tag "Ok" then (
             if Stdlib.( <> ) len 2 then
-              of_json_error "expected a JSON array of length 2";
+              of_json_error
+                ("Expected array of length 2 as result 'Ok', got "
+                ^ Js.Json.stringify json);
             Ok (ok_of_json (Js.Array.unsafe_get array 1)))
           else if Stdlib.( = ) tag "Error" then (
             if Stdlib.( <> ) len 2 then
-              of_json_error "expected a JSON array of length 2";
+              of_json_error
+                ("Expected array of length 2 as result 'Error', got "
+                ^ Js.Json.stringify json);
             Error (err_of_json (Js.Array.unsafe_get array 1)))
           else of_json_error "invalid JSON"
         else
           of_json_error
-            "expected a non empty JSON array with element being a string"
-      else of_json_error "expected a non empty JSON array"
-    else of_json_error "expected a non empty JSON array"
+            ("Expected non-empty array with element being a string, got "
+            ^ Js.Json.stringify json)
+      else
+        of_json_error
+          ("Expected non-empty array, got " ^ Js.Json.stringify json)
+    else
+      of_json_error
+        ("Expected a non-empty array, got " ^ Js.Json.stringify json)
 
   let at' key decode json =
     if
@@ -230,7 +251,7 @@ module Of_json = struct
               (of_json_error_to_string err ^ "\n\tat field '" ^ key ^ "'")
           )
       | None -> of_json_error {j|Expected field '$(key)'|j}
-    else of_json_error ("Expected object, got " ^ _stringify json)
+    else of_json_error ("Expected object, got " ^ Js.Json.stringify json)
 
   let rec at key_path decoder =
     match key_path with
@@ -251,7 +272,7 @@ module Of_json = struct
           in
           of_json_error
             ({j|All decoders given to oneOf failed. Here are all the errors: $formattedErrors\nAnd the JSON being decoded: |j}
-            ^ _stringify json)
+            ^ Js.Json.stringify json)
       | decode :: rest -> (
           try decode json
           with Of_json_error e -> inner rest (e :: errors))

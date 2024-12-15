@@ -26,8 +26,7 @@ let show_json_type = function
   | `String _ -> "string"
 
 let of_json_error_type_mismatch json expected =
-  of_json_error
-    ("expected " ^ expected ^ " but got " ^ show_json_type json)
+  of_json_error ("Expected " ^ expected ^ ", got " ^ show_json_type json)
 
 module To_json = struct
   let string_to_json v = `String v

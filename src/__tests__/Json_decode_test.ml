@@ -288,7 +288,8 @@ let () =
           with
           | Of_json_error
               (Json_error
-                 "Expected array of length 2, got array of length 1")
+                 "Expected array of length 2 as tuple, got array of \
+                  length 1")
           ->
             pass);
       test "too large" (fun () ->
@@ -300,7 +301,8 @@ let () =
           with
           | Of_json_error
               (Json_error
-                 "Expected array of length 2, got array of length 3")
+                 "Expected array of length 2 as tuple, got array of \
+                  length 3")
           ->
             pass);
       test "bad type a" (fun () ->
@@ -329,7 +331,8 @@ let () =
           try
             let (_ : int * int) = (pair int int) (parseOrRaise {| 4 |}) in
             fail "should throw"
-          with Of_json_error (Json_error "Expected array, got 4") ->
+          with
+          | Of_json_error (Json_error "Expected array as tuple, got 4") ->
             pass);
       test "non-DecodeError exceptions in decoder should pass through"
         (fun () ->
@@ -355,7 +358,8 @@ let () =
           with
           | Of_json_error
               (Json_error
-                 "Expected array of length 2, got array of length 1")
+                 "Expected array of length 2 as tuple, got array of \
+                  length 1")
           ->
             pass);
       test "too large" (fun () ->
@@ -367,7 +371,8 @@ let () =
           with
           | Of_json_error
               (Json_error
-                 "Expected array of length 2, got array of length 3")
+                 "Expected array of length 2 as tuple, got array of \
+                  length 3")
           ->
             pass);
       test "bad type a" (fun () ->
@@ -398,7 +403,8 @@ let () =
               (tuple2 int int) (parseOrRaise {| 4 |})
             in
             fail "should throw"
-          with Of_json_error (Json_error "Expected array, got 4") ->
+          with
+          | Of_json_error (Json_error "Expected array as tuple, got 4") ->
             pass);
       test "non-DecodeError exceptions in decoder should pass through"
         (fun () ->
@@ -426,7 +432,8 @@ let () =
           with
           | Of_json_error
               (Json_error
-                 "Expected array of length 3, got array of length 1")
+                 "Expected array of length 3 as tuple, got array of \
+                  length 1")
           ->
             pass);
       test "too large" (fun () ->
@@ -438,7 +445,8 @@ let () =
           with
           | Of_json_error
               (Json_error
-                 "Expected array of length 3, got array of length 5")
+                 "Expected array of length 3 as tuple, got array of \
+                  length 5")
           ->
             pass);
       test "bad type a" (fun () ->
@@ -470,7 +478,8 @@ let () =
               (tuple3 int int int) (parseOrRaise {| 4 |})
             in
             fail "should throw"
-          with Of_json_error (Json_error "Expected array, got 4") ->
+          with
+          | Of_json_error (Json_error "Expected array as tuple, got 4") ->
             pass);
       test "non-DecodeError exceptions in decoder should pass through"
         (fun () ->
@@ -499,7 +508,8 @@ let () =
           with
           | Of_json_error
               (Json_error
-                 "Expected array of length 4, got array of length 1")
+                 "Expected array of length 4 as tuple, got array of \
+                  length 1")
           ->
             pass);
       test "too large" (fun () ->
@@ -512,7 +522,8 @@ let () =
           with
           | Of_json_error
               (Json_error
-                 "Expected array of length 4, got array of length 6")
+                 "Expected array of length 4 as tuple, got array of \
+                  length 6")
           ->
             pass);
       test "bad type a" (fun () ->
@@ -544,7 +555,8 @@ let () =
               (tuple4 int int int int) (parseOrRaise {| 4 |})
             in
             fail "should throw"
-          with Of_json_error (Json_error "Expected array, got 4") ->
+          with
+          | Of_json_error (Json_error "Expected array as tuple, got 4") ->
             pass);
       test "non-DecodeError exceptions in decoder should pass through"
         (fun () ->

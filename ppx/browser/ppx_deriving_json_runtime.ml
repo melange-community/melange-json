@@ -1,4 +1,5 @@
 [@@@alert "-deprecated"]
+
 type t = Js.Json.t
 
 let to_json t = t
@@ -61,75 +62,16 @@ module To_json = struct
 end
 
 module Of_json = struct
-  let string_of_json (json : t) : string =
-    if Js.typeof json = "string" then (Obj.magic json : string)
-    else of_json_error "expected a string"
-
-  let bool_of_json (json : t) : bool =
-    if Js.typeof json = "boolean" then (Obj.magic json : bool)
-    else of_json_error "expected a boolean"
-
-  let is_int value =
-    Js.Float.isFinite value && Js.Math.floor_float value == value
-
-  let int_of_json (json : t) : int =
-    if Js.typeof json = "number" then
-      let v = (Obj.magic json : float) in
-      if is_int v then (Obj.magic v : int)
-      else of_json_error "expected an integer"
-    else of_json_error "expected an integer"
-
-  let int64_of_json (json : t) : int64 =
-    if Js.typeof json = "string" then
-      let v = (Obj.magic json : string) in
-      match Int64.of_string_opt v with
-      | Some v -> v
-      | None -> of_json_error "expected int64 as string"
-    else of_json_error "expected int64 as string"
-
-  let float_of_json (json : t) : float =
-    if Js.typeof json = "number" then (Obj.magic json : float)
-    else of_json_error "expected a float"
-
-  let unit_of_json (json : t) =
-    if (Obj.magic json : 'a Js.null) == Js.null then ()
-    else of_json_error "expected null"
-
-  let array_of_json v_of_json (json : t) =
-    if Js.Array.isArray json then
-      let json = (Obj.magic json : Js.Json.t array) in
-      Js.Array.map ~f:v_of_json json
-    else of_json_error "expected a JSON array"
-
-  let list_of_json v_of_json (json : t) =
-    array_of_json v_of_json json |> Array.to_list
-
-  let option_of_json v_of_json (json : t) =
-    if (Obj.magic json : 'a Js.null) == Js.null then None
-    else Some (v_of_json json)
-
-  let result_of_json ok_of_json err_of_json (json : t) =
-    if Js.Array.isArray json then
-      let array = (Obj.magic json : Js.Json.t array) in
-      let len = Js.Array.length array in
-      if Stdlib.( > ) len 0 then
-        let tag = Js.Array.unsafe_get array 0 in
-        if Stdlib.( = ) (Js.typeof tag) "string" then
-          let tag = (Obj.magic tag : string) in
-          if Stdlib.( = ) tag "Ok" then (
-            if Stdlib.( <> ) len 2 then
-              of_json_error "expected a JSON array of length 2";
-            Ok (ok_of_json (Js.Array.unsafe_get array 1)))
-          else if Stdlib.( = ) tag "Error" then (
-            if Stdlib.( <> ) len 2 then
-              of_json_error "expected a JSON array of length 2";
-            Error (err_of_json (Js.Array.unsafe_get array 1)))
-          else of_json_error "invalid JSON"
-        else
-          of_json_error
-            "expected a non empty JSON array with element being a string"
-      else of_json_error "expected a non empty JSON array"
-    else of_json_error "expected a non empty JSON array"
+  let string_of_json = Json.Of_json.string
+  let bool_of_json = Json.Of_json.bool
+  let int_of_json = Json.Of_json.int
+  let int64_of_json = Json.Of_json.int64
+  let float_of_json = Json.Of_json.float
+  let unit_of_json = Json.Of_json.unit
+  let array_of_json = Json.Of_json.array
+  let list_of_json = Json.Of_json.list
+  let option_of_json = Json.Of_json.option
+  let result_of_json = Json.Of_json.result
 end
 
 module Primitives = struct
@@ -138,6 +80,10 @@ module Primitives = struct
 end
 
 module Classify = struct
+  (* This function is also defined in `Json` module, but not exposed on its mli *)
+  let is_int value =
+    Js.Float.isFinite value && Js.Math.floor_float value == value
+
   let classify :
       t ->
       [ `Null
@@ -154,7 +100,7 @@ module Classify = struct
       | "string" -> `String (Obj.magic json : string)
       | "number" ->
           let v = (Obj.magic json : float) in
-          if Of_json.is_int v then `Int (Obj.magic v : int) else `Float v
+          if is_int v then `Int (Obj.magic v : int) else `Float v
       | "boolean" -> `Bool (Obj.magic json : bool)
       | "object" ->
           if Js.Array.isArray json then
