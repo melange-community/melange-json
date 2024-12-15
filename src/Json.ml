@@ -19,6 +19,9 @@ let to_string t = Js.Json.stringify t
 
 exception Of_string_error of string
 
+external _unsafeCreateUninitializedArray : int -> 'a array = "Array"
+[@@mel.new]
+
 let of_string s =
   try Js.Json.parseExn s
   with exn ->
@@ -38,18 +41,21 @@ module Of_json = struct
 
   let string (json : t) : string =
     if Js.typeof json = "string" then (Obj.magic json : string)
-    else of_json_error "expected a string"
+    else of_json_error ("Expected string, got " ^ Js.Json.stringify json)
 
   let char (json : t) =
     if Js.typeof json = "string" then
       let s = (Obj.magic json : string) in
       if String.length s = 1 then String.get s 0
-      else of_json_error "expected a single-character string"
+      else
+        of_json_error
+          ("Expected a single-character string, got "
+          ^ Js.Json.stringify json)
     else of_json_error "expected a string"
 
   let bool (json : t) : bool =
     if Js.typeof json = "boolean" then (Obj.magic json : bool)
-    else of_json_error "expected a boolean"
+    else of_json_error ("Expected boolean, got " ^ Js.Json.stringify json)
 
   let is_int value =
     Js.Float.isFinite value && Js.Math.floor_float value == value
@@ -58,8 +64,9 @@ module Of_json = struct
     if Js.typeof json = "number" then
       let v = (Obj.magic json : float) in
       if is_int v then (Obj.magic v : int)
-      else of_json_error "expected an integer"
-    else of_json_error "expected an integer"
+      else
+        of_json_error ("Expected integer, got " ^ Js.Json.stringify json)
+    else of_json_error ("Expected number, got " ^ Js.Json.stringify json)
 
   let int64 (json : t) : int64 =
     if Js.typeof json = "string" then
@@ -77,11 +84,22 @@ module Of_json = struct
     if (Obj.magic json : 'a Js.null) == Js.null then ()
     else of_json_error "expected null"
 
-  let array v_of_json (json : t) : _ array =
-    if Js.Array.isArray json then
-      let json = (Obj.magic json : Js.Json.t array) in
-      Js.Array.map ~f:v_of_json json
-    else of_json_error "expected a JSON array"
+  let array v_of_json (json : t) =
+    if Js.Array.isArray json then (
+      let source = (Obj.magic (json : Js.Json.t) : Js.Json.t array) in
+      let length = Js.Array.length source in
+      let target = _unsafeCreateUninitializedArray length in
+      for i = 0 to length - 1 do
+        let value =
+          try v_of_json (Array.unsafe_get source i)
+          with Of_json_error (Json_error err) ->
+            of_json_error
+              (err ^ "\n\tin array at index " ^ string_of_int i)
+        in
+        Array.unsafe_set target i value
+      done;
+      target)
+    else of_json_error ("Expected array, got " ^ Js.Json.stringify json)
 
   let list v_of_json (json : t) : _ list =
     array v_of_json json |> Array.to_list
@@ -163,7 +181,11 @@ module Of_json = struct
         let value =
           try decode (Js.Dict.unsafeGet source key)
           with Of_json_error err ->
-            of_json_error (of_json_error_to_string err ^ "\n\tin dict")
+            of_json_error
+              (of_json_error_to_string err
+              ^ "\n\tin object at key '"
+              ^ key
+              ^ "'")
         in
         Js.Dict.set target key value
       done;
