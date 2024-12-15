@@ -28,5 +28,5 @@ let _ =
   let json = {|{ "y": 42 } |} |> Json.parseOrRaise in
   match Json.Decode.(field "x" int json) with
   | x -> Js.log x
-  | exception Json.Decode.DecodeError err ->
-      Js.log ("Error:" ^ Json.Decode.error_to_string err)
+  | exception Json.Of_json_error err ->
+      Js.log ("Error:" ^ Json.of_json_error_to_string err)

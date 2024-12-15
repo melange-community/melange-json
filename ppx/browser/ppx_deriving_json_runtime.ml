@@ -6,8 +6,6 @@ let to_json t = t
 let of_json t = t
 let to_string t = Js.Json.stringify t
 
-exception Of_string_error of string
-
 let of_string s =
   try Js.Json.parseExn s
   with exn ->
@@ -20,13 +18,13 @@ let of_string s =
       (* msg really cannot be None in browser or any sane JS runtime *)
       Option.value msg ~default:"JSON error"
     in
-    raise (Of_string_error msg)
+    raise (Json.Of_string_error msg)
 
-type error = Json.Decode.error =
+type error = Json.of_json_error =
   | Json_error of string
   | Unexpected_variant of string
 
-exception Of_json_error = Json.Decode.DecodeError
+exception Of_json_error = Json.Of_json_error
 
 let of_json_error msg = raise (Of_json_error (Json_error msg))
 

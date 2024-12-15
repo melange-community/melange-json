@@ -126,6 +126,8 @@ val to_json : json to_json
 (** The type of a error which occurs during decoding JSON values. *)
 type of_json_error = Json_error of string | Unexpected_variant of string
 
+val of_json_error_to_string : of_json_error -> string
+
 type exn +=
   | Of_json_error of of_json_error
         (** The exception raised when a decoding error occurs *)
@@ -262,12 +264,6 @@ end
 module Decode : sig
   type 'a decoder = 'a of_json [@@deprecated "Use `of_json` instead"]
   (** The type of a decoder combinator *)
-
-  type error = Json_error of string | Unexpected_variant of string
-
-  val error_to_string : error -> string
-
-  exception DecodeError of error
 
   val id : t of_json [@@deprecated "Use `of_json` instead"]
   val bool : bool of_json [@@deprecated "Use `Of_json.bool` instead"]
