@@ -33,7 +33,7 @@ module Test = struct
         try
           let _ = decoder value in
           fail "should throw"
-        with Of_json_error _ -> pass)
+        with Json.Of_json_error _ -> pass)
 end
 
 let () =

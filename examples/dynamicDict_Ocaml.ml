@@ -1,3 +1,5 @@
+[@@@alert "-deprecated"]
+
 (*
     Handling an object with dynamic keys for sub-objects.
     example:

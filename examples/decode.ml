@@ -1,3 +1,5 @@
+[@@@alert "-deprecated"]
+
 (* Decoding a fixed JSON data structure using Json.Decode *)
 let mapJsonObjectString f decoder (encoder : int -> Js.Json.t) str =
   let json = Json.parseOrRaise str in

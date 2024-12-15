@@ -1,3 +1,4 @@
+[@@@alert "-deprecated"]
 (* Decode a JSON tree structure *)
 type 'a tree = Node of 'a * 'a tree list | Leaf of 'a
 
