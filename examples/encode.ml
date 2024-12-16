@@ -1,3 +1,4 @@
+[@@@alert "-deprecated"]
 (* Encoding a JSON data structure using Json.Encode *)
 
 (* prints ["foo", "bar"] *)

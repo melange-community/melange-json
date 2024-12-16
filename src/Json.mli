@@ -126,6 +126,8 @@ val to_json : json to_json
 (** The type of a error which occurs during decoding JSON values. *)
 type of_json_error = Json_error of string | Unexpected_variant of string
 
+val of_json_error_to_string : of_json_error -> string
+
 type exn +=
   | Of_json_error of of_json_error
         (** The exception raised when a decoding error occurs *)
@@ -139,7 +141,7 @@ val of_json : json of_json
 module Of_json : sig
   (** Provides a set of low level combinator primitives to decode
       Js.Json.t data structures A decoder combinator will return the
-      decoded value if successful, or raise a [DecodeError of string] if
+      decoded value if successful, or raise a [Of_json_error] exception if
       unsuccessful, where the string argument contains the error message.
       Decoders are designed to be combined to produce more complex
       decoders that can decode arbitrary data structures, though the

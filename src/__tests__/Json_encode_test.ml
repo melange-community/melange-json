@@ -1,3 +1,4 @@
+[@@@alert "-deprecated"]
 open Jest
 open Expect
 open! Json.Encode

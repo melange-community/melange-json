@@ -1,3 +1,4 @@
+[@@@alert "-deprecated"]
 type line = { start : point; end_ : point; thickness : int option }
 and point = { x : int; y : int }
 
