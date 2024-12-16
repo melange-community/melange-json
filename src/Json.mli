@@ -412,3 +412,14 @@ type exn += ParseError of string
 val parse : string -> json option [@@deprecated "Use `of_string` instead"]
 val parseOrRaise : string -> json [@@deprecated "Use `of_string` instead"]
 val stringify : json -> string [@@deprecated "Use `to_string` instead"]
+
+val classify :
+  json ->
+  [ `Assoc of (string * json) list
+  | `Bool of bool
+  | `Float of float
+  | `Int of int
+  | `List of json list
+  | `Null
+  | `String of string ]
+(** Classify a JSON value into a variant type. *)

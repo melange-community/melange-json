@@ -119,9 +119,7 @@ module Of_json_string = struct
   let expand =
     expand_via ~what:(Expansion_helpers.Suffix "of_json_string")
       ~through:(Expansion_helpers.Suffix "of_json") (fun ~loc of_json ->
-        [%expr
-          fun _json ->
-            [%e of_json] (Ppx_deriving_json_runtime.of_string _json)])
+        [%expr fun _json -> [%e of_json] (Json.of_string _json)])
 
   let register ~of_json () =
     Deriving.add "of_json_string"
@@ -134,9 +132,7 @@ module To_json_string = struct
   let expand =
     expand_via ~what:(Expansion_helpers.Suffix "to_json_string")
       ~through:(Expansion_helpers.Suffix "to_json") (fun ~loc to_json ->
-        [%expr
-          fun _data ->
-            Ppx_deriving_json_runtime.to_string ([%e to_json] _data)])
+        [%expr fun _data -> Json.to_string ([%e to_json] _data)])
 
   let register ~to_json () =
     Deriving.add "to_json_string"

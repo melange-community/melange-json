@@ -1,4 +1,4 @@
-open Ppx_deriving_json_runtime.Primitives
+open Json.Primitives
 
 let print fmt = Printf.ksprintf print_endline fmt
 

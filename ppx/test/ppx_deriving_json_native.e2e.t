@@ -5,7 +5,7 @@
   $ echo '
   > (executable 
   >   (name main)
-  >   (flags :standard -w -37-69 -open Ppx_deriving_json_runtime.Primitives)
+  >   (flags :standard -w -37-69 -open Json.Primitives)
   >   (preprocess (pps melange-json-native.ppx)))' > dune
 
   $ echo '
