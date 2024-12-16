@@ -21,6 +21,6 @@
   > let json = sum_to_json A
   > ' >> main.ml
 
-Can build without having to open Ppx_deriving_json_runtime.Primitives
+Can build without having to open Json.Primitives
 
   $ dune build @js

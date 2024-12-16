@@ -7,6 +7,13 @@ open Ppx_deriving_tools.Conv
 open Ppx_deriving_json_common
 
 module Of_json = struct
+  let of_json_error ~loc fmt =
+    ksprintf
+      (fun msg ->
+        let msg = estring ~loc msg in
+        [%expr raise (Json.Of_json_error (Json_error [%e msg]))])
+      fmt
+
   let with_refs ~loc prefix fs inner =
     let gen_name n = sprintf "%s_%s" prefix n in
     let gen_expr (n : label loc) =
@@ -45,10 +52,7 @@ module Of_json = struct
         [%pat? name]
         -->
         if allow_extra_fields then [%expr ()]
-        else
-          [%expr
-            Ppx_deriving_json_runtime.of_json_error
-              (Stdlib.Printf.sprintf "unknown field: %s" name)]
+        else of_json_error ~loc "unknown field: %s" "name"
       in
       let cases =
         List.fold_left (List.rev fs) ~init:[ fail_case ]
@@ -80,11 +84,7 @@ module Of_json = struct
                       match default with
                       | Some default -> default
                       | None ->
-                          [%expr
-                            Ppx_deriving_json_runtime.of_json_error
-                              [%e
-                                estring ~loc:key.loc
-                                  (sprintf "missing field %S" key.txt)]]]]
+                          of_json_error ~loc "missing field: %S" key.txt]]
             ))
       in
       pexp_record ~loc fields None
@@ -108,11 +108,7 @@ module Of_json = struct
       [
         xpatt --> build_tuple ~loc derive xexprs t.tpl_types;
         [%pat? _]
-        --> [%expr
-              Ppx_deriving_json_runtime.of_json_error
-                [%e
-                  estring ~loc
-                    (sprintf "expected a JSON array of length %i" n)]];
+        --> of_json_error ~loc "expected a JSON array of length %i" n;
       ]
 
   let derive_of_record derive t x =
@@ -125,10 +121,7 @@ module Of_json = struct
         [%pat? `Assoc fs]
         --> build_record ~allow_extra_fields ~loc derive t.rcd_fields
               [%expr fs] Fun.id;
-        [%pat? _]
-        --> [%expr
-              Ppx_deriving_json_runtime.of_json_error
-                [%e estring ~loc (sprintf "expected a JSON object")]];
+        [%pat? _] --> of_json_error ~loc "expected a JSON object";
       ]
 
   let derive_of_variant_case derive make vcs =
