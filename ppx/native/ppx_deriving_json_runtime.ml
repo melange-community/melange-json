@@ -14,7 +14,22 @@ type error = Json_error of string | Unexpected_variant of string
 
 exception Of_json_error of error
 
-let of_json_error msg = raise (Of_json_error (Json_error msg))
+let () =
+  Printexc.register_printer (function
+    | Of_json_error (Json_error str) ->
+        Some
+          (Printf.sprintf
+             " exception \
+              Ppx_deriving_json_runtime.Of_json_error(Json_error %S)"
+             str)
+    | Of_json_error (Unexpected_variant str) ->
+        Some
+          (Printf.sprintf
+             " exception \
+              Ppx_deriving_json_runtime.Of_json_error(Unexpected_variant \
+              %S)"
+             str)
+    | _ -> None)
 
 let show_json_type = function
   | `Assoc _ -> "object"
@@ -25,9 +40,59 @@ let show_json_type = function
   | `Null -> "null"
   | `String _ -> "string"
 
+let show_json_error ?depth json =
+  let fprintf = Format.fprintf in
+  let rec loop ?depth fmt json =
+    let depth = Option.map (fun i -> i - 1) depth in
+    match depth with
+    | Some 0 -> fprintf fmt "_"
+    | _ -> (
+        match json with
+        | `Any ->
+            (* Special non-json variant to represent parts where anything is allowed in expected json. *)
+            fprintf fmt "_"
+        | `Assoc assoc ->
+            fprintf fmt "{";
+            List.iter
+              (fun (k, v) -> fprintf fmt {|"%s": %a, |} k (loop ?depth) v)
+              assoc;
+            fprintf fmt "}"
+        | `Bool bool -> fprintf fmt (if bool then "true" else "false")
+        | `Float float -> fprintf fmt "%f" float
+        | `Int int -> fprintf fmt "%i" int
+        | `List li ->
+            fprintf fmt "[";
+            List.iter (fun elt -> fprintf fmt "%a, " (loop ?depth) elt) li;
+            fprintf fmt "]"
+        | `Null -> fprintf fmt "null"
+        | `String str -> fprintf fmt "%S" str)
+  in
+  Format.asprintf "%a"
+    (loop ?depth:(Option.map (fun i -> i + 1) depth))
+    json
+
+let of_json_msg_error msg = raise (Of_json_error (Json_error msg))
+
+let of_json_error_mismatch ~depth ~expected ~json =
+  of_json_msg_error
+    ("expected "
+    ^ (expected |> List.map show_json_error |> String.concat "or ")
+    ^ "but got"
+    ^ show_json_error ~depth json)
+
+let of_json_error ?(depth = 2) ~json msg =
+  of_json_msg_error
+    (Printf.sprintf "%s. Json received: %s" msg
+       (show_json_error ~depth json))
+
 let of_json_error_type_mismatch json expected =
-  of_json_error
-    ("expected " ^ expected ^ " but got " ^ show_json_type json)
+  of_json_msg_error
+    ("expected "
+    ^ expected
+    ^ " but got "
+    ^ show_json_type json
+    ^ ": "
+    ^ show_json_error json)
 
 module To_json = struct
   let string_to_json v = `String v
@@ -87,7 +152,7 @@ module Of_json = struct
 
   let unit_of_json = function
     | `Null -> ()
-    | _ -> of_json_error "expected null"
+    | json -> of_json_error_type_mismatch json "expected null"
 
   let option_of_json v_of_json = function
     | `Null -> None
@@ -105,7 +170,14 @@ module Of_json = struct
     match json with
     | `List [ `String "Ok"; x ] -> Ok (ok_of_json x)
     | `List [ `String "Error"; x ] -> Error (err_of_json x)
-    | _ -> of_json_error "invalid JSON"
+    | _ ->
+        of_json_error_mismatch
+          ~expected:
+            [
+              `List [ `String "Ok"; `Any ];
+              `List [ `String "Error"; `Any ];
+            ]
+          ~depth:2 ~json
 end
 
 module Primitives = struct

@@ -503,6 +503,21 @@ module Conv = struct
 
        method! derive_of_variant td cs x =
          let loc = td.ptype_loc in
+         let error_message =
+           Printf.sprintf "expected %s"
+             (cs
+             |> List.map ~f:(fun c ->
+                    let name = c.pcd_name in
+                    match c.pcd_args with
+                    | Pcstr_record _fs ->
+                        Printf.sprintf {|["%s", { _ }]|} name.txt
+                    | Pcstr_tuple li ->
+                        Printf.sprintf {|["%s"%s]|} name.txt
+                          (li
+                          |> List.map ~f:(fun _ -> ", _")
+                          |> String.concat ~sep:""))
+             |> String.concat ~sep:" or ")
+         in
          let cs = repr_variant_cases cs in
          let cases =
            List.fold_left cs
@@ -510,10 +525,8 @@ module Conv = struct
                [
                  [%pat? _]
                  --> [%expr
-                       raise
-                         (Ppx_deriving_json_runtime.Of_json_error
-                            (Ppx_deriving_json_runtime.Unexpected_variant
-                               "unexpected variant"))];
+                       Ppx_deriving_json_runtime.of_json_error ~json:x
+                         [%e estring ~loc error_message]];
                ]
              ~f:(fun next (c : constructor_declaration) ->
                let ctx = Vcs_ctx_variant c in

@@ -3,7 +3,7 @@
   > (implicit_transitive_deps false)
   > ' >> dune-project
   $ echo '
-  > (executable 
+  > (executable
   >   (name main)
   >   (flags :standard -w -37-69 -open Ppx_deriving_json_runtime.Primitives)
   >   (preprocess (pps melange-json-native.ppx)))' > dune
