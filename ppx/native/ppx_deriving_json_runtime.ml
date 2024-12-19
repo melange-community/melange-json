@@ -92,7 +92,7 @@ let of_json_error_type_mismatch json expected =
     ^ " but got "
     ^ show_json_type json
     ^ ": "
-    ^ show_json_error json)
+    ^ show_json_error ~depth:1 json)
 
 module To_json = struct
   let string_to_json v = `String v

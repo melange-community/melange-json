@@ -14,3 +14,6 @@ $ ocamlopt -dsource _build/default/prettify.pp.ml
   $ dune exec ./prettify.exe -- wrong_core_type.json
   Fatal error: exception  exception Ppx_deriving_json_runtime.Of_json_error(Json_error "expected int but got string: \"i am a string\"")
   [2]
+  $ dune exec ./prettify.exe -- deep_culprit.json
+  Fatal error: exception  exception Ppx_deriving_json_runtime.Of_json_error(Json_error "expected string but got object: {\"a\": _, \"foo\": _, \"b\": _, \"c\": _, \"d\": _, }")
+  [2]
