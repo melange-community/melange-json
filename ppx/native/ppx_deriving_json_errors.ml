@@ -18,7 +18,7 @@ let show_json_type json =
   | `Null -> "null"
   | `String _ -> "string"
 
-let show_json_error ?depth json =
+let show_json_error ?depth ?width json =
   with_buffer (fun emit ->
       let rec loop ?depth json =
         let json = Classify.classify json in
@@ -29,13 +29,18 @@ let show_json_error ?depth json =
             match json with
             | `Assoc assoc ->
                 emit "{";
-                List.iter
-                  (fun (k, v) ->
-                    emit {|"|};
-                    emit k;
-                    emit {|": |};
-                    loop ?depth v;
-                    emit {|, |})
+                List.iteri
+                  (fun i (k, v) ->
+                    match width with
+                    | Some width when i = width -> emit "..."
+                    | Some width when i > width -> ()
+                    | _ ->
+                        emit {|"|};
+                        emit k;
+                        emit {|": |};
+                        let depth = Option.map (fun i -> i - 1) depth in
+                        loop ?depth v;
+                        emit {|, |})
                   assoc;
                 emit "}"
             | `Bool bool -> emit (if bool then "true" else "false")
@@ -43,10 +48,14 @@ let show_json_error ?depth json =
             | `Int int -> emit (string_of_int int)
             | `List li ->
                 emit "[";
-                List.iter
-                  (fun elt ->
-                    loop ?depth elt;
-                    emit ", ")
+                List.iteri
+                  (fun i elt ->
+                    match width with
+                    | Some width when i = width -> emit "..."
+                    | Some width when i > width -> ()
+                    | _ ->
+                        loop ?depth elt;
+                        emit ", ")
                   li;
                 emit "]"
             | `Null -> emit "null"
@@ -60,12 +69,12 @@ let show_json_error ?depth json =
 
 let of_json_msg_error msg = raise (Of_json_error (Json_error msg))
 
-let of_json_error ?(depth = 2) ~json msg =
+let of_json_error ?(depth = 2) ?(width = 8) ~json msg =
   of_json_msg_error
     (with_buffer (fun emit ->
          emit msg;
          emit " but got ";
-         emit (show_json_error ~depth json)))
+         emit (show_json_error ~depth ~width json)))
 
 let of_json_error_type_mismatch json expected =
   of_json_msg_error
@@ -75,4 +84,4 @@ let of_json_error_type_mismatch json expected =
          emit " but got ";
          emit (show_json_type json);
          emit ": ";
-         emit (show_json_error ~depth:1 json)))
+         emit (show_json_error ~depth:2 ~width:8 json)))

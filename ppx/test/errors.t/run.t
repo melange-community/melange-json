@@ -17,3 +17,7 @@ $ ocamlopt -dsource _build/default/prettify.pp.ml
   $ dune exec ./prettify.exe -- deep_culprit.json
   Fatal error: exception  exception Ppx_deriving_json_runtime.Of_json_error(Json_error {|expected string but got object: {"a": _, "foo": _, "b": _, "c": _, "d": _, }|})
   [2]
+
+  $ dune exec ./prettify.exe -- wide_culprit.json
+  Fatal error: exception  exception Ppx_deriving_json_runtime.Of_json_error(Json_error {|expected string but got array: [123, 234, 345, 123, 234, 345, 123, 234, ...]|})
+  [2]
