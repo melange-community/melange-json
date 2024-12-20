@@ -5,7 +5,10 @@
   :standard
   \
   ppx_deriving_json_runtime
-  ppx_deriving_json_native_test)
+  ppx_deriving_json_native_test
+  ppx_deriving_json_classify
+  ppx_deriving_json_errors
+  ppx_deriving_json_exception)
  (libraries ppxlib)
  (ppx_runtime_libraries melange-json-native.ppx-runtime yojson)
  (preprocess
@@ -16,7 +19,11 @@
  (public_name melange-json-native.ppx-runtime)
  (name ppx_deriving_json_native_runtime)
  (wrapped false)
- (modules ppx_deriving_json_runtime)
+ (modules
+  ppx_deriving_json_runtime
+  ppx_deriving_json_classify
+  ppx_deriving_json_errors
+  ppx_deriving_json_exception)
  (libraries yojson))
 
 (executable

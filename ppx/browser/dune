@@ -1,7 +1,14 @@
 (library
  (public_name melange-json.ppx)
  (name ppx_deriving_json_js)
- (modules :standard \ ppx_deriving_json_runtime ppx_deriving_json_js_test)
+ (modules
+  :standard
+  \
+  ppx_deriving_json_runtime
+  ppx_deriving_json_js_test
+  ppx_deriving_json_classify
+  ppx_deriving_json_errors
+  ppx_deriving_json_exception)
  (libraries ppxlib)
  (ppx_runtime_libraries melange-json melange-json.ppx-runtime)
  (preprocess
@@ -11,7 +18,11 @@
 (library
  (public_name melange-json.ppx-runtime)
  (name ppx_deriving_json_js_runtime)
- (modules ppx_deriving_json_runtime)
+ (modules
+  ppx_deriving_json_runtime
+  ppx_deriving_json_classify
+  ppx_deriving_json_errors
+  ppx_deriving_json_exception)
  (libraries melange-json)
  (wrapped false)
  (modes melange))
@@ -37,6 +48,9 @@
 
 (copy_files#
  (files ../native/ppx_deriving_json_common.ml))
+
+(copy_files#
+ (files ../native/ppx_deriving_json_errors.ml))
 
 (copy_files#
  (files ../native/ppx_deriving_tools.{ml,mli}))
