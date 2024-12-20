@@ -1,4 +1,5 @@
   $ dune build ./prettify.exe
+Uncomment to debug
 $ ocamlopt -dsource _build/default/prettify.pp.ml
   $ dune exec ./prettify.exe -- ok.json
   {
