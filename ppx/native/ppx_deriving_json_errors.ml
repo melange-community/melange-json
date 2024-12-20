@@ -70,10 +70,21 @@ let show_json_error ?depth ?width json =
                   li;
                 emit "]"
             | `Null -> emit "null"
-            | `String str ->
-                emit {|"|};
-                emit (String.escaped str);
-                emit {|"|})
+            | `String str -> (
+                let len = String.length str in
+                match width with
+                | Some width
+                  when len > (width * 2) + 5
+                       (* I add 5 to account for the [" ... "] I am adding in that case *)
+                  ->
+                    emit {|"|};
+                    emit (String.escaped (String.sub str 0 width));
+                    emit " ... ";
+                    emit {|"|}
+                | _ ->
+                    emit {|"|};
+                    emit (String.escaped str);
+                    emit {|"|}))
       in
 
       (loop ?depth:(Option.map (fun i -> i + 1) depth)) json)
