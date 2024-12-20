@@ -48,7 +48,7 @@ module Of_json = struct
         else
           [%expr
             Ppx_deriving_json_runtime.of_json_error ~json:x
-              (Stdlib.Printf.sprintf "did not expect field: %s" name)]
+              (Stdlib.Printf.sprintf {|did not expect field "%s"|} name)]
       in
       let cases =
         List.fold_left (List.rev fs) ~init:[ fail_case ]
@@ -84,7 +84,7 @@ module Of_json = struct
                             Ppx_deriving_json_runtime.of_json_error ~json:x
                               [%e
                                 estring ~loc:key.loc
-                                  (sprintf "missing field %S" key.txt)]]]]
+                                  (sprintf "expected field %S" key.txt)]]]]
             ))
       in
       pexp_record ~loc fields None

@@ -4,8 +4,6 @@ type t = Yojson.Basic.t
 
 include Ppx_deriving_json_errors
 
-
-
 let to_json t = t
 let of_json t = t
 let to_string t = Yojson.Basic.to_string t
@@ -21,14 +19,12 @@ let () =
     | Of_json_error (Json_error str) ->
         Some
           (sprintf
-             " exception \
-              Ppx_deriving_json_runtime.Of_json_error(Json_error {|%s|})"
+             "Ppx_deriving_json_runtime.Of_json_error(Json_error {|%s|})"
              str)
     | Of_json_error (Unexpected_variant str) ->
         Some
           (sprintf
-             " exception \
-              Ppx_deriving_json_runtime.Of_json_error(Unexpected_variant \
+             "Ppx_deriving_json_runtime.Of_json_error(Unexpected_variant \
               {|%s|})"
              str)
     | _ -> None)

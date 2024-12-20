@@ -170,8 +170,8 @@
                    | "age" -> x_age := Stdlib.Option.Some (int_of_json v)
                    | name ->
                        Ppx_deriving_json_runtime.of_json_error ~json:x
-                         (Stdlib.Printf.sprintf "did not expect field: %s"
-                            name));
+                         (Stdlib.Printf.sprintf
+                            {|did not expect field "%s"|} name));
                    iter fs
              in
              iter fs;
@@ -181,13 +181,13 @@
                  | Stdlib.Option.Some v -> v
                  | Stdlib.Option.None ->
                      Ppx_deriving_json_runtime.of_json_error ~json:x
-                       "missing field \"name\"");
+                       "expected field \"name\"");
                age =
                  (match Stdlib.( ! ) x_age with
                  | Stdlib.Option.Some v -> v
                  | Stdlib.Option.None ->
                      Ppx_deriving_json_runtime.of_json_error ~json:x
-                       "missing field \"age\"");
+                       "expected field \"age\"");
              }
          | _ ->
              Ppx_deriving_json_runtime.of_json_error ~json:x
@@ -243,8 +243,8 @@
                    | "my_age" -> x_age := Stdlib.Option.Some (int_of_json v)
                    | name ->
                        Ppx_deriving_json_runtime.of_json_error ~json:x
-                         (Stdlib.Printf.sprintf "did not expect field: %s"
-                            name));
+                         (Stdlib.Printf.sprintf
+                            {|did not expect field "%s"|} name));
                    iter fs
              in
              iter fs;
@@ -254,7 +254,7 @@
                  | Stdlib.Option.Some v -> v
                  | Stdlib.Option.None ->
                      Ppx_deriving_json_runtime.of_json_error ~json:x
-                       "missing field \"my_name\"");
+                       "expected field \"my_name\"");
                age =
                  (match Stdlib.( ! ) x_age with
                  | Stdlib.Option.Some v -> v
@@ -311,8 +311,8 @@
                          Stdlib.Option.Some ((option_of_json int_of_json) v)
                    | name ->
                        Ppx_deriving_json_runtime.of_json_error ~json:x
-                         (Stdlib.Printf.sprintf "did not expect field: %s"
-                            name));
+                         (Stdlib.Printf.sprintf
+                            {|did not expect field "%s"|} name));
                    iter fs
              in
              iter fs;
@@ -371,8 +371,8 @@
                        x_name := Stdlib.Option.Some (string_of_json v)
                    | name ->
                        Ppx_deriving_json_runtime.of_json_error ~json:x
-                         (Stdlib.Printf.sprintf "did not expect field: %s"
-                            name));
+                         (Stdlib.Printf.sprintf
+                            {|did not expect field "%s"|} name));
                    iter fs
              in
              iter fs;
@@ -383,7 +383,7 @@
                    | Stdlib.Option.Some v -> v
                    | Stdlib.Option.None ->
                        Ppx_deriving_json_runtime.of_json_error ~json:x
-                         "missing field \"name\"");
+                         "expected field \"name\"");
                }
          | _ ->
              Ppx_deriving_json_runtime.of_json_error ~json:x
@@ -789,7 +789,7 @@
                  | Stdlib.Option.Some v -> v
                  | Stdlib.Option.None ->
                      Ppx_deriving_json_runtime.of_json_error ~json:x
-                       "missing field \"a\"");
+                       "expected field \"a\"");
              }
          | _ ->
              Ppx_deriving_json_runtime.of_json_error ~json:x
@@ -845,7 +845,7 @@
                    | Stdlib.Option.Some v -> v
                    | Stdlib.Option.None ->
                        Ppx_deriving_json_runtime.of_json_error ~json:x
-                         "missing field \"a\"");
+                         "expected field \"a\"");
                }
          | _ ->
              Ppx_deriving_json_runtime.of_json_error ~json:x
@@ -903,8 +903,8 @@
                          Stdlib.Option.Some ((option_of_json int_of_json) v)
                    | name ->
                        Ppx_deriving_json_runtime.of_json_error ~json:x
-                         (Stdlib.Printf.sprintf "did not expect field: %s"
-                            name));
+                         (Stdlib.Printf.sprintf
+                            {|did not expect field "%s"|} name));
                    iter fs
              in
              iter fs;
@@ -914,7 +914,7 @@
                  | Stdlib.Option.Some v -> v
                  | Stdlib.Option.None ->
                      Ppx_deriving_json_runtime.of_json_error ~json:x
-                       "missing field \"a\"");
+                       "expected field \"a\"");
                b_opt =
                  (match Stdlib.( ! ) x_b_opt with
                  | Stdlib.Option.Some v -> v

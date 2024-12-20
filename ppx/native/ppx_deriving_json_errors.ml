@@ -8,6 +8,17 @@ let with_buffer f =
   f (Buffer.add_string buffer);
   Buffer.contents buffer
 
+let iteri_last f li =
+  let rec loop i li =
+    match li with
+    | [] -> ()
+    | [ elt ] -> f ~is_last:true i elt
+    | elt :: li ->
+        f ~is_last:false i elt;
+        loop (i + 1) li
+  in
+  loop 0 li
+
 let show_json_type json =
   json |> Classify.classify |> function
   | `Assoc _ -> "object"
@@ -29,8 +40,8 @@ let show_json_error ?depth ?width json =
             match json with
             | `Assoc assoc ->
                 emit "{";
-                List.iteri
-                  (fun i (k, v) ->
+                iteri_last
+                  (fun ~is_last i (k, v) ->
                     match width with
                     | Some width when i = width -> emit "..."
                     | Some width when i > width -> ()
@@ -40,7 +51,7 @@ let show_json_error ?depth ?width json =
                         emit {|": |};
                         let depth = Option.map (fun i -> i - 1) depth in
                         loop ?depth v;
-                        emit {|, |})
+                        if not is_last then emit {|, |})
                   assoc;
                 emit "}"
             | `Bool bool -> emit (if bool then "true" else "false")
@@ -48,14 +59,14 @@ let show_json_error ?depth ?width json =
             | `Int int -> emit (string_of_int int)
             | `List li ->
                 emit "[";
-                List.iteri
-                  (fun i elt ->
+                iteri_last
+                  (fun ~is_last i elt ->
                     match width with
                     | Some width when i = width -> emit "..."
                     | Some width when i > width -> ()
                     | _ ->
                         loop ?depth elt;
-                        emit ", ")
+                        if not is_last then emit ", ")
                   li;
                 emit "]"
             | `Null -> emit "null"
