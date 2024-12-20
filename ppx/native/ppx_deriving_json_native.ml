@@ -47,8 +47,8 @@ module Of_json = struct
         if allow_extra_fields then [%expr ()]
         else
           [%expr
-            Ppx_deriving_json_runtime.of_json_error
-              (Stdlib.Printf.sprintf "unknown field: %s" name)]
+            Ppx_deriving_json_runtime.of_json_error ~json:x
+              (Stdlib.Printf.sprintf {|did not expect field "%s"|} name)]
       in
       let cases =
         List.fold_left (List.rev fs) ~init:[ fail_case ]
@@ -81,10 +81,10 @@ module Of_json = struct
                       | Some default -> default
                       | None ->
                           [%expr
-                            Ppx_deriving_json_runtime.of_json_error
+                            Ppx_deriving_json_runtime.of_json_error ~json:x
                               [%e
                                 estring ~loc:key.loc
-                                  (sprintf "missing field %S" key.txt)]]]]
+                                  (sprintf "expected field %S" key.txt)]]]]
             ))
       in
       pexp_record ~loc fields None
@@ -109,7 +109,7 @@ module Of_json = struct
         xpatt --> build_tuple ~loc derive xexprs t.tpl_types;
         [%pat? _]
         --> [%expr
-              Ppx_deriving_json_runtime.of_json_error
+              Ppx_deriving_json_runtime.of_json_error ~json:[%e x]
                 [%e
                   estring ~loc
                     (sprintf "expected a JSON array of length %i" n)]];
@@ -127,7 +127,7 @@ module Of_json = struct
               [%expr fs] Fun.id;
         [%pat? _]
         --> [%expr
-              Ppx_deriving_json_runtime.of_json_error
+              Ppx_deriving_json_runtime.of_json_error ~json:[%e x]
                 [%e estring ~loc (sprintf "expected a JSON object")]];
       ]
 

@@ -65,7 +65,7 @@ We can alias poly varaints:
                     then
                       (if Stdlib.(<>) len 1
                        then
-                         Ppx_deriving_json_runtime.of_json_error
+                         Ppx_deriving_json_runtime.of_json_msg_error ~json:x
                            "expected a JSON array of length 1";
                        `A)
                     else
@@ -73,7 +73,7 @@ We can alias poly varaints:
                       then
                         (if Stdlib.(<>) len 1
                          then
-                           Ppx_deriving_json_runtime.of_json_error
+                           Ppx_deriving_json_runtime.of_json_msg_error ~json:x
                              "expected a JSON array of length 1";
                          `B)
                       else
@@ -82,13 +82,13 @@ We can alias poly varaints:
                              (Ppx_deriving_json_runtime.Unexpected_variant
                                 "unexpected variant")))
                  else
-                   Ppx_deriving_json_runtime.of_json_error
+                   Ppx_deriving_json_runtime.of_json_error ~json:x
                      "expected a non empty JSON array with element being a string")
               else
-                Ppx_deriving_json_runtime.of_json_error
+                Ppx_deriving_json_runtime.of_json_error ~json:x
                   "expected a non empty JSON array")
            else
-             Ppx_deriving_json_runtime.of_json_error
+             Ppx_deriving_json_runtime.of_json_error ~json:x
                "expected a non empty JSON array" : Js.Json.t -> t)
       let _ = of_json
       [@@@ocaml.warning "-39-11-27"]
@@ -206,7 +206,7 @@ We can extend aliased polyvariants:
                     then
                       (if Stdlib.(<>) len 1
                        then
-                         Ppx_deriving_json_runtime.of_json_error
+                         Ppx_deriving_json_runtime.of_json_msg_error ~json:x
                            "expected a JSON array of length 1";
                        `A)
                     else
@@ -214,7 +214,7 @@ We can extend aliased polyvariants:
                       then
                         (if Stdlib.(<>) len 1
                          then
-                           Ppx_deriving_json_runtime.of_json_error
+                           Ppx_deriving_json_runtime.of_json_msg_error ~json:x
                              "expected a JSON array of length 1";
                          `B)
                       else
@@ -223,13 +223,13 @@ We can extend aliased polyvariants:
                              (Ppx_deriving_json_runtime.Unexpected_variant
                                 "unexpected variant")))
                  else
-                   Ppx_deriving_json_runtime.of_json_error
+                   Ppx_deriving_json_runtime.of_json_error ~json:x
                      "expected a non empty JSON array with element being a string")
               else
-                Ppx_deriving_json_runtime.of_json_error
+                Ppx_deriving_json_runtime.of_json_error ~json:x
                   "expected a non empty JSON array")
            else
-             Ppx_deriving_json_runtime.of_json_error
+             Ppx_deriving_json_runtime.of_json_error ~json:x
                "expected a non empty JSON array" : Js.Json.t -> t)
       let _ = of_json
       [@@@ocaml.warning "-39-11-27"]
@@ -266,8 +266,8 @@ We can extend aliased polyvariants:
                         then
                           (if Stdlib.(<>) len 1
                            then
-                             Ppx_deriving_json_runtime.of_json_error
-                               "expected a JSON array of length 1";
+                             Ppx_deriving_json_runtime.of_json_msg_error
+                               ~json:x "expected a JSON array of length 1";
                            `C)
                         else
                           raise
@@ -275,13 +275,13 @@ We can extend aliased polyvariants:
                                (Ppx_deriving_json_runtime.Unexpected_variant
                                   "unexpected variant")))
                  else
-                   Ppx_deriving_json_runtime.of_json_error
+                   Ppx_deriving_json_runtime.of_json_error ~json:x
                      "expected a non empty JSON array with element being a string")
               else
-                Ppx_deriving_json_runtime.of_json_error
+                Ppx_deriving_json_runtime.of_json_error ~json:x
                   "expected a non empty JSON array")
            else
-             Ppx_deriving_json_runtime.of_json_error
+             Ppx_deriving_json_runtime.of_json_error ~json:x
                "expected a non empty JSON array" : Js.Json.t -> u)
       let _ = u_of_json
       [@@@ocaml.warning "-39-11-27"]
@@ -421,16 +421,16 @@ We can extend poly variants which are placed behind signatures:
                         then
                           (if Stdlib.(<>) len 1
                            then
-                             Ppx_deriving_json_runtime.of_json_error
-                               "expected a JSON array of length 1";
+                             Ppx_deriving_json_runtime.of_json_msg_error
+                               ~json:x "expected a JSON array of length 1";
                            `A)
                         else
                           if Stdlib.(=) tag "B"
                           then
                             (if Stdlib.(<>) len 1
                              then
-                               Ppx_deriving_json_runtime.of_json_error
-                                 "expected a JSON array of length 1";
+                               Ppx_deriving_json_runtime.of_json_msg_error
+                                 ~json:x "expected a JSON array of length 1";
                              `B)
                           else
                             raise
@@ -438,13 +438,13 @@ We can extend poly variants which are placed behind signatures:
                                  (Ppx_deriving_json_runtime.Unexpected_variant
                                     "unexpected variant")))
                      else
-                       Ppx_deriving_json_runtime.of_json_error
+                       Ppx_deriving_json_runtime.of_json_error ~json:x
                          "expected a non empty JSON array with element being a string")
                   else
-                    Ppx_deriving_json_runtime.of_json_error
+                    Ppx_deriving_json_runtime.of_json_error ~json:x
                       "expected a non empty JSON array")
                else
-                 Ppx_deriving_json_runtime.of_json_error
+                 Ppx_deriving_json_runtime.of_json_error ~json:x
                    "expected a non empty JSON array" : Js.Json.t -> t)
           let _ = of_json
           [@@@ocaml.warning "-39-11-27"]
@@ -482,8 +482,8 @@ We can extend poly variants which are placed behind signatures:
                         then
                           (if Stdlib.(<>) len 1
                            then
-                             Ppx_deriving_json_runtime.of_json_error
-                               "expected a JSON array of length 1";
+                             Ppx_deriving_json_runtime.of_json_msg_error
+                               ~json:x "expected a JSON array of length 1";
                            `C)
                         else
                           raise
@@ -491,13 +491,13 @@ We can extend poly variants which are placed behind signatures:
                                (Ppx_deriving_json_runtime.Unexpected_variant
                                   "unexpected variant")))
                  else
-                   Ppx_deriving_json_runtime.of_json_error
+                   Ppx_deriving_json_runtime.of_json_error ~json:x
                      "expected a non empty JSON array with element being a string")
               else
-                Ppx_deriving_json_runtime.of_json_error
+                Ppx_deriving_json_runtime.of_json_error ~json:x
                   "expected a non empty JSON array")
            else
-             Ppx_deriving_json_runtime.of_json_error
+             Ppx_deriving_json_runtime.of_json_error ~json:x
                "expected a non empty JSON array" : Js.Json.t -> u)
       let _ = u_of_json
       [@@@ocaml.warning "-39-11-27"]

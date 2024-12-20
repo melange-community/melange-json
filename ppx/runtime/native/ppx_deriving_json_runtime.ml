@@ -1,4 +1,8 @@
+open Printf
+
 type t = Yojson.Basic.t
+
+include Ppx_deriving_json_errors
 
 let to_json t = t
 let of_json t = t
@@ -10,24 +14,20 @@ let of_string s =
   try Yojson.Basic.from_string s
   with Yojson.Json_error msg -> raise (Of_string_error msg)
 
-type error = Json_error of string | Unexpected_variant of string
-
-exception Of_json_error of error
-
-let of_json_error msg = raise (Of_json_error (Json_error msg))
-
-let show_json_type = function
-  | `Assoc _ -> "object"
-  | `Bool _ -> "bool"
-  | `Float _ -> "float"
-  | `Int _ -> "int"
-  | `List _ -> "array"
-  | `Null -> "null"
-  | `String _ -> "string"
-
-let of_json_error_type_mismatch json expected =
-  of_json_error
-    ("expected " ^ expected ^ " but got " ^ show_json_type json)
+let () =
+  Printexc.register_printer (function
+    | Of_json_error (Json_error str) ->
+        Some
+          (sprintf
+             "Ppx_deriving_json_runtime.Of_json_error(Json_error {|%s|})"
+             str)
+    | Of_json_error (Unexpected_variant str) ->
+        Some
+          (sprintf
+             "Ppx_deriving_json_runtime.Of_json_error(Unexpected_variant \
+              {|%s|})"
+             str)
+    | _ -> None)
 
 module To_json = struct
   let string_to_json v = `String v
@@ -87,7 +87,7 @@ module Of_json = struct
 
   let unit_of_json = function
     | `Null -> ()
-    | _ -> of_json_error "expected null"
+    | json -> of_json_error_type_mismatch json "expected null"
 
   let option_of_json v_of_json = function
     | `Null -> None
@@ -105,23 +105,12 @@ module Of_json = struct
     match json with
     | `List [ `String "Ok"; x ] -> Ok (ok_of_json x)
     | `List [ `String "Error"; x ] -> Error (err_of_json x)
-    | _ -> of_json_error "invalid JSON"
+    | _ ->
+        of_json_error {|expected ["Ok"; _] or ["Error"; _]|} ~depth:2
+          ~json
 end
 
 module Primitives = struct
   include To_json
   include Of_json
-end
-
-module Classify = struct
-  let classify :
-      t ->
-      [ `Null
-      | `String of string
-      | `Float of float
-      | `Int of int
-      | `Bool of bool
-      | `List of t list
-      | `Assoc of (string * t) list ] =
-   fun x -> x
 end
