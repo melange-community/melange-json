@@ -6,6 +6,7 @@ type variant =
   | B of int
   | C of int * string
   | D of { x : int; y : string }
+  | Different_named [@name "different_name"]
 [@@deriving json]
 
 type j = {
