@@ -178,7 +178,7 @@ let oneOf decoders json =
     | [] ->
         let formattedErrors =
           "\n- "
-          ^ Js.Array.join ~sep:"\n- " (Array.of_list (List.rev errors))
+          ^ Js.Array.join ~sep:"\n- " (Array.of_list (List.rev_map error_to_string errors))
         in
         error
           ({j|All decoders given to oneOf failed. Here are all the errors: $formattedErrors\nAnd the JSON being decoded: |j}

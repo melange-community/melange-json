@@ -720,7 +720,7 @@ let () =
             let a = Encode.jsonDict (Js.Dict.empty ()) in
             let (_ : string) = either string string a in
             fail "should throw"
-          with DecodeError (Json_error "All decoders given to oneOf failed. Here are all the errors: \n- [object Object]\n- [object Object]\nAnd the JSON being decoded: {}") -> pass);
+          with DecodeError (Json_error "All decoders given to oneOf failed. Here are all the errors: \n- Expected string, got {}\n- Expected string, got {}\nAnd the JSON being decoded: {}") -> pass);
 
       Test.throws
         (either int (field "x" int))
