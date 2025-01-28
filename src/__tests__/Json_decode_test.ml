@@ -86,6 +86,12 @@ let () =
       test "single-character string" (fun () ->
           expect @@ string (Encode.char 'a') |> toEqual "a");
 
+      test "object as string" (fun () ->
+          try
+            let (_ : string) = string (Encode.jsonDict (Js.Dict.empty ())) in
+            fail "should throw"
+          with DecodeError Json_error "Expected string, got {}" -> pass);
+
       Test.throws string [ Bool; Float; Int; Null; Array; Object ]);
 
   describe "date" (fun () ->
@@ -708,6 +714,13 @@ let () =
           |> toEqual 2);
       test "int" (fun () ->
           expect @@ (either int (field "x" int)) (Encode.int 23) |> toEqual 23);
+
+     test "object as string in either" (fun () ->
+          try
+            let a = Encode.jsonDict (Js.Dict.empty ()) in
+            let (_ : string) = either string string a in
+            fail "should throw"
+          with DecodeError (Json_error "All decoders given to oneOf failed. Here are all the errors: \n- Expected string, got {}\n- Expected string, got {}\nAnd the JSON being decoded: {}") -> pass);
 
       Test.throws
         (either int (field "x" int))
