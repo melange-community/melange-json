@@ -364,8 +364,8 @@ module Conv = struct
 
   let repr_variant_cases cs = List.rev cs
 
-  let deriving_of ~name ~of_t ~error ~derive_of_tuple ~derive_of_record
-      ~derive_of_variant ~derive_of_variant_case () =
+  let deriving_of ~name ~of_t ~is_allow_any_constr ~derive_of_tuple
+      ~derive_of_record ~derive_of_variant ~derive_of_variant_case () =
     (object (self)
        inherit Schema.deriving1
        method name = name
@@ -384,9 +384,43 @@ module Conv = struct
        method! derive_of_variant td cs x =
          let loc = td.ptype_loc in
          let cs = repr_variant_cases cs in
+         let allow_any_constr =
+           cs
+           |> List.find_opt ~f:(fun cs ->
+                  is_allow_any_constr (Vcs_ctx_variant cs))
+           |> Option.map (fun cs e -> econstruct cs (Some e))
+         in
+         let cs =
+           List.filter
+             ~f:(fun cs -> not (is_allow_any_constr (Vcs_ctx_variant cs)))
+             cs
+         in
          let body, cases =
            List.fold_left cs
-             ~init:(error ~loc, [])
+             ~init:
+               (match allow_any_constr with
+               | Some allow_any_constr -> allow_any_constr x, []
+               | None ->
+                   let error_message =
+                     Printf.sprintf "expected %s"
+                       (cs
+                       |> List.map ~f:(fun c ->
+                              let name = c.pcd_name in
+                              match c.pcd_args with
+                              | Pcstr_record _fs ->
+                                  Printf.sprintf {|["%s", { _ }]|}
+                                    name.txt
+                              | Pcstr_tuple li ->
+                                  Printf.sprintf {|["%s"%s]|} name.txt
+                                    (li
+                                    |> List.map ~f:(fun _ -> ", _")
+                                    |> String.concat ~sep:""))
+                       |> String.concat ~sep:" or ")
+                   in
+                   ( [%expr
+                       Ppx_deriving_json_errors.of_json_error ~json:[%e x]
+                         [%e estring ~loc error_message]],
+                     [] ))
              ~f:(fun (next, cases) c ->
                let make (n : label loc) arg =
                  pexp_construct (map_loc lident n) ~loc:n.loc arg
@@ -403,7 +437,7 @@ module Conv = struct
                    in
                    let next =
                      derive_of_variant_case self#derive_of_core_type
-                       (make n) t next
+                       (make n) t allow_any_constr next
                    in
                    next, t :: cases
                | Pcstr_tuple ts ->
@@ -415,7 +449,7 @@ module Conv = struct
                    in
                    let next =
                      derive_of_variant_case self#derive_of_core_type
-                       (make n) case next
+                       (make n) case allow_any_constr next
                    in
                    next, case :: cases)
          in
@@ -426,20 +460,41 @@ module Conv = struct
              vrt_ctx = Vrt_ctx_variant td;
            }
          in
-         derive_of_variant self#derive_of_core_type t body x
+         derive_of_variant self#derive_of_core_type t allow_any_constr
+           body x
 
        method! derive_of_polyvariant t (cs : row_field list) x =
          let loc = t.ptyp_loc in
+         let allow_any_constr =
+           cs
+           |> List.find_opt ~f:(fun cs ->
+                  is_allow_any_constr (Vcs_ctx_polyvariant cs))
+           |> Option.map (fun cs ->
+                  match cs.prf_desc with
+                  | Rinherit _ ->
+                      failwith "[@allow_any] placed on inherit clause"
+                  | Rtag (n, _, _) ->
+                      fun e -> pexp_variant ~loc:n.loc n.txt (Some e))
+         in
+         let cs =
+           List.filter
+             ~f:(fun cs ->
+               not (is_allow_any_constr (Vcs_ctx_polyvariant cs)))
+             cs
+         in
          let cases = repr_polyvariant_cases cs in
          let body, cases =
            List.fold_left cases
              ~init:
-               ( [%expr
-                   raise
-                     (Ppx_deriving_json_runtime.Of_json_error
-                        (Ppx_deriving_json_runtime.Unexpected_variant
-                           "unexpected variant"))],
-                 [] )
+               (match allow_any_constr with
+               | Some allow_any_constr -> allow_any_constr x, []
+               | None ->
+                   ( [%expr
+                       raise
+                         (Ppx_deriving_json_runtime.Of_json_error
+                            (Ppx_deriving_json_runtime.Unexpected_variant
+                               "unexpected variant"))],
+                     [] ))
              ~f:(fun (next, cases) (c, r) ->
                let ctx = Vcs_ctx_polyvariant c in
                match r with
@@ -453,7 +508,7 @@ module Conv = struct
                    in
                    let next =
                      derive_of_variant_case self#derive_of_core_type make
-                       case next
+                       case allow_any_constr next
                    in
                    next, case :: cases
                | `Rinherit (n, ts) ->
@@ -480,7 +535,8 @@ module Conv = struct
              vrt_ctx = Vrt_ctx_polyvariant t;
            }
          in
-         derive_of_variant self#derive_of_core_type t body x
+         derive_of_variant self#derive_of_core_type t allow_any_constr
+           body x
      end
       :> deriving)
 
