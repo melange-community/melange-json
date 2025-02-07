@@ -42,8 +42,9 @@ module Of_json = struct
                     [%expr
                       Ppx_deriving_json_runtime.of_json_error ~json:x
                         [%e
-                          estring ~loc (sprintf "expected field %S to be present" n.txt)]]]]
-      )
+                          estring ~loc
+                            (sprintf "expected field %S to be present"
+                               n.txt)]]]] )
     in
     [%expr
       let fs = (Obj.magic [%e x] : [%t build_js_type ~loc fs]) in
@@ -68,12 +69,19 @@ module Of_json = struct
         Ppx_deriving_json_runtime.of_json_msg_error
           [%e estring ~loc (sprintf "expected a JSON object")]]
 
-  let ensure_json_array_len ~loc n len x =
+  let ensure_json_array_len ~loc ~allow_any_constr ~else_ n len x =
     [%expr
       if Stdlib.( <> ) [%e len] [%e eint ~loc n] then
-        Ppx_deriving_json_runtime.of_json_msg_error ~json:[%e x]
-          [%e
-            estring ~loc (sprintf "expected a JSON array of length %i" n)]]
+        [%e
+          match allow_any_constr with
+          | Some allow_any_constr -> allow_any_constr x
+          | None ->
+              [%expr
+                Ppx_deriving_json_runtime.of_json_msg_error ~json:[%e x]
+                  [%e
+                    estring ~loc
+                      (sprintf "expected a JSON array of length %i" n)]]]
+      else [%e else_]]
 
   let derive_of_tuple derive t x =
     let loc = t.tpl_loc in
@@ -99,7 +107,7 @@ module Of_json = struct
       [%e ensure_json_object ~loc x];
       [%e build_record ~loc derive t.rcd_fields x Fun.id]]
 
-  let derive_of_variant _derive t body x =
+  let derive_of_variant _derive t allow_any_constr body x =
     let loc = t.vrt_loc in
     [%expr
       if Js.Array.isArray [%e x] then
@@ -111,52 +119,75 @@ module Of_json = struct
             let tag = (Obj.magic tag : string) in
             [%e body]
           else
-            Ppx_deriving_json_runtime.of_json_error ~json:[%e x]
-              "expected a non empty JSON array with element being a \
-               string"
+            [%e
+              match allow_any_constr with
+              | Some allow_any_constr -> allow_any_constr x
+              | None ->
+                  [%expr
+                    Ppx_deriving_json_runtime.of_json_error ~json:[%e x]
+                      "expected a non empty JSON array with element \
+                       being a string"]]
         else
-          Ppx_deriving_json_runtime.of_json_error ~json:[%e x]
-            "expected a non empty JSON array"
+          [%e
+            match allow_any_constr with
+            | Some allow_any_constr -> allow_any_constr x
+            | None ->
+                [%expr
+                  Ppx_deriving_json_runtime.of_json_error ~json:[%e x]
+                    "expected a non empty JSON array"]]
       else
-        Ppx_deriving_json_runtime.of_json_error ~json:[%e x]
-          "expected a non empty JSON array"]
+        [%e
+          match allow_any_constr with
+          | Some allow_any_constr -> allow_any_constr x
+          | None ->
+              [%expr
+                Ppx_deriving_json_runtime.of_json_error ~json:[%e x]
+                  "expected a non empty JSON array"]]]
 
-  let derive_of_variant_case derive make c next =
+  let derive_of_variant_case derive make c allow_any_constr next =
     match c with
     | Vcs_record (n, r) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name r.rcd_ctx) in
         [%expr
-          if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then (
-            [%e ensure_json_array_len ~loc 2 [%expr len] [%expr x]];
-            let fs = Js.Array.unsafe_get array 1 in
-            [%e ensure_json_object ~loc [%expr fs]];
+          if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then
             [%e
-              build_record ~loc derive r.rcd_fields [%expr fs] (fun e ->
-                  make (Some e))])
+              ensure_json_array_len ~loc ~allow_any_constr 2 [%expr len]
+                [%expr x]
+                ~else_:
+                  [%expr
+                    let fs = Js.Array.unsafe_get array 1 in
+                    [%e ensure_json_object ~loc [%expr fs]];
+                    [%e
+                      build_record ~loc derive r.rcd_fields [%expr fs]
+                        (fun e -> make (Some e))]]]
           else [%e next]]
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
         let arity = List.length t.tpl_types in
         [%expr
-          if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then (
-            [%e ensure_json_array_len ~loc (arity + 1) [%expr len] [%expr x]];
+          if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then
             [%e
-              if Stdlib.( = ) arity 0 then make None
-              else
-                make
-                  (Some
-                     (build_tuple ~loc derive 1 t.tpl_types [%expr array]))])
+              ensure_json_array_len ~loc ~allow_any_constr (arity + 1)
+                [%expr len] [%expr x]
+                ~else_:
+                  (if Stdlib.( = ) arity 0 then make None
+                   else
+                     make
+                       (Some
+                          (build_tuple ~loc derive 1 t.tpl_types
+                             [%expr array])))]
           else [%e next]]
+
+  let is_allow_any_constr vcs =
+    Ppx_deriving_json_common.vcs_attr_json_allow_any vcs
 
   let deriving : Ppx_deriving_tools.deriving =
     deriving_of () ~name:"of_json"
-      ~error:(fun ~loc ->
-        [%expr Ppx_deriving_json_runtime.of_json_msg_error "invalid JSON"])
       ~of_t:(fun ~loc -> [%type: Js.Json.t])
-      ~derive_of_tuple ~derive_of_record ~derive_of_variant
-      ~derive_of_variant_case
+      ~is_allow_any_constr ~derive_of_tuple ~derive_of_record
+      ~derive_of_variant ~derive_of_variant_case
 end
 
 module To_json = struct
@@ -194,13 +225,24 @@ module To_json = struct
     | Vcs_record (n, r) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name r.rcd_ctx) in
-        let tag = [%expr (Obj.magic [%e estring ~loc:n.loc n.txt]: Js.Json.t)] in
+        let tag =
+          [%expr (Obj.magic [%e estring ~loc:n.loc n.txt] : Js.Json.t)]
+        in
         let es = [ derive_of_record derive r es ] in
         as_json ~loc (pexp_array ~loc (tag :: es))
+    | Vcs_tuple (_n, t) when vcs_attr_json_allow_any t.tpl_ctx -> (
+        match es with
+        | [ x ] -> x
+        | es ->
+            failwith
+              (sprintf "expected a tuple of length 1, got %i"
+                 (List.length es)))
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
-        let tag = [%expr (Obj.magic [%e estring ~loc:n.loc n.txt]: Js.Json.t)] in
+        let tag =
+          [%expr (Obj.magic [%e estring ~loc:n.loc n.txt] : Js.Json.t)]
+        in
         let es = List.map2 t.tpl_types es ~f:derive in
         as_json ~loc (pexp_array ~loc (tag :: es))
 
