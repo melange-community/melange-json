@@ -7,6 +7,7 @@ let get_of_variant_case ?mark_as_seen ~variant ~polyvariant = function
   | Vcs_ctx_variant ctx -> Attribute.get ?mark_as_seen variant ctx
   | Vcs_ctx_polyvariant ctx -> Attribute.get ?mark_as_seen polyvariant ctx
 
+
 let get_of_variant ?mark_as_seen ~variant ~polyvariant = function
   | Vrt_ctx_variant ctx -> Attribute.get ?mark_as_seen variant ctx
   | Vrt_ctx_polyvariant ctx -> Attribute.get ?mark_as_seen polyvariant ctx
@@ -22,6 +23,20 @@ let vcs_attr_json_name =
   in
   let polyvariant = attr_json_name Attribute.Context.rtag in
   get_of_variant_case ~variant ~polyvariant
+
+
+
+let attr_json_allow_any ctx = Attribute.declare_flag "json.allow_any" ctx
+
+let vcs_attr_json_allow_any =
+  let variant =
+    attr_json_allow_any Attribute.Context.constructor_declaration
+  in
+  let polyvariant = attr_json_allow_any Attribute.Context.rtag in
+  fun ?mark_as_seen ctx ->
+    match get_of_variant_case ~variant ~polyvariant ?mark_as_seen ctx with
+    | None -> false
+    | Some () -> true
 
 let ld_attr_json_key =
   Attribute.get

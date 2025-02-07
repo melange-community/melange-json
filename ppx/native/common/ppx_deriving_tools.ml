@@ -484,8 +484,8 @@ module Conv = struct
      end
       :> deriving)
 
-  let deriving_of_match ~name ~of_t ~derive_of_tuple ~derive_of_record
-      ~derive_of_variant_case () =
+  let deriving_of_match ~name ~of_t ~cmp_sort_vcs ~derive_of_tuple
+      ~derive_of_record ~derive_of_variant_case () =
     (object (self)
        inherit Schema.deriving1
        method name = name
@@ -519,6 +519,14 @@ module Conv = struct
              |> String.concat ~sep:" or ")
          in
          let cs = repr_variant_cases cs in
+         let cs =
+           List.stable_sort
+             ~cmp:(fun cs1 cs2 ->
+               let vcs1 = Vcs_ctx_variant cs1
+               and vcs2 = Vcs_ctx_variant cs2 in
+               cmp_sort_vcs vcs1 vcs2)
+             cs
+         in
          let cases =
            List.fold_left cs
              ~init:
@@ -561,6 +569,14 @@ module Conv = struct
        method! derive_of_polyvariant t (cs : row_field list) x =
          let loc = t.ptyp_loc in
          let cases = repr_polyvariant_cases cs in
+         let cases =
+           List.stable_sort
+             ~cmp:(fun (cs1, _) (cs2, _) ->
+               let vcs1 = Vcs_ctx_polyvariant cs1
+               and vcs2 = Vcs_ctx_polyvariant cs2 in
+               cmp_sort_vcs vcs1 vcs2)
+             cases
+         in
          let ctors, inherits =
            List.partition_map cases ~f:(fun (c, r) ->
                let ctx = Vcs_ctx_polyvariant c in
