@@ -182,7 +182,7 @@ add the `[@@deriving json]` attribute to the type declaration,
 ensuring the converters for primitives like `int` and `string` are in scope if necessary:
 
 ```ocaml
-open Ppx_deriving_json_runtime.Primitives
+open Json.Primitives
 
 type t = {
   a: int;

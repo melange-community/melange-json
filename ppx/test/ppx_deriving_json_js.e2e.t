@@ -1,5 +1,5 @@
 
-  $ echo '(lang dune 3.11) 
+  $ echo '(lang dune 3.11)
   > (using melange 0.1)' > dune-project
 
   $ echo '

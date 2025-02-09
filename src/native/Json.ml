@@ -1,3 +1,5 @@
+open Printf
+
 type t = Yojson.Basic.t
 (** The type of a JSON data structure *)
 
@@ -6,7 +8,7 @@ type json = t
 
 let to_string t = Yojson.Basic.to_string t
 
-exception Of_string_error of string
+include Errors
 
 let of_string s =
   try Yojson.Basic.from_string s
@@ -17,23 +19,20 @@ type 'a to_json = 'a -> json
 
 let to_json : json to_json = fun x -> x
 
-type error = Json_error of string | Unexpected_variant of string
-
-exception Of_json_error of error
-
-let of_json_error msg = raise (Of_json_error (Json_error msg))
-
-let show_json_type = function
-  | `Assoc _ -> "object"
-  | `Bool _ -> "bool"
-  | `Float _ -> "float"
-  | `Int _ -> "int"
-  | `List _ -> "array"
-  | `Null -> "null"
-  | `String _ -> "string"
-
-let of_json_error_type_mismatch json expected =
-  of_json_error ("Expected " ^ expected ^ ", got " ^ show_json_type json)
+let () =
+  Printexc.register_printer (function
+    | Of_json_error (Json_error str) ->
+        Some
+          (sprintf
+             "Ppx_deriving_json_runtime.Of_json_error(Json_error {|%s|})"
+             str)
+    | Of_json_error (Unexpected_variant str) ->
+        Some
+          (sprintf
+             "Ppx_deriving_json_runtime.Of_json_error(Unexpected_variant \
+              {|%s|})"
+             str)
+    | _ -> None)
 
 type 'a of_json = json -> 'a
 (** Describe how to decode a value from JSON. *)
@@ -74,7 +73,9 @@ module Of_json = struct
     | `Int i -> float_of_int i
     | json -> of_json_error_type_mismatch json "float"
 
-  let unit = function `Null -> () | _ -> of_json_error "expected null"
+  let unit = function
+    | `Null -> ()
+    | json -> of_json_error_type_mismatch json "expected null"
 
   let option v_of_json = function
     | `Null -> None
@@ -92,7 +93,9 @@ module Of_json = struct
     match json with
     | `List [ `String "Ok"; x ] -> Ok (ok_of_json x)
     | `List [ `String "Error"; x ] -> Error (err_of_json x)
-    | _ -> of_json_error "invalid JSON"
+    | _ ->
+        of_json_error {|expected ["Ok"; _] or ["Error"; _]|} ~depth:2
+          ~json
 end
 
 module To_json = struct
@@ -134,14 +137,3 @@ module Primitives = struct
   let list_to_json = To_json.list
   let array_to_json = To_json.array
 end
-
-let classify :
-    t ->
-    [ `Null
-    | `String of string
-    | `Float of float
-    | `Int of int
-    | `Bool of bool
-    | `List of t list
-    | `Assoc of (string * t) list ] =
- fun x -> x

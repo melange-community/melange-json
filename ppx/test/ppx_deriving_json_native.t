@@ -128,9 +128,7 @@
          match x with
          | `List [ x_0; x_1 ] -> int_of_json x_0, string_of_json x_1
          | _ ->
-             raise
-               (Json.Of_json_error
-                  (Json_error "expected a JSON array of length 2"))
+             Json.of_json_error ~json:x "expected a JSON array of length 2"
         : Yojson.Basic.t -> tuple)
   
     let _ = tuple_of_json
@@ -170,9 +168,9 @@
                        x_name := Stdlib.Option.Some (string_of_json v)
                    | "age" -> x_age := Stdlib.Option.Some (int_of_json v)
                    | name ->
-                       raise
-                         (Json.Of_json_error
-                            (Json_error "unknown field: name")));
+                       Json.of_json_error ~json:x
+                         (Stdlib.Printf.sprintf
+                            {|did not expect field "%s"|} name));
                    iter fs
              in
              iter fs;
@@ -181,20 +179,14 @@
                  (match Stdlib.( ! ) x_name with
                  | Stdlib.Option.Some v -> v
                  | Stdlib.Option.None ->
-                     raise
-                       (Json.Of_json_error
-                          (Json_error "missing field: \"name\"")));
+                     Json.of_json_error ~json:x "expected field \"name\"");
                age =
                  (match Stdlib.( ! ) x_age with
                  | Stdlib.Option.Some v -> v
                  | Stdlib.Option.None ->
-                     raise
-                       (Json.Of_json_error
-                          (Json_error "missing field: \"age\"")));
+                     Json.of_json_error ~json:x "expected field \"age\"");
              }
-         | _ ->
-             raise
-               (Json.Of_json_error (Json_error "expected a JSON object"))
+         | _ -> Json.of_json_error ~json:x "expected a JSON object"
         : Yojson.Basic.t -> record)
   
     let _ = record_of_json
@@ -245,9 +237,9 @@
                        x_name := Stdlib.Option.Some (string_of_json v)
                    | "my_age" -> x_age := Stdlib.Option.Some (int_of_json v)
                    | name ->
-                       raise
-                         (Json.Of_json_error
-                            (Json_error "unknown field: name")));
+                       Json.of_json_error ~json:x
+                         (Stdlib.Printf.sprintf
+                            {|did not expect field "%s"|} name));
                    iter fs
              in
              iter fs;
@@ -256,17 +248,13 @@
                  (match Stdlib.( ! ) x_name with
                  | Stdlib.Option.Some v -> v
                  | Stdlib.Option.None ->
-                     raise
-                       (Json.Of_json_error
-                          (Json_error "missing field: \"my_name\"")));
+                     Json.of_json_error ~json:x "expected field \"my_name\"");
                age =
                  (match Stdlib.( ! ) x_age with
                  | Stdlib.Option.Some v -> v
                  | Stdlib.Option.None -> 100);
              }
-         | _ ->
-             raise
-               (Json.Of_json_error (Json_error "expected a JSON object"))
+         | _ -> Json.of_json_error ~json:x "expected a JSON object"
         : Yojson.Basic.t -> record_aliased)
   
     let _ = record_aliased_of_json
@@ -314,9 +302,9 @@
                        x_k :=
                          Stdlib.Option.Some ((option_of_json int_of_json) v)
                    | name ->
-                       raise
-                         (Json.Of_json_error
-                            (Json_error "unknown field: name")));
+                       Json.of_json_error ~json:x
+                         (Stdlib.Printf.sprintf
+                            {|did not expect field "%s"|} name));
                    iter fs
              in
              iter fs;
@@ -326,9 +314,7 @@
                  | Stdlib.Option.Some v -> v
                  | Stdlib.Option.None -> Stdlib.Option.None);
              }
-         | _ ->
-             raise
-               (Json.Of_json_error (Json_error "expected a JSON object"))
+         | _ -> Json.of_json_error ~json:x "expected a JSON object"
         : Yojson.Basic.t -> record_opt)
   
     let _ = record_opt_of_json
@@ -374,9 +360,9 @@
                    | "name" ->
                        x_name := Stdlib.Option.Some (string_of_json v)
                    | name ->
-                       raise
-                         (Json.Of_json_error
-                            (Json_error "unknown field: name")));
+                       Json.of_json_error ~json:x
+                         (Stdlib.Printf.sprintf
+                            {|did not expect field "%s"|} name));
                    iter fs
              in
              iter fs;
@@ -386,14 +372,11 @@
                    (match Stdlib.( ! ) x_name with
                    | Stdlib.Option.Some v -> v
                    | Stdlib.Option.None ->
-                       raise
-                         (Json.Of_json_error
-                            (Json_error "missing field: \"name\"")));
+                       Json.of_json_error ~json:x "expected field \"name\"");
                }
          | _ ->
-             raise
-               (Json.Of_json_error
-                  (Json.Unexpected_variant "unexpected variant"))
+             Json.of_json_error ~json:x
+               "expected [\"A\"] or [\"B\", _] or [\"C\", { _ }]"
         : Yojson.Basic.t -> sum)
   
     let _ = sum_of_json
@@ -436,10 +419,7 @@
          match x with
          | `List [ `String "S2"; x_0; x_1 ] ->
              S2 (int_of_json x_0, string_of_json x_1)
-         | _ ->
-             raise
-               (Json.Of_json_error
-                  (Json.Unexpected_variant "unexpected variant"))
+         | _ -> Json.of_json_error ~json:x "expected [\"S2\", _, _]"
         : Yojson.Basic.t -> sum2)
   
     let _ = sum2_of_json
@@ -606,9 +586,7 @@
          | `List (`String "A" :: []) -> A
          | `List [ `String "Fix"; x_0 ] -> Fix (recur_of_json x_0)
          | _ ->
-             raise
-               (Json.Of_json_error
-                  (Json.Unexpected_variant "unexpected variant"))
+             Json.of_json_error ~json:x "expected [\"A\"] or [\"Fix\", _]"
         : Yojson.Basic.t -> recur)
   
     let _ = recur_of_json
@@ -675,10 +653,7 @@
          match x with
          | `List (`String "A" :: []) -> A
          | `List (`String "b_aliased" :: []) -> B
-         | _ ->
-             raise
-               (Json.Of_json_error
-                  (Json.Unexpected_variant "unexpected variant"))
+         | _ -> Json.of_json_error ~json:x "expected [\"A\"] or [\"B\"]"
         : Yojson.Basic.t -> evar)
   
     let _ = evar_of_json
@@ -746,9 +721,7 @@
          | `List [ `String "A"; x_0 ] -> A (a_of_json x_0)
          | `List [ `String "B"; x_0 ] -> B (b_of_json x_0)
          | _ ->
-             raise
-               (Json.Of_json_error
-                  (Json.Unexpected_variant "unexpected variant"))
+             Json.of_json_error ~json:x "expected [\"A\", _] or [\"B\", _]"
         : Yojson.Basic.t -> ('a, 'b) p2)
   
     let _ = p2_of_json
@@ -795,13 +768,9 @@
                  (match Stdlib.( ! ) x_a with
                  | Stdlib.Option.Some v -> v
                  | Stdlib.Option.None ->
-                     raise
-                       (Json.Of_json_error
-                          (Json_error "missing field: \"a\"")));
+                     Json.of_json_error ~json:x "expected field \"a\"");
              }
-         | _ ->
-             raise
-               (Json.Of_json_error (Json_error "expected a JSON object"))
+         | _ -> Json.of_json_error ~json:x "expected a JSON object"
         : Yojson.Basic.t -> allow_extra_fields)
   
     let _ = allow_extra_fields_of_json
@@ -852,14 +821,9 @@
                    (match Stdlib.( ! ) x_a with
                    | Stdlib.Option.Some v -> v
                    | Stdlib.Option.None ->
-                       raise
-                         (Json.Of_json_error
-                            (Json_error "missing field: \"a\"")));
+                       Json.of_json_error ~json:x "expected field \"a\"");
                }
-         | _ ->
-             raise
-               (Json.Of_json_error
-                  (Json.Unexpected_variant "unexpected variant"))
+         | _ -> Json.of_json_error ~json:x "expected [\"A\", { _ }]"
         : Yojson.Basic.t -> allow_extra_fields2)
   
     let _ = allow_extra_fields2_of_json
@@ -912,9 +876,9 @@
                        x_b_opt :=
                          Stdlib.Option.Some ((option_of_json int_of_json) v)
                    | name ->
-                       raise
-                         (Json.Of_json_error
-                            (Json_error "unknown field: name")));
+                       Json.of_json_error ~json:x
+                         (Stdlib.Printf.sprintf
+                            {|did not expect field "%s"|} name));
                    iter fs
              in
              iter fs;
@@ -923,17 +887,13 @@
                  (match Stdlib.( ! ) x_a with
                  | Stdlib.Option.Some v -> v
                  | Stdlib.Option.None ->
-                     raise
-                       (Json.Of_json_error
-                          (Json_error "missing field: \"a\"")));
+                     Json.of_json_error ~json:x "expected field \"a\"");
                b_opt =
                  (match Stdlib.( ! ) x_b_opt with
                  | Stdlib.Option.Some v -> v
                  | Stdlib.Option.None -> Stdlib.Option.None);
              }
-         | _ ->
-             raise
-               (Json.Of_json_error (Json_error "expected a JSON object"))
+         | _ -> Json.of_json_error ~json:x "expected a JSON object"
         : Yojson.Basic.t -> drop_default_option)
   
     let _ = drop_default_option_of_json

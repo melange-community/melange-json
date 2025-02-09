@@ -78,7 +78,7 @@ let () =
             let (_ : int) = int (Encode.int inf) in
             fail "should throw"
           with
-          | Of_json_error (Json_error "Expected integer, got null") ->
+          | Of_json_error (Json_error "expected an integer but got inf") ->
             pass);
 
       Test.throws int [ Bool; Float; String; Null; Array; Object; Char ]);
@@ -91,6 +91,13 @@ let () =
 
       test "single-character string" (fun () ->
           expect @@ string (Encode.char 'a') |> toEqual "a");
+
+      test "object as string" (fun () ->
+          try
+            let (_ : string) = string (Encode.jsonDict (Js.Dict.empty ())) in
+            fail "should throw"
+          with Of_json_error (Json_error "expected a string but got {}") ->
+            pass);
 
       Test.throws string [ Bool; Float; Int; Null; Array; Object ]);
 
@@ -118,7 +125,7 @@ let () =
             fail "should throw"
           with
           | Of_json_error
-              (Json_error "Expected single-character string, got \"\"")
+              (Json_error "expected a single-character string but got \"\"")
           ->
             pass);
 
@@ -128,7 +135,7 @@ let () =
             fail "should throw"
           with
           | Of_json_error
-              (Json_error "Expected single-character string, got \"abc\"")
+              (Json_error "expected a single-character string but got \"abc\"")
           ->
             pass);
 
@@ -208,7 +215,7 @@ let () =
             fail "should throw"
           with
           | Of_json_error
-              (Json_error "Expected boolean, got 1\n\tin array at index 0")
+              (Json_error "expected a boolean but got 1\n\tin array at index 0")
           ->
             pass);
       test "non-Of_json_error exceptions in decoder should pass through"
@@ -255,7 +262,7 @@ let () =
             fail "should throw"
           with
           | Of_json_error
-              (Json_error "Expected boolean, got 1\n\tin array at index 0")
+              (Json_error "expected a boolean but got 1\n\tin array at index 0")
           ->
             pass);
       test "non-Of_json_error exceptions in decoder should pass through"
@@ -288,8 +295,7 @@ let () =
           with
           | Of_json_error
               (Json_error
-                 "Expected array of length 2 as tuple, got array of \
-                  length 1")
+                 "expected tuple as array of length 2 but got [4]")
           ->
             pass);
       test "too large" (fun () ->
@@ -301,8 +307,7 @@ let () =
           with
           | Of_json_error
               (Json_error
-                 "Expected array of length 2 as tuple, got array of \
-                  length 3")
+                 "expected tuple as array of length 2 but got [3, 4, 5]")
           ->
             pass);
       test "bad type a" (fun () ->
@@ -313,7 +318,7 @@ let () =
             fail "should throw"
           with
           | Of_json_error
-              (Json_error "Expected number, got \"3\"\n\tin pair/tuple2")
+              (Json_error "expected an integer but got \"3\"\n\tin pair/tuple2")
           ->
             pass);
       test "bad type b" (fun () ->
@@ -324,7 +329,7 @@ let () =
             fail "should throw"
           with
           | Of_json_error
-              (Json_error "Expected string, got 4\n\tin pair/tuple2")
+              (Json_error "expected a string but got 4\n\tin pair/tuple2")
           ->
             pass);
       test "not array" (fun () ->
@@ -332,7 +337,7 @@ let () =
             let (_ : int * int) = (pair int int) (parseOrRaise {| 4 |}) in
             fail "should throw"
           with
-          | Of_json_error (Json_error "Expected array as tuple, got 4") ->
+          | Of_json_error (Json_error "expected tuple as array but got 4") ->
             pass);
       test "non-Of_json_error exceptions in decoder should pass through"
         (fun () ->
@@ -358,8 +363,7 @@ let () =
           with
           | Of_json_error
               (Json_error
-                 "Expected array of length 2 as tuple, got array of \
-                  length 1")
+                 "expected tuple as array of length 2 but got [4]")
           ->
             pass);
       test "too large" (fun () ->
@@ -371,8 +375,7 @@ let () =
           with
           | Of_json_error
               (Json_error
-                 "Expected array of length 2 as tuple, got array of \
-                  length 3")
+                 "expected tuple as array of length 2 but got [3, 4, 5]")
           ->
             pass);
       test "bad type a" (fun () ->
@@ -383,7 +386,7 @@ let () =
             fail "should throw"
           with
           | Of_json_error
-              (Json_error "Expected number, got \"3\"\n\tin pair/tuple2")
+              (Json_error "expected an integer but got \"3\"\n\tin pair/tuple2")
           ->
             pass);
       test "bad type b" (fun () ->
@@ -394,7 +397,7 @@ let () =
             fail "should throw"
           with
           | Of_json_error
-              (Json_error "Expected string, got 4\n\tin pair/tuple2")
+              (Json_error "expected a string but got 4\n\tin pair/tuple2")
           ->
             pass);
       test "not array" (fun () ->
@@ -404,7 +407,7 @@ let () =
             in
             fail "should throw"
           with
-          | Of_json_error (Json_error "Expected array as tuple, got 4") ->
+          | Of_json_error (Json_error "expected tuple as array but got 4") ->
             pass);
       test "non-Of_json_error exceptions in decoder should pass through"
         (fun () ->
@@ -432,8 +435,7 @@ let () =
           with
           | Of_json_error
               (Json_error
-                 "Expected array of length 3 as tuple, got array of \
-                  length 1")
+                 "expected tuple as array of length 3 but got [4]")
           ->
             pass);
       test "too large" (fun () ->
@@ -445,8 +447,7 @@ let () =
           with
           | Of_json_error
               (Json_error
-                 "Expected array of length 3 as tuple, got array of \
-                  length 5")
+                 "expected tuple as array of length 3 but got [3, 4, 5, 6, 7]")
           ->
             pass);
       test "bad type a" (fun () ->
@@ -457,7 +458,7 @@ let () =
             fail "should throw"
           with
           | Of_json_error
-              (Json_error "Expected number, got \"3\"\n\tin tuple3")
+              (Json_error "expected an integer but got \"3\"\n\tin tuple3")
           ->
             pass);
       test "bad type b" (fun () ->
@@ -469,7 +470,7 @@ let () =
             fail "should throw"
           with
           | Of_json_error
-              (Json_error "Expected string, got 4\n\tin tuple3")
+              (Json_error "expected a string but got 4\n\tin tuple3")
           ->
             pass);
       test "not array" (fun () ->
@@ -479,7 +480,7 @@ let () =
             in
             fail "should throw"
           with
-          | Of_json_error (Json_error "Expected array as tuple, got 4") ->
+          | Of_json_error (Json_error "expected tuple as array but got 4") ->
             pass);
       test "non-Of_json_error exceptions in decoder should pass through"
         (fun () ->
@@ -508,8 +509,7 @@ let () =
           with
           | Of_json_error
               (Json_error
-                 "Expected array of length 4 as tuple, got array of \
-                  length 1")
+                 "expected tuple as array of length 4 but got [4]")
           ->
             pass);
       test "too large" (fun () ->
@@ -522,8 +522,7 @@ let () =
           with
           | Of_json_error
               (Json_error
-                 "Expected array of length 4 as tuple, got array of \
-                  length 6")
+                 "expected tuple as array of length 4 but got [3, 4, 5, 6, 7, 8]")
           ->
             pass);
       test "bad type a" (fun () ->
@@ -534,7 +533,7 @@ let () =
             fail "should throw"
           with
           | Of_json_error
-              (Json_error "Expected number, got \"3\"\n\tin tuple4")
+              (Json_error "expected an integer but got \"3\"\n\tin tuple4")
           ->
             pass);
       test "bad type b" (fun () ->
@@ -546,7 +545,7 @@ let () =
             fail "should throw"
           with
           | Of_json_error
-              (Json_error "Expected string, got 4\n\tin tuple4")
+              (Json_error "expected a string but got 4\n\tin tuple4")
           ->
             pass);
       test "not array" (fun () ->
@@ -556,7 +555,7 @@ let () =
             in
             fail "should throw"
           with
-          | Of_json_error (Json_error "Expected array as tuple, got 4") ->
+          | Of_json_error (Json_error "expected tuple as array but got 4") ->
             pass);
       test "non-Of_json_error exceptions in decoder should pass through"
         (fun () ->
@@ -603,7 +602,7 @@ let () =
           with
           | Of_json_error
               (Json_error
-                 "Expected string, got null\n\tin object at key 'a'")
+                 "expected a string but got null\n\tin object at key 'a'")
           ->
             pass);
       test "non-Of_json_error exceptions in decoder should pass through"
@@ -648,7 +647,7 @@ let () =
                 (parseOrRaise {| { "a": null, "b": null } |})
             in
             fail "should throw"
-          with Of_json_error (Json_error "Expected field 'c'") -> pass);
+          with Of_json_error (Json_error "expected object with field 'c' but got {\"a\": _, \"b\": _}") -> pass);
       test "decoder error" (fun () ->
           try
             let (_ : string) =
@@ -658,7 +657,7 @@ let () =
             fail "should throw"
           with
           | Of_json_error
-              (Json_error "Expected string, got null\n\tat field 'b'")
+              (Json_error "expected a string but got null\n\tat field 'b'")
           ->
             pass);
 
@@ -710,7 +709,7 @@ let () =
             fail "should throw"
           with
           | Of_json_error
-              (Json_error "Expected field 'y'\n\tat field 'a'")
+              (Json_error "expected object with field 'y' but got {\"x\": _}\n\tat field 'a'")
           ->
             pass);
       test "decoder error" (fun () ->
@@ -727,7 +726,7 @@ let () =
           with
           | Of_json_error
               (Json_error
-                 "Expected null\n\
+                 "expected null but got \"foo\"\n\
                   \tat field 'y'\n\
                   \tat field 'x'\n\
                   \tat field 'a'")
@@ -806,7 +805,7 @@ let () =
               (field "y" (optional int)) (parseOrRaise {| { "x": 2} |})
             in
             fail "should throw"
-          with Of_json_error (Json_error "Expected field 'y'") -> pass);
+          with Of_json_error (Json_error "expected object with field 'y' but got {\"x\": _}") -> pass);
 
       test "non-Of_json_error exceptions in decoder should pass through"
         (fun () ->
@@ -849,6 +848,13 @@ let () =
       test "int" (fun () ->
           expect @@ (either int (field "x" int)) (Encode.int 23)
           |> toEqual 23);
+
+     test "object as string in either" (fun () ->
+          try
+            let a = Encode.jsonDict (Js.Dict.empty ()) in
+            let (_ : string) = either string string a in
+            fail "should throw"
+          with Of_json_error (Json_error "All decoders given to oneOf failed. Here are all the errors: \n- expected a string but got {}\n- expected a string but got {}\nAnd the JSON being decoded: {}") -> pass);
 
       Test.throws
         (either int (field "x" int))
@@ -944,7 +950,7 @@ let () =
           with
           | Of_json_error
               (Json_error
-                 "Expected number, got true\n\
+                 "expected an integer but got true\n\
                   \tin array at index 0\n\
                   \tin array at index 1\n\
                   \tin object at key 'a'")
@@ -961,7 +967,7 @@ let () =
           with
           | Of_json_error
               (Json_error
-                 "Expected array, got \"foo\"\n\
+                 "expected an array but got \"foo\"\n\
                   \tin array at index 1\n\
                   \tin object at key 'a'")
           ->

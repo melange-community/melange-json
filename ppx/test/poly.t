@@ -65,38 +65,27 @@ We can alias poly varaints:
                     then
                       (if Stdlib.(<>) len 1
                        then
-                         raise
-                           (Json.Of_json_error
-                              (Json_error "expected a JSON array of length 1"));
+                         Json.of_json_msg_error ~json:x
+                           "expected a JSON array of length 1";
                        `A)
                     else
                       if Stdlib.(=) tag "B"
                       then
                         (if Stdlib.(<>) len 1
                          then
-                           raise
-                             (Json.Of_json_error
-                                (Json_error "expected a JSON array of length 1"));
+                           Json.of_json_msg_error ~json:x
+                             "expected a JSON array of length 1";
                          `B)
                       else
                         raise
                           (Json.Of_json_error
                              (Json.Unexpected_variant "unexpected variant")))
                  else
-                   raise
-                     (Json.Of_json_error
-                        (Json_error
-                           "expected a non empty JSON array with element being a string")))
-              else
-                raise
-                  (Json.Of_json_error
-                     (Json_error "expected a non empty JSON array")))
-           else
-             raise
-               (Json.Of_json_error
-                  (Json_error "expected a non empty JSON array")) : Js.Json.t
-                                                                      -> 
-                                                                      t)
+                   Json.of_json_error ~json:x
+                     "expected a non empty JSON array with element being a string")
+              else Json.of_json_error ~json:x "expected a non empty JSON array")
+           else Json.of_json_error ~json:x "expected a non empty JSON array" : 
+        Js.Json.t -> t)
       let _ = of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec to_json =
@@ -210,38 +199,27 @@ We can extend aliased polyvariants:
                     then
                       (if Stdlib.(<>) len 1
                        then
-                         raise
-                           (Json.Of_json_error
-                              (Json_error "expected a JSON array of length 1"));
+                         Json.of_json_msg_error ~json:x
+                           "expected a JSON array of length 1";
                        `A)
                     else
                       if Stdlib.(=) tag "B"
                       then
                         (if Stdlib.(<>) len 1
                          then
-                           raise
-                             (Json.Of_json_error
-                                (Json_error "expected a JSON array of length 1"));
+                           Json.of_json_msg_error ~json:x
+                             "expected a JSON array of length 1";
                          `B)
                       else
                         raise
                           (Json.Of_json_error
                              (Json.Unexpected_variant "unexpected variant")))
                  else
-                   raise
-                     (Json.Of_json_error
-                        (Json_error
-                           "expected a non empty JSON array with element being a string")))
-              else
-                raise
-                  (Json.Of_json_error
-                     (Json_error "expected a non empty JSON array")))
-           else
-             raise
-               (Json.Of_json_error
-                  (Json_error "expected a non empty JSON array")) : Js.Json.t
-                                                                      -> 
-                                                                      t)
+                   Json.of_json_error ~json:x
+                     "expected a non empty JSON array with element being a string")
+              else Json.of_json_error ~json:x "expected a non empty JSON array")
+           else Json.of_json_error ~json:x "expected a non empty JSON array" : 
+        Js.Json.t -> t)
       let _ = of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec to_json =
@@ -277,30 +255,19 @@ We can extend aliased polyvariants:
                         then
                           (if Stdlib.(<>) len 1
                            then
-                             raise
-                               (Json.Of_json_error
-                                  (Json_error
-                                     "expected a JSON array of length 1"));
+                             Json.of_json_msg_error ~json:x
+                               "expected a JSON array of length 1";
                            `C)
                         else
                           raise
                             (Json.Of_json_error
                                (Json.Unexpected_variant "unexpected variant")))
                  else
-                   raise
-                     (Json.Of_json_error
-                        (Json_error
-                           "expected a non empty JSON array with element being a string")))
-              else
-                raise
-                  (Json.Of_json_error
-                     (Json_error "expected a non empty JSON array")))
-           else
-             raise
-               (Json.Of_json_error
-                  (Json_error "expected a non empty JSON array")) : Js.Json.t
-                                                                      -> 
-                                                                      u)
+                   Json.of_json_error ~json:x
+                     "expected a non empty JSON array with element being a string")
+              else Json.of_json_error ~json:x "expected a non empty JSON array")
+           else Json.of_json_error ~json:x "expected a non empty JSON array" : 
+        Js.Json.t -> u)
       let _ = u_of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec u_to_json =
@@ -434,38 +401,29 @@ We can extend poly variants which are placed behind signatures:
                         then
                           (if Stdlib.(<>) len 1
                            then
-                             raise
-                               (Json.Of_json_error
-                                  (Json_error
-                                     "expected a JSON array of length 1"));
+                             Json.of_json_msg_error ~json:x
+                               "expected a JSON array of length 1";
                            `A)
                         else
                           if Stdlib.(=) tag "B"
                           then
                             (if Stdlib.(<>) len 1
                              then
-                               raise
-                                 (Json.Of_json_error
-                                    (Json_error
-                                       "expected a JSON array of length 1"));
+                               Json.of_json_msg_error ~json:x
+                                 "expected a JSON array of length 1";
                              `B)
                           else
                             raise
                               (Json.Of_json_error
                                  (Json.Unexpected_variant "unexpected variant")))
                      else
-                       raise
-                         (Json.Of_json_error
-                            (Json_error
-                               "expected a non empty JSON array with element being a string")))
+                       Json.of_json_error ~json:x
+                         "expected a non empty JSON array with element being a string")
                   else
-                    raise
-                      (Json.Of_json_error
-                         (Json_error "expected a non empty JSON array")))
+                    Json.of_json_error ~json:x
+                      "expected a non empty JSON array")
                else
-                 raise
-                   (Json.Of_json_error
-                      (Json_error "expected a non empty JSON array")) : 
+                 Json.of_json_error ~json:x "expected a non empty JSON array" : 
             Js.Json.t -> t)
           let _ = of_json
           [@@@ocaml.warning "-39-11-27"]
@@ -503,30 +461,19 @@ We can extend poly variants which are placed behind signatures:
                         then
                           (if Stdlib.(<>) len 1
                            then
-                             raise
-                               (Json.Of_json_error
-                                  (Json_error
-                                     "expected a JSON array of length 1"));
+                             Json.of_json_msg_error ~json:x
+                               "expected a JSON array of length 1";
                            `C)
                         else
                           raise
                             (Json.Of_json_error
                                (Json.Unexpected_variant "unexpected variant")))
                  else
-                   raise
-                     (Json.Of_json_error
-                        (Json_error
-                           "expected a non empty JSON array with element being a string")))
-              else
-                raise
-                  (Json.Of_json_error
-                     (Json_error "expected a non empty JSON array")))
-           else
-             raise
-               (Json.Of_json_error
-                  (Json_error "expected a non empty JSON array")) : Js.Json.t
-                                                                      -> 
-                                                                      u)
+                   Json.of_json_error ~json:x
+                     "expected a non empty JSON array with element being a string")
+              else Json.of_json_error ~json:x "expected a non empty JSON array")
+           else Json.of_json_error ~json:x "expected a non empty JSON array" : 
+        Js.Json.t -> u)
       let _ = u_of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec u_to_json =
