@@ -7,7 +7,7 @@
   >  (name lib)
   >  (modes melange)
   >  (modules example example_json_string main)
-  >  (flags :standard -w -37-69 -open Ppx_deriving_json_runtime.Primitives)
+  >  (flags :standard -w -20-37-69 -open Ppx_deriving_json_runtime.Primitives)
   >  (preprocess (pps melange.ppx melange-json.ppx)))
   > (melange.emit
   >  (alias js)

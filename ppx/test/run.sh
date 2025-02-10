@@ -13,7 +13,7 @@ echo '
  (name lib)
  (modes melange)
  (modules main_js)
- (flags :standard -w -37-69 -open Ppx_deriving_json_runtime.Primitives)
+ (flags :standard -w -20-37-69 -open Ppx_deriving_json_runtime.Primitives)
  (preprocess (pps melange.ppx melange-json.ppx)))
 (melange.emit
  (alias js)
@@ -21,7 +21,7 @@ echo '
  (modules)
  (libraries lib)
  (module_systems commonjs))
-(executable 
+(executable
   (name main)
   (modules main)
   (flags :standard -w -37-69 -open Ppx_deriving_json_runtime.Primitives)

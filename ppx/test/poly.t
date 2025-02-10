@@ -1,4 +1,4 @@
-We can alias poly varaints:
+We can alias poly variants:
   $ echo '
   > type t = [`A | `B] [@@deriving json]
   > type u = t [@@deriving json]
