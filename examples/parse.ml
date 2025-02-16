@@ -1,3 +1,5 @@
+[@@@alert "-deprecated"]
+
 (* Parsing a JSON string using Json.parseOrRaise *)
 
 let arrayOfInts str =

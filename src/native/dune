@@ -1,0 +1,7 @@
+(library
+ (name json)
+ (public_name melange-json-native)
+ (libraries yojson))
+
+(copy_files
+ (files ../errors.ml))

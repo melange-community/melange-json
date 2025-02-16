@@ -2,8 +2,8 @@ We can alias poly variants:
   $ echo '
   > type t = [`A | `B] [@@deriving json]
   > type u = t [@@deriving json]
-  > let () = print_endline (Ppx_deriving_json_runtime.to_string (u_to_json `A))
-  > let () = assert (u_of_json (Ppx_deriving_json_runtime.of_string {|["B"]|}) = `B)
+  > let () = print_endline (Json.to_string (u_to_json `A))
+  > let () = assert (u_of_json (Json.of_string {|["B"]|}) = `B)
   > ' | ./run.sh
   === ppx output:native ===
   type t = [ `A  | `B ][@@deriving json]
@@ -18,9 +18,10 @@ We can alias poly variants:
            | `List ((`String "B")::[]) -> `B
            | x ->
                raise
-                 (Ppx_deriving_json_runtime.Of_json_error
-                    (Ppx_deriving_json_runtime.Unexpected_variant
-                       "unexpected variant")) : Yojson.Basic.t -> t)
+                 (Json.Of_json_error
+                    (Json.Unexpected_variant "unexpected variant")) : Yojson.Basic.t
+                                                                      -> 
+                                                                      t)
       let _ = of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec to_json =
@@ -40,9 +41,8 @@ We can alias poly variants:
       let rec u_to_json = (fun x -> to_json x : u -> Yojson.Basic.t)
       let _ = u_to_json
     end[@@ocaml.doc "@inline"][@@merlin.hide ]
-  let () = print_endline (Ppx_deriving_json_runtime.to_string (u_to_json `A))
-  let () =
-    assert ((u_of_json (Ppx_deriving_json_runtime.of_string {|["B"]|})) = `B)
+  let () = print_endline (Json.to_string (u_to_json `A))
+  let () = assert ((u_of_json (Json.of_string {|["B"]|})) = `B)
   === ppx output:browser ===
   type t = [ `A  | `B ][@@deriving json]
   include
@@ -65,7 +65,7 @@ We can alias poly variants:
                     then
                       (if Stdlib.(<>) len 1
                        then
-                         Ppx_deriving_json_runtime.of_json_msg_error ~json:x
+                         Json.of_json_msg_error ~json:x
                            "expected a JSON array of length 1";
                        `A)
                     else
@@ -73,23 +73,19 @@ We can alias poly variants:
                       then
                         (if Stdlib.(<>) len 1
                          then
-                           Ppx_deriving_json_runtime.of_json_msg_error ~json:x
+                           Json.of_json_msg_error ~json:x
                              "expected a JSON array of length 1";
                          `B)
                       else
                         raise
-                          (Ppx_deriving_json_runtime.Of_json_error
-                             (Ppx_deriving_json_runtime.Unexpected_variant
-                                "unexpected variant")))
+                          (Json.Of_json_error
+                             (Json.Unexpected_variant "unexpected variant")))
                  else
-                   Ppx_deriving_json_runtime.of_json_error ~json:x
+                   Json.of_json_error ~json:x
                      "expected a non empty JSON array with element being a string")
-              else
-                Ppx_deriving_json_runtime.of_json_error ~json:x
-                  "expected a non empty JSON array")
-           else
-             Ppx_deriving_json_runtime.of_json_error ~json:x
-               "expected a non empty JSON array" : Js.Json.t -> t)
+              else Json.of_json_error ~json:x "expected a non empty JSON array")
+           else Json.of_json_error ~json:x "expected a non empty JSON array" : 
+        Js.Json.t -> t)
       let _ = of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec to_json =
@@ -111,9 +107,8 @@ We can alias poly variants:
       let rec u_to_json = (fun x -> to_json x : u -> Js.Json.t)
       let _ = u_to_json
     end[@@ocaml.doc "@inline"][@@merlin.hide ]
-  let () = print_endline (Ppx_deriving_json_runtime.to_string (u_to_json `A))
-  let () =
-    assert ((u_of_json (Ppx_deriving_json_runtime.of_string {|["B"]|})) = `B)
+  let () = print_endline (Json.to_string (u_to_json `A))
+  let () = assert ((u_of_json (Json.of_string {|["B"]|})) = `B)
   === stdout:native ===
   ["A"]
   === stdout:js ===
@@ -123,10 +118,10 @@ We can extend aliased polyvariants:
   $ echo '
   > type t = [`A | `B] [@@deriving json]
   > type u = [t | `C] [@@deriving json]
-  > let () = print_endline (Ppx_deriving_json_runtime.to_string (u_to_json `A))
-  > let () = print_endline (Ppx_deriving_json_runtime.to_string (u_to_json `C))
-  > let () = assert (u_of_json (Ppx_deriving_json_runtime.of_string {|["B"]|}) = `B)
-  > let () = assert (u_of_json (Ppx_deriving_json_runtime.of_string {|["C"]|}) = `C)
+  > let () = print_endline (Json.to_string (u_to_json `A))
+  > let () = print_endline (Json.to_string (u_to_json `C))
+  > let () = assert (u_of_json (Json.of_string {|["B"]|}) = `B)
+  > let () = assert (u_of_json (Json.of_string {|["C"]|}) = `C)
   > ' | ./run.sh
   === ppx output:native ===
   type t = [ `A  | `B ][@@deriving json]
@@ -141,9 +136,10 @@ We can extend aliased polyvariants:
            | `List ((`String "B")::[]) -> `B
            | x ->
                raise
-                 (Ppx_deriving_json_runtime.Of_json_error
-                    (Ppx_deriving_json_runtime.Unexpected_variant
-                       "unexpected variant")) : Yojson.Basic.t -> t)
+                 (Json.Of_json_error
+                    (Json.Unexpected_variant "unexpected variant")) : Yojson.Basic.t
+                                                                      -> 
+                                                                      t)
       let _ = of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec to_json =
@@ -164,12 +160,11 @@ We can extend aliased polyvariants:
            | x ->
                (match of_json x with
                 | x -> (x :> [ | t | `C ])
-                | exception Ppx_deriving_json_runtime.Of_json_error
-                    (Ppx_deriving_json_runtime.Unexpected_variant _) ->
+                | exception Json.Of_json_error (Json.Unexpected_variant _) ->
                     raise
-                      (Ppx_deriving_json_runtime.Of_json_error
-                         (Ppx_deriving_json_runtime.Unexpected_variant
-                            "unexpected variant"))) : Yojson.Basic.t -> u)
+                      (Json.Of_json_error
+                         (Json.Unexpected_variant "unexpected variant"))) : 
+        Yojson.Basic.t -> u)
       let _ = u_of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec u_to_json =
@@ -178,12 +173,10 @@ We can extend aliased polyvariants:
         u -> Yojson.Basic.t)
       let _ = u_to_json
     end[@@ocaml.doc "@inline"][@@merlin.hide ]
-  let () = print_endline (Ppx_deriving_json_runtime.to_string (u_to_json `A))
-  let () = print_endline (Ppx_deriving_json_runtime.to_string (u_to_json `C))
-  let () =
-    assert ((u_of_json (Ppx_deriving_json_runtime.of_string {|["B"]|})) = `B)
-  let () =
-    assert ((u_of_json (Ppx_deriving_json_runtime.of_string {|["C"]|})) = `C)
+  let () = print_endline (Json.to_string (u_to_json `A))
+  let () = print_endline (Json.to_string (u_to_json `C))
+  let () = assert ((u_of_json (Json.of_string {|["B"]|})) = `B)
+  let () = assert ((u_of_json (Json.of_string {|["C"]|})) = `C)
   === ppx output:browser ===
   type t = [ `A  | `B ][@@deriving json]
   include
@@ -206,7 +199,7 @@ We can extend aliased polyvariants:
                     then
                       (if Stdlib.(<>) len 1
                        then
-                         Ppx_deriving_json_runtime.of_json_msg_error ~json:x
+                         Json.of_json_msg_error ~json:x
                            "expected a JSON array of length 1";
                        `A)
                     else
@@ -214,23 +207,19 @@ We can extend aliased polyvariants:
                       then
                         (if Stdlib.(<>) len 1
                          then
-                           Ppx_deriving_json_runtime.of_json_msg_error ~json:x
+                           Json.of_json_msg_error ~json:x
                              "expected a JSON array of length 1";
                          `B)
                       else
                         raise
-                          (Ppx_deriving_json_runtime.Of_json_error
-                             (Ppx_deriving_json_runtime.Unexpected_variant
-                                "unexpected variant")))
+                          (Json.Of_json_error
+                             (Json.Unexpected_variant "unexpected variant")))
                  else
-                   Ppx_deriving_json_runtime.of_json_error ~json:x
+                   Json.of_json_error ~json:x
                      "expected a non empty JSON array with element being a string")
-              else
-                Ppx_deriving_json_runtime.of_json_error ~json:x
-                  "expected a non empty JSON array")
-           else
-             Ppx_deriving_json_runtime.of_json_error ~json:x
-               "expected a non empty JSON array" : Js.Json.t -> t)
+              else Json.of_json_error ~json:x "expected a non empty JSON array")
+           else Json.of_json_error ~json:x "expected a non empty JSON array" : 
+        Js.Json.t -> t)
       let _ = of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec to_json =
@@ -260,29 +249,25 @@ We can extend aliased polyvariants:
                    let tag = (Obj.magic tag : string) in
                    match of_json x with
                    | e -> (e :> [ | t | `C ])
-                   | exception Ppx_deriving_json_runtime.Of_json_error
-                       (Ppx_deriving_json_runtime.Unexpected_variant _) ->
+                   | exception Json.Of_json_error (Json.Unexpected_variant _)
+                       ->
                        (if Stdlib.(=) tag "C"
                         then
                           (if Stdlib.(<>) len 1
                            then
-                             Ppx_deriving_json_runtime.of_json_msg_error
-                               ~json:x "expected a JSON array of length 1";
+                             Json.of_json_msg_error ~json:x
+                               "expected a JSON array of length 1";
                            `C)
                         else
                           raise
-                            (Ppx_deriving_json_runtime.Of_json_error
-                               (Ppx_deriving_json_runtime.Unexpected_variant
-                                  "unexpected variant")))
+                            (Json.Of_json_error
+                               (Json.Unexpected_variant "unexpected variant")))
                  else
-                   Ppx_deriving_json_runtime.of_json_error ~json:x
+                   Json.of_json_error ~json:x
                      "expected a non empty JSON array with element being a string")
-              else
-                Ppx_deriving_json_runtime.of_json_error ~json:x
-                  "expected a non empty JSON array")
-           else
-             Ppx_deriving_json_runtime.of_json_error ~json:x
-               "expected a non empty JSON array" : Js.Json.t -> u)
+              else Json.of_json_error ~json:x "expected a non empty JSON array")
+           else Json.of_json_error ~json:x "expected a non empty JSON array" : 
+        Js.Json.t -> u)
       let _ = u_of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec u_to_json =
@@ -293,12 +278,10 @@ We can extend aliased polyvariants:
         u -> Js.Json.t)
       let _ = u_to_json
     end[@@ocaml.doc "@inline"][@@merlin.hide ]
-  let () = print_endline (Ppx_deriving_json_runtime.to_string (u_to_json `A))
-  let () = print_endline (Ppx_deriving_json_runtime.to_string (u_to_json `C))
-  let () =
-    assert ((u_of_json (Ppx_deriving_json_runtime.of_string {|["B"]|})) = `B)
-  let () =
-    assert ((u_of_json (Ppx_deriving_json_runtime.of_string {|["C"]|})) = `C)
+  let () = print_endline (Json.to_string (u_to_json `A))
+  let () = print_endline (Json.to_string (u_to_json `C))
+  let () = assert ((u_of_json (Json.of_string {|["B"]|})) = `B)
+  let () = assert ((u_of_json (Json.of_string {|["C"]|})) = `C)
   === stdout:native ===
   ["A"]
   ["C"]
@@ -314,10 +297,10 @@ We can extend poly variants which are placed behind signatures:
   >   type t = [`A | `B] [@@deriving json]
   > end
   > type u = [P.t | `C] [@@deriving json]
-  > let () = print_endline (Ppx_deriving_json_runtime.to_string (u_to_json `A))
-  > let () = print_endline (Ppx_deriving_json_runtime.to_string (u_to_json `C))
-  > let () = assert (u_of_json (Ppx_deriving_json_runtime.of_string {|["B"]|}) = `B)
-  > let () = assert (u_of_json (Ppx_deriving_json_runtime.of_string {|["C"]|}) = `C)
+  > let () = print_endline (Json.to_string (u_to_json `A))
+  > let () = print_endline (Json.to_string (u_to_json `C))
+  > let () = assert (u_of_json (Json.of_string {|["B"]|}) = `B)
+  > let () = assert (u_of_json (Json.of_string {|["C"]|}) = `C)
   > ' | ./run.sh
   === ppx output:native ===
   module P :
@@ -343,9 +326,9 @@ We can extend poly variants which are placed behind signatures:
                | `List ((`String "B")::[]) -> `B
                | x ->
                    raise
-                     (Ppx_deriving_json_runtime.Of_json_error
-                        (Ppx_deriving_json_runtime.Unexpected_variant
-                           "unexpected variant")) : Yojson.Basic.t -> t)
+                     (Json.Of_json_error
+                        (Json.Unexpected_variant "unexpected variant")) : 
+            Yojson.Basic.t -> t)
           let _ = of_json
           [@@@ocaml.warning "-39-11-27"]
           let rec to_json =
@@ -368,12 +351,11 @@ We can extend poly variants which are placed behind signatures:
            | x ->
                (match P.of_json x with
                 | x -> (x :> [ | P.t | `C ])
-                | exception Ppx_deriving_json_runtime.Of_json_error
-                    (Ppx_deriving_json_runtime.Unexpected_variant _) ->
+                | exception Json.Of_json_error (Json.Unexpected_variant _) ->
                     raise
-                      (Ppx_deriving_json_runtime.Of_json_error
-                         (Ppx_deriving_json_runtime.Unexpected_variant
-                            "unexpected variant"))) : Yojson.Basic.t -> u)
+                      (Json.Of_json_error
+                         (Json.Unexpected_variant "unexpected variant"))) : 
+        Yojson.Basic.t -> u)
       let _ = u_of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec u_to_json =
@@ -382,12 +364,10 @@ We can extend poly variants which are placed behind signatures:
         u -> Yojson.Basic.t)
       let _ = u_to_json
     end[@@ocaml.doc "@inline"][@@merlin.hide ]
-  let () = print_endline (Ppx_deriving_json_runtime.to_string (u_to_json `A))
-  let () = print_endline (Ppx_deriving_json_runtime.to_string (u_to_json `C))
-  let () =
-    assert ((u_of_json (Ppx_deriving_json_runtime.of_string {|["B"]|})) = `B)
-  let () =
-    assert ((u_of_json (Ppx_deriving_json_runtime.of_string {|["C"]|})) = `C)
+  let () = print_endline (Json.to_string (u_to_json `A))
+  let () = print_endline (Json.to_string (u_to_json `C))
+  let () = assert ((u_of_json (Json.of_string {|["B"]|})) = `B)
+  let () = assert ((u_of_json (Json.of_string {|["C"]|})) = `C)
   === ppx output:browser ===
   module P :
     sig
@@ -421,31 +401,30 @@ We can extend poly variants which are placed behind signatures:
                         then
                           (if Stdlib.(<>) len 1
                            then
-                             Ppx_deriving_json_runtime.of_json_msg_error
-                               ~json:x "expected a JSON array of length 1";
+                             Json.of_json_msg_error ~json:x
+                               "expected a JSON array of length 1";
                            `A)
                         else
                           if Stdlib.(=) tag "B"
                           then
                             (if Stdlib.(<>) len 1
                              then
-                               Ppx_deriving_json_runtime.of_json_msg_error
-                                 ~json:x "expected a JSON array of length 1";
+                               Json.of_json_msg_error ~json:x
+                                 "expected a JSON array of length 1";
                              `B)
                           else
                             raise
-                              (Ppx_deriving_json_runtime.Of_json_error
-                                 (Ppx_deriving_json_runtime.Unexpected_variant
-                                    "unexpected variant")))
+                              (Json.Of_json_error
+                                 (Json.Unexpected_variant "unexpected variant")))
                      else
-                       Ppx_deriving_json_runtime.of_json_error ~json:x
+                       Json.of_json_error ~json:x
                          "expected a non empty JSON array with element being a string")
                   else
-                    Ppx_deriving_json_runtime.of_json_error ~json:x
+                    Json.of_json_error ~json:x
                       "expected a non empty JSON array")
                else
-                 Ppx_deriving_json_runtime.of_json_error ~json:x
-                   "expected a non empty JSON array" : Js.Json.t -> t)
+                 Json.of_json_error ~json:x "expected a non empty JSON array" : 
+            Js.Json.t -> t)
           let _ = of_json
           [@@@ocaml.warning "-39-11-27"]
           let rec to_json =
@@ -476,29 +455,25 @@ We can extend poly variants which are placed behind signatures:
                    let tag = (Obj.magic tag : string) in
                    match P.of_json x with
                    | e -> (e :> [ | P.t | `C ])
-                   | exception Ppx_deriving_json_runtime.Of_json_error
-                       (Ppx_deriving_json_runtime.Unexpected_variant _) ->
+                   | exception Json.Of_json_error (Json.Unexpected_variant _)
+                       ->
                        (if Stdlib.(=) tag "C"
                         then
                           (if Stdlib.(<>) len 1
                            then
-                             Ppx_deriving_json_runtime.of_json_msg_error
-                               ~json:x "expected a JSON array of length 1";
+                             Json.of_json_msg_error ~json:x
+                               "expected a JSON array of length 1";
                            `C)
                         else
                           raise
-                            (Ppx_deriving_json_runtime.Of_json_error
-                               (Ppx_deriving_json_runtime.Unexpected_variant
-                                  "unexpected variant")))
+                            (Json.Of_json_error
+                               (Json.Unexpected_variant "unexpected variant")))
                  else
-                   Ppx_deriving_json_runtime.of_json_error ~json:x
+                   Json.of_json_error ~json:x
                      "expected a non empty JSON array with element being a string")
-              else
-                Ppx_deriving_json_runtime.of_json_error ~json:x
-                  "expected a non empty JSON array")
-           else
-             Ppx_deriving_json_runtime.of_json_error ~json:x
-               "expected a non empty JSON array" : Js.Json.t -> u)
+              else Json.of_json_error ~json:x "expected a non empty JSON array")
+           else Json.of_json_error ~json:x "expected a non empty JSON array" : 
+        Js.Json.t -> u)
       let _ = u_of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec u_to_json =
@@ -509,12 +484,10 @@ We can extend poly variants which are placed behind signatures:
         u -> Js.Json.t)
       let _ = u_to_json
     end[@@ocaml.doc "@inline"][@@merlin.hide ]
-  let () = print_endline (Ppx_deriving_json_runtime.to_string (u_to_json `A))
-  let () = print_endline (Ppx_deriving_json_runtime.to_string (u_to_json `C))
-  let () =
-    assert ((u_of_json (Ppx_deriving_json_runtime.of_string {|["B"]|})) = `B)
-  let () =
-    assert ((u_of_json (Ppx_deriving_json_runtime.of_string {|["C"]|})) = `C)
+  let () = print_endline (Json.to_string (u_to_json `A))
+  let () = print_endline (Json.to_string (u_to_json `C))
+  let () = assert ((u_of_json (Json.of_string {|["B"]|})) = `B)
+  let () = assert ((u_of_json (Json.of_string {|["C"]|})) = `C)
   === stdout:native ===
   ["A"]
   ["C"]

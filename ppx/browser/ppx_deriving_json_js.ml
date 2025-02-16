@@ -7,6 +7,7 @@ open Ppx_deriving_tools.Conv
 open Ppx_deriving_json_common
 
 module Of_json = struct
+
   let build_tuple ~loc derive si (ts : core_type list) e =
     pexp_tuple ~loc
       (List.mapi ts ~f:(fun i t ->
@@ -31,7 +32,7 @@ module Of_json = struct
         [%expr
           match
             Js.Undefined.toOption
-              [%e fs] ## [%e pexp_ident ~loc:n.loc (map_loc lident n)]
+              [%e fs]##[%e pexp_ident ~loc:n.loc (map_loc lident n)]
           with
           | Stdlib.Option.Some v -> [%e derive ld.pld_type [%expr v]]
           | Stdlib.Option.None ->
@@ -40,7 +41,7 @@ module Of_json = struct
                 | Some default -> default
                 | None ->
                     [%expr
-                      Ppx_deriving_json_runtime.of_json_error ~json:x
+                      Json.of_json_error ~json:x
                         [%e
                           estring ~loc (sprintf "expected field %S to be present" n.txt)]]]]
       )
@@ -65,13 +66,13 @@ module Of_json = struct
   let ensure_json_object ~loc x =
     [%expr
       if Stdlib.not [%e eis_json_object ~loc x] then
-        Ppx_deriving_json_runtime.of_json_msg_error
+        Json.of_json_msg_error
           [%e estring ~loc (sprintf "expected a JSON object")]]
 
   let ensure_json_array_len ~loc n len x =
     [%expr
       if Stdlib.( <> ) [%e len] [%e eint ~loc n] then
-        Ppx_deriving_json_runtime.of_json_msg_error ~json:[%e x]
+        Json.of_json_msg_error ~json:[%e x]
           [%e
             estring ~loc (sprintf "expected a JSON array of length %i" n)]]
 
@@ -89,7 +90,7 @@ module Of_json = struct
         let es = (Obj.magic [%e x] : Js.Json.t array) in
         [%e build_tuple ~loc derive 0 t.tpl_types [%expr es]]
       else
-        Ppx_deriving_json_runtime.of_json_error ~json:[%e x]
+        Json.of_json_error ~json:[%e x]
           [%e
             estring ~loc (sprintf "expected a JSON array of length %i" n)]]
 
@@ -111,14 +112,14 @@ module Of_json = struct
             let tag = (Obj.magic tag : string) in
             [%e body]
           else
-            Ppx_deriving_json_runtime.of_json_error ~json:[%e x]
+            Json.of_json_error ~json:[%e x]
               "expected a non empty JSON array with element being a \
                string"
         else
-          Ppx_deriving_json_runtime.of_json_error ~json:[%e x]
+          Json.of_json_error ~json:[%e x]
             "expected a non empty JSON array"
       else
-        Ppx_deriving_json_runtime.of_json_error ~json:[%e x]
+        Json.of_json_error ~json:[%e x]
           "expected a non empty JSON array"]
 
   let derive_of_variant_case derive make c next =
@@ -153,7 +154,7 @@ module Of_json = struct
   let deriving : Ppx_deriving_tools.deriving =
     deriving_of () ~name:"of_json"
       ~error:(fun ~loc ->
-        [%expr Ppx_deriving_json_runtime.of_json_msg_error "invalid JSON"])
+        [%expr Json.of_json_msg_error "invalid JSON"])
       ~of_t:(fun ~loc -> [%type: Js.Json.t])
       ~derive_of_tuple ~derive_of_record ~derive_of_variant
       ~derive_of_variant_case
@@ -194,13 +195,17 @@ module To_json = struct
     | Vcs_record (n, r) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name r.rcd_ctx) in
-        let tag = [%expr (Obj.magic [%e estring ~loc:n.loc n.txt]: Js.Json.t)] in
+        let tag =
+          [%expr (Obj.magic [%e estring ~loc:n.loc n.txt] : Js.Json.t)]
+        in
         let es = [ derive_of_record derive r es ] in
         as_json ~loc (pexp_array ~loc (tag :: es))
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
-        let tag = [%expr (Obj.magic [%e estring ~loc:n.loc n.txt]: Js.Json.t)] in
+        let tag =
+          [%expr (Obj.magic [%e estring ~loc:n.loc n.txt] : Js.Json.t)]
+        in
         let es = List.map2 t.tpl_types es ~f:derive in
         as_json ~loc (pexp_array ~loc (tag :: es))
 
