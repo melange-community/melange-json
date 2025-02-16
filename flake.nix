@@ -1,57 +1,71 @@
 {
   description = "melange-json Nix Flake";
 
-  inputs.nix-filter.url = "github:numtide/nix-filter";
-  inputs.flake-utils.url = "github:numtide/flake-utils";
-  inputs.nixpkgs = {
-    url = "github:nix-ocaml/nix-overlays";
-    inputs.flake-utils.follows = "flake-utils";
-  };
+  inputs.nixpkgs.url = "github:nix-ocaml/nix-overlays";
 
-  outputs = { self, nixpkgs, flake-utils, nix-filter }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = nixpkgs.legacyPackages."${system}".appendOverlays [
-          (self: super: {
+  outputs = { self, nixpkgs }:
+    let
+      forAllSystems = f: nixpkgs.lib.genAttrs nixpkgs.lib.systems.flakeExposed (system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system}.extend (self: super: {
             ocamlPackages = super.ocaml-ng.ocamlPackages_5_2;
-          })
-        ];
-        inherit (pkgs) nodejs_latest lib stdenv darwin;
+          });
+        in
+        f pkgs);
+    in
+    {
+      packages = forAllSystems (pkgs:
+        let
+          melange-json = with pkgs.ocamlPackages; buildDunePackage {
+            pname = "melange-json";
+            version = "dev";
 
-        melange-json = with pkgs.ocamlPackages; buildDunePackage {
-          pname = "melange-json";
-          version = "dev";
+            src =
+              let fs = pkgs.lib.fileset; in
+              fs.toSource {
+                root = ./.;
+                fileset = fs.unions [
+                  ./dune-project
+                  ./dune
+                  ./melange-json.opam
+                  ./melange-json-native.opam
+                  ./src
+                  ./ppx
+                ];
+              };
 
-          src = ./.;
-          nativeBuildInputs = with pkgs.ocamlPackages; [ melange ];
-          propagatedBuildInputs = with pkgs.ocamlPackages; [
-            melange
-            yojson
-            ppxlib
-          ];
-        };
-
-        mkShell = { buildInputs ? [ ] }: pkgs.mkShell {
-          inputsFrom = [ melange-json ];
-          nativeBuildInputs = with pkgs; [
-            yarn
-            nodejs_latest
-          ] ++ (with pkgs.ocamlPackages; [
-            ocamlformat
-            merlin
-            melange-jest
-            reason
-          ]);
-          inherit buildInputs;
-        };
-      in
-      rec {
-        packages.default = melange-json;
-        devShells = {
+            nativeBuildInputs = with pkgs.ocamlPackages; [ melange ];
+            propagatedBuildInputs = with pkgs.ocamlPackages; [
+              melange
+              yojson
+              ppxlib
+            ];
+          };
+        in
+        { inherit melange-json; default = melange-json; });
+      devShells = forAllSystems (pkgs:
+        let
+          inherit (pkgs) nodejs_latest ocamlPackages system yarn;
+          mkShell = { buildInputs ? [ ] }: pkgs.mkShell {
+            inputsFrom = [ self.packages.${system}.melange-json ];
+            nativeBuildInputs = [
+              yarn
+              nodejs_latest
+            ] ++ (with ocamlPackages; [
+              ocamlformat
+              merlin
+              melange-jest
+              reason
+            ]);
+            inherit buildInputs;
+          };
+        in
+        {
           default = mkShell { };
           release = mkShell {
             buildInputs = with pkgs; [ cacert curl ocamlPackages.dune-release git ];
           };
-        };
-      });
+        }
+      );
+    };
 }

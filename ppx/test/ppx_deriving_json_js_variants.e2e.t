@@ -1,5 +1,5 @@
 
-  $ echo '(lang dune 3.11) 
+  $ echo '(lang dune 3.11)
   > (using melange 0.1)' > dune-project
 
   $ echo '
@@ -7,7 +7,7 @@
   >  (name lib)
   >  (modes melange)
   >  (modules main)
-  >  (flags :standard -w -37-69)
+  >  (flags :standard -w -20-37-69)
   >  (preprocess (pps melange.ppx melange-json.ppx)))
   > (melange.emit
   >  (alias js)
