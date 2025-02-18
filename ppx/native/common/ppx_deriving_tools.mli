@@ -99,7 +99,7 @@ module Conv : sig
   val deriving_of :
     name:label ->
     of_t:(loc:location -> core_type) ->
-    error:(loc:location -> expression) ->
+    is_allow_any_constr:(variant_case_ctx -> bool) ->
     derive_of_tuple:
       (derive_of_core_type -> core_type tuple -> expression -> expression) ->
     derive_of_record:
@@ -110,6 +110,7 @@ module Conv : sig
     derive_of_variant:
       (derive_of_core_type ->
       variant ->
+      allow_any_constr:(expression -> expression) option ->
       expression ->
       expression ->
       expression) ->
@@ -117,6 +118,7 @@ module Conv : sig
       (derive_of_core_type ->
       (expression option -> expression) ->
       variant_case ->
+      allow_any_constr:(expression -> expression) option ->
       expression ->
       expression) ->
     unit ->
@@ -126,6 +128,7 @@ module Conv : sig
   val deriving_of_match :
     name:label ->
     of_t:(loc:location -> core_type) ->
+    cmp_sort_vcs:(variant_case_ctx -> variant_case_ctx -> int) ->
     derive_of_tuple:
       (derive_of_core_type -> core_type tuple -> expression -> expression) ->
     derive_of_record:

@@ -66,16 +66,16 @@ We can alias poly variants:
                       (if Stdlib.(<>) len 1
                        then
                          Ppx_deriving_json_runtime.of_json_msg_error ~json:x
-                           "expected a JSON array of length 1";
-                       `A)
+                           "expected a JSON array of length 1"
+                       else `A)
                     else
                       if Stdlib.(=) tag "B"
                       then
                         (if Stdlib.(<>) len 1
                          then
                            Ppx_deriving_json_runtime.of_json_msg_error ~json:x
-                             "expected a JSON array of length 1";
-                         `B)
+                             "expected a JSON array of length 1"
+                         else `B)
                       else
                         raise
                           (Ppx_deriving_json_runtime.Of_json_error
@@ -207,16 +207,16 @@ We can extend aliased polyvariants:
                       (if Stdlib.(<>) len 1
                        then
                          Ppx_deriving_json_runtime.of_json_msg_error ~json:x
-                           "expected a JSON array of length 1";
-                       `A)
+                           "expected a JSON array of length 1"
+                       else `A)
                     else
                       if Stdlib.(=) tag "B"
                       then
                         (if Stdlib.(<>) len 1
                          then
                            Ppx_deriving_json_runtime.of_json_msg_error ~json:x
-                             "expected a JSON array of length 1";
-                         `B)
+                             "expected a JSON array of length 1"
+                         else `B)
                       else
                         raise
                           (Ppx_deriving_json_runtime.Of_json_error
@@ -267,8 +267,8 @@ We can extend aliased polyvariants:
                           (if Stdlib.(<>) len 1
                            then
                              Ppx_deriving_json_runtime.of_json_msg_error
-                               ~json:x "expected a JSON array of length 1";
-                           `C)
+                               ~json:x "expected a JSON array of length 1"
+                           else `C)
                         else
                           raise
                             (Ppx_deriving_json_runtime.Of_json_error
@@ -422,16 +422,16 @@ We can extend poly variants which are placed behind signatures:
                           (if Stdlib.(<>) len 1
                            then
                              Ppx_deriving_json_runtime.of_json_msg_error
-                               ~json:x "expected a JSON array of length 1";
-                           `A)
+                               ~json:x "expected a JSON array of length 1"
+                           else `A)
                         else
                           if Stdlib.(=) tag "B"
                           then
                             (if Stdlib.(<>) len 1
                              then
                                Ppx_deriving_json_runtime.of_json_msg_error
-                                 ~json:x "expected a JSON array of length 1";
-                             `B)
+                                 ~json:x "expected a JSON array of length 1"
+                             else `B)
                           else
                             raise
                               (Ppx_deriving_json_runtime.Of_json_error
@@ -483,8 +483,8 @@ We can extend poly variants which are placed behind signatures:
                           (if Stdlib.(<>) len 1
                            then
                              Ppx_deriving_json_runtime.of_json_msg_error
-                               ~json:x "expected a JSON array of length 1";
-                           `C)
+                               ~json:x "expected a JSON array of length 1"
+                           else `C)
                         else
                           raise
                             (Ppx_deriving_json_runtime.Of_json_error
