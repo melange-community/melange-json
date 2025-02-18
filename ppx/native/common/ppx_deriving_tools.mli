@@ -2,6 +2,7 @@
 
 open Ppxlib
 
+
 (** A deriver is represented by this api *)
 class virtual deriving : object
   method virtual name : label
@@ -146,6 +147,9 @@ module Conv : sig
       cases where the serialized data can be inspected with pattern matching.
     *)
 end
+
+val vcs_attr_json_name: ?mark_as_seen:bool -> Conv.variant_case_ctx -> label loc option
+(** return the payload of the [@name "..."] attribute if there is one. *)
 
 val not_supported : loc:location -> string -> 'a
 (** [not_supported what] terminates ppx with an error message telling [what] unsupported. *)

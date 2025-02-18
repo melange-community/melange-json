@@ -52,15 +52,15 @@
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec param_of_json a_of_json =
-      (fun x -> a_of_json x : Yojson.Basic.t -> 'a param)
+    let rec param_of_json a_of_json : Yojson.Basic.t -> 'a param =
+     fun x -> a_of_json x
   
     let _ = param_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec param_to_json a_to_json =
-      (fun x -> a_to_json x : 'a param -> Yojson.Basic.t)
+    let rec param_to_json a_to_json : 'a param -> Yojson.Basic.t =
+     fun x -> a_to_json x
   
     let _ = param_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -566,25 +566,22 @@
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec c_of_json a_of_json =
-      (fun x ->
-         match x with
-         | `List [ `String "C"; x_0 ] -> `C (a_of_json x_0)
-         | x ->
-             raise
-               (Ppx_deriving_json_runtime.Of_json_error
-                  (Ppx_deriving_json_runtime.Unexpected_variant
-                     "unexpected variant"))
-        : Yojson.Basic.t -> 'a c)
+    let rec c_of_json a_of_json : Yojson.Basic.t -> 'a c =
+     fun x ->
+      match x with
+      | `List [ `String "C"; x_0 ] -> `C (a_of_json x_0)
+      | x ->
+          raise
+            (Ppx_deriving_json_runtime.Of_json_error
+               (Ppx_deriving_json_runtime.Unexpected_variant
+                  "unexpected variant"))
   
     let _ = c_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec c_to_json a_to_json =
-      (fun x ->
-         match x with `C x_0 -> `List [ `String "C"; a_to_json x_0 ]
-        : 'a c -> Yojson.Basic.t)
+    let rec c_to_json a_to_json : 'a c -> Yojson.Basic.t =
+     fun x -> match x with `C x_0 -> `List [ `String "C"; a_to_json x_0 ]
   
     let _ = c_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -676,7 +673,7 @@
          | `List (`String "b_aliased" :: []) -> B
          | _ ->
              Ppx_deriving_json_runtime.of_json_error ~json:x
-               "expected [\"A\"] or [\"B\"]"
+               "expected [\"A\"] or [\"b_aliased\"]"
         : Yojson.Basic.t -> evar)
   
     let _ = evar_of_json
@@ -739,26 +736,24 @@
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec p2_of_json a_of_json b_of_json =
-      (fun x ->
-         match x with
-         | `List [ `String "A"; x_0 ] -> A (a_of_json x_0)
-         | `List [ `String "B"; x_0 ] -> B (b_of_json x_0)
-         | _ ->
-             Ppx_deriving_json_runtime.of_json_error ~json:x
-               "expected [\"A\", _] or [\"B\", _]"
-        : Yojson.Basic.t -> ('a, 'b) p2)
+    let rec p2_of_json a_of_json b_of_json : Yojson.Basic.t -> ('a, 'b) p2 =
+     fun x ->
+      match x with
+      | `List [ `String "A"; x_0 ] -> A (a_of_json x_0)
+      | `List [ `String "B"; x_0 ] -> B (b_of_json x_0)
+      | _ ->
+          Ppx_deriving_json_runtime.of_json_error ~json:x
+            "expected [\"A\", _] or [\"B\", _]"
   
     let _ = p2_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec p2_to_json a_to_json b_to_json =
-      (fun x ->
-         match x with
-         | A x_0 -> `List [ `String "A"; a_to_json x_0 ]
-         | B x_0 -> `List [ `String "B"; b_to_json x_0 ]
-        : ('a, 'b) p2 -> Yojson.Basic.t)
+    let rec p2_to_json a_to_json b_to_json : ('a, 'b) p2 -> Yojson.Basic.t =
+     fun x ->
+      match x with
+      | A x_0 -> `List [ `String "A"; a_to_json x_0 ]
+      | B x_0 -> `List [ `String "B"; b_to_json x_0 ]
   
     let _ = p2_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
