@@ -107,7 +107,7 @@ module Of_json = struct
       [%e ensure_json_object ~loc x];
       [%e build_record ~loc derive t.rcd_fields x Fun.id]]
 
-  let derive_of_variant _derive t allow_any_constr body x =
+  let derive_of_variant _derive t ~allow_any_constr body x =
     let loc = t.vrt_loc in
     [%expr
       if Js.Array.isArray [%e x] then
@@ -144,7 +144,7 @@ module Of_json = struct
                 Ppx_deriving_json_runtime.of_json_error ~json:[%e x]
                   "expected a non empty JSON array"]]]
 
-  let derive_of_variant_case derive make c allow_any_constr next =
+  let derive_of_variant_case derive make c ~allow_any_constr next =
     match c with
     | Vcs_record (n, r) ->
         let loc = n.loc in

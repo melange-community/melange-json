@@ -437,7 +437,7 @@ module Conv = struct
                    in
                    let next =
                      derive_of_variant_case self#derive_of_core_type
-                       (make n) t allow_any_constr next
+                       (make n) t ~allow_any_constr next
                    in
                    next, t :: cases
                | Pcstr_tuple ts ->
@@ -449,7 +449,7 @@ module Conv = struct
                    in
                    let next =
                      derive_of_variant_case self#derive_of_core_type
-                       (make n) case allow_any_constr next
+                       (make n) case ~allow_any_constr next
                    in
                    next, case :: cases)
          in
@@ -460,7 +460,7 @@ module Conv = struct
              vrt_ctx = Vrt_ctx_variant td;
            }
          in
-         derive_of_variant self#derive_of_core_type t allow_any_constr
+         derive_of_variant self#derive_of_core_type t ~allow_any_constr
            body x
 
        method! derive_of_polyvariant t (cs : row_field list) x =
@@ -508,7 +508,7 @@ module Conv = struct
                    in
                    let next =
                      derive_of_variant_case self#derive_of_core_type make
-                       case allow_any_constr next
+                       case ~allow_any_constr next
                    in
                    next, case :: cases
                | `Rinherit (n, ts) ->
@@ -535,7 +535,7 @@ module Conv = struct
              vrt_ctx = Vrt_ctx_polyvariant t;
            }
          in
-         derive_of_variant self#derive_of_core_type t allow_any_constr
+         derive_of_variant self#derive_of_core_type t ~allow_any_constr
            body x
      end
       :> deriving)
