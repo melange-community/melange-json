@@ -139,7 +139,6 @@ module Of_json = struct
         [%pat? _] --> make (Some [%expr x])
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
-        (* here *)
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
         let arity = List.length t.tpl_types in
         if arity = 0 then

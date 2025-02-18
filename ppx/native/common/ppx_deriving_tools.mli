@@ -110,7 +110,7 @@ module Conv : sig
     derive_of_variant:
       (derive_of_core_type ->
       variant ->
-      (expression -> expression) option ->
+      allow_any_constr:(expression -> expression) option ->
       expression ->
       expression ->
       expression) ->
@@ -118,7 +118,7 @@ module Conv : sig
       (derive_of_core_type ->
       (expression option -> expression) ->
       variant_case ->
-      (expression -> expression) option ->
+      allow_any_constr:(expression -> expression) option ->
       expression ->
       expression) ->
     unit ->
