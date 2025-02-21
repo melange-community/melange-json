@@ -27,10 +27,12 @@ end
 module To_json = struct
   let obj c =
     Melange_json.To_json.(
-      json_dict (Js.Dict.fromList 
-        [
-          "static", c.static |> string; "dynamics", c.dynamics |> js_dict int;
-        ]))
+      json_dict
+        (Js.Dict.fromList
+           [
+             "static", c.static |> string;
+             "dynamics", c.dynamics |> js_dict int;
+           ]))
 end
 
 let data =

@@ -128,8 +128,7 @@ module Of_json = struct
             decodeB (Array.unsafe_get source 1),
             decodeC (Array.unsafe_get source 2) )
         with Of_json_error err ->
-          of_json_msg_error
-            (of_json_error_to_string err ^ "\n\tin tuple3")
+          of_json_msg_error (of_json_error_to_string err ^ "\n\tin tuple3")
       else of_json_error ~json "expected tuple as array of length 3"
     else of_json_error ~json "expected tuple as array"
 
@@ -144,8 +143,7 @@ module Of_json = struct
             decodeC (Array.unsafe_get source 2),
             decodeD (Array.unsafe_get source 3) )
         with Of_json_error err ->
-          of_json_msg_error
-            (of_json_error_to_string err ^ "\n\tin tuple4")
+          of_json_msg_error (of_json_error_to_string err ^ "\n\tin tuple4")
       else of_json_error ~json "expected tuple as array of length 4"
     else of_json_error ~json "expected tuple as array"
 

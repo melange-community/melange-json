@@ -18,8 +18,7 @@ let _ =
 (* prints { x: 42, foo: 'bar' } *)
 let _ =
   Melange_json.To_json.(
-    json_dict (Js.Dict.fromList [ "x", int 42; "foo", string "bar" ])
-  )
+    json_dict (Js.Dict.fromList [ "x", int 42; "foo", string "bar" ]))
   |> Js.log
 
 (* Advanced example: encode a record *)
@@ -33,18 +32,14 @@ module Encode = struct
 
   let line r =
     Melange_json.To_json.(
-      json_dict (
-        Js.Dict.fromList
-          [
-            "start", point r.start;
-            "end", point r.end_;
-            ( "thickness",
-              match r.thickness with
-              | Some x -> int x
-              | None -> unit () );
-          ]
-        )
-    )
+      json_dict
+        (Js.Dict.fromList
+           [
+             "start", point r.start;
+             "end", point r.end_;
+             ( "thickness",
+               match r.thickness with Some x -> int x | None -> unit () );
+           ]))
 end
 
 let data =

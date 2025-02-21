@@ -7,7 +7,6 @@ open Ppx_deriving_tools.Conv
 open Ppx_deriving_json_common
 
 module Of_json = struct
-
   let build_tuple ~loc derive si (ts : core_type list) e =
     pexp_tuple ~loc
       (List.mapi ts ~f:(fun i t ->
@@ -43,8 +42,9 @@ module Of_json = struct
                     [%expr
                       Melange_json.of_json_error ~json:x
                         [%e
-                          estring ~loc (sprintf "expected field %S to be present" n.txt)]]]]
-      )
+                          estring ~loc
+                            (sprintf "expected field %S to be present"
+                               n.txt)]]]] )
     in
     [%expr
       let fs = (Obj.magic [%e x] : [%t build_js_type ~loc fs]) in
@@ -142,7 +142,8 @@ module Of_json = struct
         let arity = List.length t.tpl_types in
         [%expr
           if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then (
-            [%e ensure_json_array_len ~loc (arity + 1) [%expr len] [%expr x]];
+            [%e
+              ensure_json_array_len ~loc (arity + 1) [%expr len] [%expr x]];
             [%e
               if Stdlib.( = ) arity 0 then make None
               else

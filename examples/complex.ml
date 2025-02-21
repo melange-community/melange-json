@@ -4,8 +4,7 @@ and point = { x : int; y : int }
 module Of_json = struct
   let point json =
     Melange_json.Of_json.
-      { x = json |> field "x" int;
-        y = json |> field "y" int }
+      { x = json |> field "x" int; y = json |> field "y" int }
 
   let line json =
     Melange_json.Of_json.
