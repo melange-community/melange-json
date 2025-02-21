@@ -79,6 +79,8 @@ let () =
           let big_int = [%raw "2147483648"] in
           expect @@ int (Encode.int big_int) |> toEqual big_int);
       test "infinity" (fun () ->
+          (* does this test make sense? it uses `Infinity` which is picked as
+             float at runtime so the error is weird *)
           let inf = [%raw "Infinity"] in
           expect
           @@ wrap_exn (fun () ->
