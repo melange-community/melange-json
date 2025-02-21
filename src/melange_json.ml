@@ -1,6 +1,8 @@
 type t = Js.Json.t
 type json = t
 
+module Classify = Classify
+
 let to_json t = t
 let of_json t = t
 
@@ -414,5 +416,3 @@ let parseOrRaise s =
     raise @@ ParseError message
 
 external stringify : Js.Json.t -> string = "JSON.stringify"
-
-let classify = Classify.classify

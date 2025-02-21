@@ -6,6 +6,8 @@ type t = Yojson.Basic.t
 type json = t
 (** Defined for convenience. *)
 
+module Classify = Classify
+
 let to_string t = Yojson.Basic.to_string t
 
 include Errors
