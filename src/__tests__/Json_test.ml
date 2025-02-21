@@ -1,9 +1,9 @@
 [@@@alert "-deprecated"]
 open Jest
 open Expect
-open Json
+open Melange_json
 
-let _ =
+let () =
   describe "parse" (fun () ->
       test "success" (fun () ->
           expect @@ parse "null" |> toEqual (Some Encode.null));

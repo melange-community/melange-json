@@ -23,7 +23,7 @@ type allow_extra_fields = {a: int} [@@deriving json] [@@json.allow_extra_fields]
 type allow_extra_fields2 = A of {a: int} [@json.allow_extra_fields] [@@deriving json]
 type drop_default_option = { a: int; b_opt: int option; [@option] [@json.drop_default] } [@@deriving json]
 type array_list = { a: int array; b: int list} [@@deriving json]
-type json = Json.t
+type json = Melange_json.t
 type of_json = C : string * (json -> 'a) * ('a -> json) * 'a -> of_json
 let of_json_cases = [
   C ({|1|}, user_of_json, user_to_json, 1);
@@ -65,11 +65,11 @@ let of_json_cases = [
 ]
 let run' (C (data, of_json, to_json, v)) =
   print_endline (Printf.sprintf "JSON    DATA: %s" data);
-  let json = Json.of_string data in
+  let json = Melange_json.of_string data in
   let v' = of_json json in
   assert (v' = v);
   let json' = to_json v' in
-  let data' = Json.to_string json' in
+  let data' = Melange_json.to_string json' in
   print_endline (Printf.sprintf "JSON REPRINT: %s" data')
 let test () =
   List.iter run' of_json_cases

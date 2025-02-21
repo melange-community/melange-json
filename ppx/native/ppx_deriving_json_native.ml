@@ -47,7 +47,7 @@ module Of_json = struct
         if allow_extra_fields then [%expr ()]
         else
           [%expr
-            Json.of_json_error ~json:x
+            Melange_json.of_json_error ~json:x
               (Stdlib.Printf.sprintf {|did not expect field "%s"|} name)]
       in
       let cases =
@@ -81,7 +81,7 @@ module Of_json = struct
                       | Some default -> default
                       | None ->
                           [%expr
-                            Json.of_json_error ~json:x
+                            Melange_json.of_json_error ~json:x
                               [%e
                                 estring ~loc:key.loc
                                   (sprintf "expected field %S" key.txt)]]]]
@@ -109,7 +109,7 @@ module Of_json = struct
         xpatt --> build_tuple ~loc derive xexprs t.tpl_types;
         [%pat? _]
         --> [%expr
-              Json.of_json_error ~json:[%e x]
+              Melange_json.of_json_error ~json:[%e x]
                 [%e
                   estring ~loc
                     (sprintf "expected a JSON array of length %i" n)]];
@@ -127,7 +127,7 @@ module Of_json = struct
               [%expr fs] Fun.id;
         [%pat? _]
         --> [%expr
-              Json.of_json_error ~json:[%e x]
+              Melange_json.of_json_error ~json:[%e x]
                 [%e estring ~loc (sprintf "expected a JSON object")]];
       ]
 

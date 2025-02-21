@@ -204,7 +204,7 @@ module Of_json = struct
       else of_json_error ~json "expected result as non-empty array"
     else of_json_error ~json "expected result as array"
 
-  let at' key decode json =
+  let field key decode json =
     if
       Js.typeof json = "object"
       && (not (Js.Array.isArray json))
@@ -224,8 +224,8 @@ module Of_json = struct
 
   let rec at key_path decoder =
     match key_path with
-    | [ key ] -> at' key decoder
-    | first :: rest -> at' first (at rest decoder)
+    | [ key ] -> field key decoder
+    | first :: rest -> field first (at rest decoder)
     | [] ->
         raise
         @@ Invalid_argument
@@ -361,7 +361,7 @@ module Decode = struct
   let tuple3 = Of_json.tuple3
   let tuple4 = Of_json.tuple4
   let dict = Of_json.js_dict
-  let field = Of_json.at'
+  let field = Of_json.field
   let at = Of_json.at
   let optional = Of_json.try_or_none
   let withDefault = Of_json.try_of_default

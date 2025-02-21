@@ -1,5 +1,5 @@
 (library
- (name json)
+ (name melange_json)
  (public_name melange-json-native)
  (libraries yojson))
 

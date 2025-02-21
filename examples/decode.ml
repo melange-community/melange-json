@@ -1,21 +1,19 @@
-[@@@alert "-deprecated"]
-
-(* Decoding a fixed JSON data structure using Json.Decode *)
+(* Decoding a fixed JSON data structure using Melange_json.Of_json *)
 let mapJsonObjectString f decoder (encoder : int -> Js.Json.t) str =
-  let json = Json.parseOrRaise str in
-  Json.Decode.(dict decoder json)
+  let json = Melange_json.of_string str in
+  Melange_json.Of_json.(js_dict decoder json)
   |> Js.Dict.map ~f:(fun [@u] v -> f v)
-  |> Json.Encode.dict encoder
-  |> Json.stringify
+  |> Melange_json.To_json.js_dict encoder
+  |> Melange_json.to_string
 
 let sum = Array.fold_left ( + ) 0
 
 (* prints `{ "foo": 6, "bar": 24 }` *)
-let _ =
+let () =
   Js.log
   @@ mapJsonObjectString sum
-       Json.Decode.(array int)
-       Json.Encode.int
+       Melange_json.Of_json.(array int)
+       Melange_json.To_json.int
        {|
       {
         "foo": [1, 2, 3],
@@ -24,9 +22,9 @@ let _ =
     |}
 
 (* Error handling *)
-let _ =
-  let json = {|{ "y": 42 } |} |> Json.parseOrRaise in
-  match Json.Decode.(field "x" int json) with
+let () =
+  let json = {|{ "y": 42 } |} |> Melange_json.of_string in
+  match Melange_json.Of_json.(field "x" int json) with
   | x -> Js.log x
-  | exception Json.Of_json_error err ->
-      Js.log ("Error:" ^ Json.of_json_error_to_string err)
+  | exception Melange_json.Of_json_error err ->
+      Js.log ("Error:" ^ Melange_json.of_json_error_to_string err)

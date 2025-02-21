@@ -436,8 +436,8 @@ module Conv = struct
              ~init:
                ( [%expr
                    raise
-                     (Json.Of_json_error
-                        (Json.Unexpected_variant "unexpected variant"))],
+                     (Melange_json.Of_json_error
+                        (Melange_json.Unexpected_variant "unexpected variant"))],
                  [] )
              ~f:(fun (next, cases) (c, r) ->
                let ctx = Vcs_ctx_polyvariant c in
@@ -465,7 +465,7 @@ module Conv = struct
                        match [%e maybe_e] with
                        | e -> (e :> [%t t])
                        | exception
-                           Json.Of_json_error (Json.Unexpected_variant _)
+                           Melange_json.Of_json_error (Melange_json.Unexpected_variant _)
                          ->
                            [%e next]]
                    in
@@ -523,7 +523,7 @@ module Conv = struct
                [
                  [%pat? _]
                  --> [%expr
-                       Json.of_json_error ~json:x
+                       Melange_json.of_json_error ~json:x
                          [%e estring ~loc error_message]];
                ]
              ~f:(fun next (c : constructor_declaration) ->
@@ -576,8 +576,8 @@ module Conv = struct
                  ~init:
                    [%expr
                      raise
-                       (Json.Of_json_error
-                          (Json.Unexpected_variant "unexpected variant"))]
+                       (Melange_json.Of_json_error
+                          (Melange_json.Unexpected_variant "unexpected variant"))]
                  ~f:(fun next (n, ts) ->
                    let maybe =
                      self#derive_type_ref ~loc self#name n ts x
@@ -587,7 +587,7 @@ module Conv = struct
                      match [%e maybe] with
                      | x -> (x :> [%t t])
                      | exception
-                         Json.Of_json_error (Json.Unexpected_variant _) ->
+                         Melange_json.Of_json_error (Melange_json.Unexpected_variant _) ->
                          [%e next]])
          in
          let cases =

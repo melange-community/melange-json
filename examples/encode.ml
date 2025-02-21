@@ -1,24 +1,26 @@
-[@@@alert "-deprecated"]
-(* Encoding a JSON data structure using Json.Encode *)
+(* Encoding a JSON data structure using Melange_json.Encode *)
 
 (* prints ["foo", "bar"] *)
 let _ =
   [| "foo"; "bar" |]
-  |> Json.Encode.stringArray
-  |> Json.stringify
+  |> Melange_json.To_json.string_array
+  |> Melange_json.to_string
   |> Js.log
 
 (* prints ["foo", "bar"] *)
 let _ =
   [| "foo"; "bar" |]
-  |> Js.Array.map ~f:Json.Encode.string
-  |> Json.Encode.jsonArray
-  |> Json.stringify
+  |> Js.Array.map ~f:Melange_json.To_json.string
+  |> Melange_json.To_json.json_array
+  |> Melange_json.to_string
   |> Js.log
 
 (* prints { x: 42, foo: 'bar' } *)
 let _ =
-  Json.Encode.(object_ [ "x", int 42; "foo", string "bar" ] |> Js.log)
+  Melange_json.To_json.(
+    json_dict (Js.Dict.fromList [ "x", int 42; "foo", string "bar" ])
+  )
+  |> Js.log
 
 (* Advanced example: encode a record *)
 type line = { start : point; end_ : point; thickness : int option }
@@ -26,18 +28,23 @@ and point = { x : float; y : float }
 
 module Encode = struct
   let point r =
-    let open! Json.Encode in
-    object_ [ "x", float r.x; "y", float r.y ]
+    let open! Melange_json.To_json in
+    json_dict (Js.Dict.fromList [ "x", float r.x; "y", float r.y ])
 
   let line r =
-    Json.Encode.(
-      object_
-        [
-          "start", point r.start;
-          "end", point r.end_;
-          ( "thickness",
-            match r.thickness with Some x -> int x | None -> null );
-        ])
+    Melange_json.To_json.(
+      json_dict (
+        Js.Dict.fromList
+          [
+            "start", point r.start;
+            "end", point r.end_;
+            ( "thickness",
+              match r.thickness with
+              | Some x -> int x
+              | None -> unit () );
+          ]
+        )
+    )
 end
 
 let data =

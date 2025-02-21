@@ -21,6 +21,6 @@
   > let json = sum_to_json A
   > ' >> main.ml
 
-Can build without having to open Json.Primitives
+Can build without having to open Melange_json.Primitives
 
   $ dune build @js

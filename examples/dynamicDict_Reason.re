@@ -1,5 +1,3 @@
-[@alert "-deprecated"];
-
 /*
      Handling an object with dynamic keys for sub-objects.
      example:
@@ -20,21 +18,23 @@ type obj = {
   dynamics: Js.Dict.t(int),
 };
 
-module Decode = {
+module Of_json = {
   let obj = json =>
-    Json.Decode.{
+    Melange_json.Of_json.{
       static: json |> field("static", string),
-      dynamics: json |> field("dynamics", dict(int)),
+      dynamics: json |> field("dynamics", js_dict(int)),
     };
 };
 
-module Encode = {
+module To_json = {
   let obj = c => {
-    Json.Encode.(
-      object_([
-        ("static", string(c.static)),
-        ("dynamics", c.dynamics |> dict(int)),
-      ])
+    Melange_json.To_json.(
+      json_dict(
+        Js.Dict.fromList([
+          ("static", string(c.static)),
+          ("dynamics", c.dynamics |> js_dict(int)),
+        ]),
+      )
     );
   };
 };
@@ -44,7 +44,7 @@ let data = {| {
   "dynamics": { "hello": 5, "random": 8 }
 } |};
 
-let decodedData = data |> Json.parseOrRaise |> Decode.obj;
+let decodedData = data |> Melange_json.of_string |> Of_json.obj;
 
 /*
  Will log [ 'hi', { hello: 5, random: 8 } ]
@@ -54,4 +54,4 @@ let _ = decodedData |> Js.log;
 /*
  Will log { static: 'hi', dynamics: { hello: 5, random: 8 } }
  */
-let encodedDataBack = decodedData |> Encode.obj |> Js.log;
+let encodedDataBack = decodedData |> To_json.obj |> Js.log;

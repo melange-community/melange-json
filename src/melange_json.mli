@@ -1,40 +1,36 @@
 (** Efficient JSON handling
 This module has four aspects to it:
 - Parsing, which turns a JSON string into an encoded JSON data structure
-- Stringificaiton, which produces a JSON string from an encoded JSON data structure
+- Stringification, which produces a JSON string from an encoded JSON data structure
 - Encoding, which is the process of construction a JSON data structure
 - Decoding, which is the process of deconstructing a JSON data structure
 {3 Parsing}
-{! parse} and {! parseOrRaise} will both (try to) parse a JSON string into a JSON
-data structure ({! Js.Json.t}), but behaves differently when encountering a
-parse error. [parseOrRaise] will raise a [ParseError], while [parse] will return
-a [Js.Json.t result] indicating whether or not the parsing succeeded. There's
-not much more to it: [string] in, [Js.Json.t] out.
+{! of_string} will (try to) parse a JSON string into a JSON data structure
+({! Js.Json.t}), it will raise a [Of_string_error]. There's not much more to it:
+[string] in, [Js.Json.t] out.
 The parsed result, and encoded JSON data structure, then needs to be decoded to
 actually be usable. See {!section:Decoding} below.
 {3 Stringification}
-Stringification is the exact reverse of parsing. {! stringify} and {! stringifyAny}
-both technically do the same thing, but where [stringifyAny] will take any value
-and try to do its best with it, retuning a [string option], [stringify] on the
-other hand uses the type system to guarantee success, but requires that the data
-has been encoded in a JSON data structure first. See {!section:Encoding} below.
+Stringification is the exact reverse of parsing. {! to_string} uses the type
+system to guarantee success, but requires that the data has been encoded in a
+JSON data structure first. See {!section:Encoding} below.
 {3 Encoding}
 Encoding creates a JSON data structure which can stringified directly with
-{! stringify} or passed to other APIs requiring a typed JSON data structure. Or
+{! to_string} or passed to other APIs requiring a typed JSON data structure. Or
 you could just go straight to decoding it again, if that's your thing. Encoding
-functions are in the {! Encode} module.
+functions are in the {! To_json} module.
 {3 Decoding}
 Decoding is a more complex process, due to the highly dynamic nature of JSON
-data structures. The {! Decode} module provides decoder combinators that can
+data structures. The {! Of_json} module provides decoder combinators that can
 be combined to create complex composite decoders for any _known_ JSON data
 structure. It allows for custom decoders to produce user-defined types.
 
 @example {[
-(* Parsing a JSON string using Json.parse *)
+(* Parsing a JSON string using Melange_json.of_string *)
 let arrayOfInts str
-  match Json.parse str with
+  match Melange_json.of_string str with
   | Some value ->
-    match Json.Decode.(array int value)
+    match Melange_json.Of_json.(array int value)
     | Ok arr -> arr
     | Error _ -> []
   | None -> failWith "Unable to parse JSON"
@@ -44,44 +40,44 @@ let _ = Js.log (arrayOfInts "[1, 2, 3]" |> Js.Array.reverse)
 ]}
 
 @example {[
-(* Stringifying a value using Json.stringify *)
+(* Stringifying a value using Melange_json.to_string *)
 
 (* prints `null` *)
 let _ =
-  Json.stringify (Encode.int 42)
+  Melange_json.to_string (To_json.int 42)
   |> Js.log
 ]}
 
 @example {[
-(* Encoding a JSON data structure using Json.Encode *)
+(* Encoding a JSON data structure using Melange_json.Encode *)
 
 (* prints ["foo", "bar"] *)
 let _ =
   [| "foo", "bar" |]
-  |> Json.Encode.stringArray
-  |> Json.stringify
+  |> Melange_json.To_json.string_array
+  |> Melange_json.to_string
   |> Js.log
 
 (* prints ["foo", "bar"] *)
 let _ =
   [| "foo", "bar" |]
-  |> Js.Array.map Encode.int
-  |> Json.Encode.jsonArray
-  |> Json.stringify
+  |> Js.Array.map To_json.int
+  |> To_json.json_array
+  |> to_string
   |> Js.log
 ]}
 
 @example {[
-(* Decoding a fixed JSON data structure using Json.Decode *)
+(* Decoding a fixed JSON data structure using Melange_json.Of_json *)
 let mapJsonObjectString f decoder encoder str =
-  match Json.parse str with
+  match Melange_json.of_string str with
   | Ok json ->
-    match Json.Decode.(dict decoder json) with
+    match Melange_json.Of_json.(js_dict decoder json) with
     | Ok dict ->
       dict |> Js.Dict.map f
            |> Js.Dict.map encoder
-           |> Json.Encode.dict
-           |> Json.stringify
+           |> Melange_json.To_json.js_dict
+           |> to_string
     | Error _ -> []
   | Error _ -> []
 
@@ -91,7 +87,7 @@ let sum ns =
 (* prints `{ "foo": 6, "bar": 24 }` *)
 let _ =
   Js.log (
-    mapJsonObjectString sun Json.Decode.(array int) Json.Encode.int {|
+    mapJsonObjectString sum Melange_json.Of_json.(array int) Melange_json.To_json.int {|
       {
         "foo": [1, 2, 3],
         "bar": [9, 8, 7]
@@ -178,7 +174,7 @@ module Of_json : sig
 
   (** Auxiliary combinators *)
 
-  val at' : string -> 'a of_json -> 'a of_json
+  val field : string -> 'a of_json -> 'a of_json
   val at : string list -> 'a of_json -> 'a of_json
   val one_of : 'a of_json list -> 'a of_json
   val either : 'a of_json -> 'a of_json -> 'a of_json
@@ -311,7 +307,7 @@ module Decode : sig
   [@@deprecated "Use `Of_json.js_dict` instead"]
 
   val field : string -> 'a of_json -> 'a of_json
-  [@@deprecated "Use `Of_json.at'` instead"]
+  [@@deprecated "Use `Of_json.field` instead"]
 
   val at : string list -> 'a of_json -> 'a of_json
   [@@deprecated "Use `Of_json.at` instead"]

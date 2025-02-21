@@ -1,16 +1,15 @@
-[@@@alert "-deprecated"]
 (* Decode a JSON tree structure *)
 type 'a tree = Node of 'a * 'a tree list | Leaf of 'a
 
 module Decode = struct
-  open Json.Decode
+  open Melange_json.Of_json
 
-  let rec tree decoder =
-    field "type" string
-    |> andThen (function
-         | "node" -> node decoder
-         | "leaf" -> leaf decoder
-         | _ -> failwith "unknown node type")
+  let rec tree decoder json =
+    let node_type = field "type" string json in
+    match node_type with
+    | "node" -> node decoder json
+    | "leaf" -> leaf decoder json
+    | _ -> failwith "unknown node type"
 
   and node decoder json =
     Node
@@ -60,4 +59,7 @@ let json =
 } |}
 
 let myTree =
-  json |> Json.parseOrRaise |> Decode.tree Json.Decode.int |> print
+  json
+  |> Melange_json.of_string
+  |> Decode.tree Melange_json.Of_json.int
+  |> print

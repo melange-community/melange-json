@@ -1,4 +1,4 @@
-open Json.Primitives
+open Melange_json.Primitives
 
 type variant =
   | A

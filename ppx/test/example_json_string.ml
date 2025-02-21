@@ -1,4 +1,4 @@
-open Json.Primitives
+open Melange_json.Primitives
 
 let print fmt = Printf.ksprintf print_endline fmt
 

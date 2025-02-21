@@ -41,7 +41,7 @@ module Of_json = struct
                 | Some default -> default
                 | None ->
                     [%expr
-                      Json.of_json_error ~json:x
+                      Melange_json.of_json_error ~json:x
                         [%e
                           estring ~loc (sprintf "expected field %S to be present" n.txt)]]]]
       )
@@ -66,13 +66,13 @@ module Of_json = struct
   let ensure_json_object ~loc x =
     [%expr
       if Stdlib.not [%e eis_json_object ~loc x] then
-        Json.of_json_msg_error
+        Melange_json.of_json_msg_error
           [%e estring ~loc (sprintf "expected a JSON object")]]
 
   let ensure_json_array_len ~loc n len x =
     [%expr
       if Stdlib.( <> ) [%e len] [%e eint ~loc n] then
-        Json.of_json_msg_error ~json:[%e x]
+        Melange_json.of_json_msg_error ~json:[%e x]
           [%e
             estring ~loc (sprintf "expected a JSON array of length %i" n)]]
 
@@ -90,7 +90,7 @@ module Of_json = struct
         let es = (Obj.magic [%e x] : Js.Json.t array) in
         [%e build_tuple ~loc derive 0 t.tpl_types [%expr es]]
       else
-        Json.of_json_error ~json:[%e x]
+        Melange_json.of_json_error ~json:[%e x]
           [%e
             estring ~loc (sprintf "expected a JSON array of length %i" n)]]
 
@@ -112,14 +112,14 @@ module Of_json = struct
             let tag = (Obj.magic tag : string) in
             [%e body]
           else
-            Json.of_json_error ~json:[%e x]
+            Melange_json.of_json_error ~json:[%e x]
               "expected a non empty JSON array with element being a \
                string"
         else
-          Json.of_json_error ~json:[%e x]
+          Melange_json.of_json_error ~json:[%e x]
             "expected a non empty JSON array"
       else
-        Json.of_json_error ~json:[%e x]
+        Melange_json.of_json_error ~json:[%e x]
           "expected a non empty JSON array"]
 
   let derive_of_variant_case derive make c next =
@@ -154,7 +154,7 @@ module Of_json = struct
   let deriving : Ppx_deriving_tools.deriving =
     deriving_of () ~name:"of_json"
       ~error:(fun ~loc ->
-        [%expr Json.of_json_msg_error "invalid JSON"])
+        [%expr Melange_json.of_json_msg_error "invalid JSON"])
       ~of_t:(fun ~loc -> [%type: Js.Json.t])
       ~derive_of_tuple ~derive_of_record ~derive_of_variant
       ~derive_of_variant_case
