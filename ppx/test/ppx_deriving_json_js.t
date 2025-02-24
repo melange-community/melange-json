@@ -174,7 +174,7 @@
                    (Stdlib.not (Js.Array.isArray x))
                    (Stdlib.not
                       (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
-         then Melange_json.of_json_msg_error "expected a JSON object";
+         then Melange_json.of_json_error ~json:x "expected a JSON object";
          let fs =
            (Obj.magic x
              : < name : Js.Json.t Js.undefined
@@ -238,7 +238,7 @@
                    (Stdlib.not (Js.Array.isArray x))
                    (Stdlib.not
                       (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
-         then Melange_json.of_json_msg_error "expected a JSON object";
+         then Melange_json.of_json_error ~json:x "expected a JSON object";
          let fs =
            (Obj.magic x
              : < my_name : Js.Json.t Js.undefined
@@ -299,7 +299,7 @@
                    (Stdlib.not (Js.Array.isArray x))
                    (Stdlib.not
                       (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
-         then Melange_json.of_json_msg_error "expected a JSON object";
+         then Melange_json.of_json_error ~json:x "expected a JSON object";
          let fs = (Obj.magic x : < k : Js.Json.t Js.undefined > Js.t) in
          {
            k =
@@ -345,17 +345,17 @@
                let tag = (Obj.magic tag : string) in
                if Stdlib.( = ) tag "A" then (
                  if Stdlib.( <> ) len 1 then
-                   Melange_json.of_json_msg_error ~json:x
+                   Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 1";
                  A)
                else if Stdlib.( = ) tag "B" then (
                  if Stdlib.( <> ) len 2 then
-                   Melange_json.of_json_msg_error ~json:x
+                   Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 2";
                  B (int_of_json (Js.Array.unsafe_get array 1)))
                else if Stdlib.( = ) tag "C" then (
                  if Stdlib.( <> ) len 2 then
-                   Melange_json.of_json_msg_error ~json:x
+                   Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 2";
                  let fs = Js.Array.unsafe_get array 1 in
                  if
@@ -369,7 +369,8 @@
                                  (Obj.magic fs : 'a Js.null)
                                  Js.null))))
                  then
-                   Melange_json.of_json_msg_error "expected a JSON object";
+                   Melange_json.of_json_error ~json:fs
+                     "expected a JSON object";
                  let fs =
                    (Obj.magic fs : < name : Js.Json.t Js.undefined > Js.t)
                  in
@@ -440,7 +441,7 @@
                let tag = (Obj.magic tag : string) in
                if Stdlib.( = ) tag "S2" then (
                  if Stdlib.( <> ) len 3 then
-                   Melange_json.of_json_msg_error ~json:x
+                   Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 3";
                  S2
                    ( int_of_json (Js.Array.unsafe_get array 1),
@@ -499,7 +500,7 @@
                let tag = (Obj.magic tag : string) in
                if Stdlib.( = ) tag "C" then (
                  if Stdlib.( <> ) len 1 then
-                   Melange_json.of_json_msg_error ~json:x
+                   Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 1";
                  `C)
                else
@@ -549,12 +550,12 @@
                let tag = (Obj.magic tag : string) in
                if Stdlib.( = ) tag "A" then (
                  if Stdlib.( <> ) len 1 then
-                   Melange_json.of_json_msg_error ~json:x
+                   Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 1";
                  `A)
                else if Stdlib.( = ) tag "B" then (
                  if Stdlib.( <> ) len 2 then
-                   Melange_json.of_json_msg_error ~json:x
+                   Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 2";
                  `B (int_of_json (Js.Array.unsafe_get array 1)))
                else
@@ -617,7 +618,7 @@
                let tag = (Obj.magic tag : string) in
                if Stdlib.( = ) tag "P2" then (
                  if Stdlib.( <> ) len 3 then
-                   Melange_json.of_json_msg_error ~json:x
+                   Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 3";
                  `P2
                    ( int_of_json (Js.Array.unsafe_get array 1),
@@ -679,7 +680,7 @@
                let tag = (Obj.magic tag : string) in
                if Stdlib.( = ) tag "C" then (
                  if Stdlib.( <> ) len 2 then
-                   Melange_json.of_json_msg_error ~json:x
+                   Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 2";
                  `C (a_of_json (Js.Array.unsafe_get array 1)))
                else
@@ -734,12 +735,12 @@
                let tag = (Obj.magic tag : string) in
                if Stdlib.( = ) tag "A" then (
                  if Stdlib.( <> ) len 1 then
-                   Melange_json.of_json_msg_error ~json:x
+                   Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 1";
                  A)
                else if Stdlib.( = ) tag "Fix" then (
                  if Stdlib.( <> ) len 2 then
-                   Melange_json.of_json_msg_error ~json:x
+                   Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 2";
                  Fix (recur_of_json (Js.Array.unsafe_get array 1)))
                else Melange_json.of_json_msg_error "invalid JSON"
@@ -793,12 +794,12 @@
                let tag = (Obj.magic tag : string) in
                if Stdlib.( = ) tag "A" then (
                  if Stdlib.( <> ) len 1 then
-                   Melange_json.of_json_msg_error ~json:x
+                   Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 1";
                  `A)
                else if Stdlib.( = ) tag "Fix" then (
                  if Stdlib.( <> ) len 2 then
-                   Melange_json.of_json_msg_error ~json:x
+                   Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 2";
                  `Fix (polyrecur_of_json (Js.Array.unsafe_get array 1)))
                else
@@ -855,12 +856,12 @@
                let tag = (Obj.magic tag : string) in
                if Stdlib.( = ) tag "A" then (
                  if Stdlib.( <> ) len 1 then
-                   Melange_json.of_json_msg_error ~json:x
+                   Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 1";
                  A)
                else if Stdlib.( = ) tag "b_aliased" then (
                  if Stdlib.( <> ) len 1 then
-                   Melange_json.of_json_msg_error ~json:x
+                   Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 1";
                  B)
                else Melange_json.of_json_msg_error "invalid JSON"
@@ -913,12 +914,12 @@
                let tag = (Obj.magic tag : string) in
                if Stdlib.( = ) tag "A_aliased" then (
                  if Stdlib.( <> ) len 1 then
-                   Melange_json.of_json_msg_error ~json:x
+                   Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 1";
                  `a)
                else if Stdlib.( = ) tag "b" then (
                  if Stdlib.( <> ) len 1 then
-                   Melange_json.of_json_msg_error ~json:x
+                   Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 1";
                  `b)
                else
@@ -974,12 +975,12 @@
                let tag = (Obj.magic tag : string) in
                if Stdlib.( = ) tag "A" then (
                  if Stdlib.( <> ) len 2 then
-                   Melange_json.of_json_msg_error ~json:x
+                   Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 2";
                  A (a_of_json (Js.Array.unsafe_get array 1)))
                else if Stdlib.( = ) tag "B" then (
                  if Stdlib.( <> ) len 2 then
-                   Melange_json.of_json_msg_error ~json:x
+                   Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 2";
                  B (b_of_json (Js.Array.unsafe_get array 1)))
                else Melange_json.of_json_msg_error "invalid JSON"
@@ -1034,7 +1035,7 @@
                    (Stdlib.not (Js.Array.isArray x))
                    (Stdlib.not
                       (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
-         then Melange_json.of_json_msg_error "expected a JSON object";
+         then Melange_json.of_json_error ~json:x "expected a JSON object";
          let fs = (Obj.magic x : < a : Js.Json.t Js.undefined > Js.t) in
          {
            a =
@@ -1082,7 +1083,7 @@
                let tag = (Obj.magic tag : string) in
                if Stdlib.( = ) tag "A" then (
                  if Stdlib.( <> ) len 2 then
-                   Melange_json.of_json_msg_error ~json:x
+                   Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 2";
                  let fs = Js.Array.unsafe_get array 1 in
                  if
@@ -1096,7 +1097,8 @@
                                  (Obj.magic fs : 'a Js.null)
                                  Js.null))))
                  then
-                   Melange_json.of_json_msg_error "expected a JSON object";
+                   Melange_json.of_json_error ~json:fs
+                     "expected a JSON object";
                  let fs =
                    (Obj.magic fs : < a : Js.Json.t Js.undefined > Js.t)
                  in
@@ -1165,7 +1167,7 @@
                    (Stdlib.not (Js.Array.isArray x))
                    (Stdlib.not
                       (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
-         then Melange_json.of_json_msg_error "expected a JSON object";
+         then Melange_json.of_json_error ~json:x "expected a JSON object";
          let fs =
            (Obj.magic x
              : < a : Js.Json.t Js.undefined

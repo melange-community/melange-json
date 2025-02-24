@@ -66,13 +66,13 @@ module Of_json = struct
   let ensure_json_object ~loc x =
     [%expr
       if Stdlib.not [%e eis_json_object ~loc x] then
-        Melange_json.of_json_msg_error
+        Melange_json.of_json_error ~json:[%e x]
           [%e estring ~loc (sprintf "expected a JSON object")]]
 
   let ensure_json_array_len ~loc n len x =
     [%expr
       if Stdlib.( <> ) [%e len] [%e eint ~loc n] then
-        Melange_json.of_json_msg_error ~json:[%e x]
+        Melange_json.of_json_error ~json:[%e x]
           [%e
             estring ~loc (sprintf "expected a JSON array of length %i" n)]]
 

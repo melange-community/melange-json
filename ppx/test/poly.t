@@ -64,7 +64,7 @@ We can alias poly variants:
                     then
                       (if Stdlib.(<>) len 1
                        then
-                         Melange_json.of_json_msg_error ~json:x
+                         Melange_json.of_json_error ~json:x
                            "expected a JSON array of length 1";
                        `A)
                     else
@@ -72,7 +72,7 @@ We can alias poly variants:
                       then
                         (if Stdlib.(<>) len 1
                          then
-                           Melange_json.of_json_msg_error ~json:x
+                           Melange_json.of_json_error ~json:x
                              "expected a JSON array of length 1";
                          `B)
                       else
@@ -202,7 +202,7 @@ We can extend aliased polyvariants:
                     then
                       (if Stdlib.(<>) len 1
                        then
-                         Melange_json.of_json_msg_error ~json:x
+                         Melange_json.of_json_error ~json:x
                            "expected a JSON array of length 1";
                        `A)
                     else
@@ -210,7 +210,7 @@ We can extend aliased polyvariants:
                       then
                         (if Stdlib.(<>) len 1
                          then
-                           Melange_json.of_json_msg_error ~json:x
+                           Melange_json.of_json_error ~json:x
                              "expected a JSON array of length 1";
                          `B)
                       else
@@ -262,7 +262,7 @@ We can extend aliased polyvariants:
                         then
                           (if Stdlib.(<>) len 1
                            then
-                             Melange_json.of_json_msg_error ~json:x
+                             Melange_json.of_json_error ~json:x
                                "expected a JSON array of length 1";
                            `C)
                         else
@@ -413,7 +413,7 @@ We can extend poly variants which are placed behind signatures:
                         then
                           (if Stdlib.(<>) len 1
                            then
-                             Melange_json.of_json_msg_error ~json:x
+                             Melange_json.of_json_error ~json:x
                                "expected a JSON array of length 1";
                            `A)
                         else
@@ -421,7 +421,7 @@ We can extend poly variants which are placed behind signatures:
                           then
                             (if Stdlib.(<>) len 1
                              then
-                               Melange_json.of_json_msg_error ~json:x
+                               Melange_json.of_json_error ~json:x
                                  "expected a JSON array of length 1";
                              `B)
                           else
@@ -474,7 +474,7 @@ We can extend poly variants which are placed behind signatures:
                         then
                           (if Stdlib.(<>) len 1
                            then
-                             Melange_json.of_json_msg_error ~json:x
+                             Melange_json.of_json_error ~json:x
                                "expected a JSON array of length 1";
                            `C)
                         else

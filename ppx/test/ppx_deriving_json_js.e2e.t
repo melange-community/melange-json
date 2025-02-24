@@ -108,7 +108,7 @@
   
   Testing error cases:
   ERROR CASE DATA: 42
-  Got expected error: expected a JSON object
+  Got expected error: expected a JSON object but got 42
   ERROR CASE DATA: [1]
   Got expected error: expected a JSON array of length 2 but got [1]
   ERROR CASE DATA: [1,2,3]
@@ -122,11 +122,11 @@
   ERROR CASE DATA: "Yellow"
   Got expected error: expected a non empty JSON array but got "Yellow"
   ERROR CASE DATA: ["Circle"]
-  Got expected error: expected a JSON array of length 2
+  Got expected error: expected a JSON array of length 2 but got ["Circle"]
   ERROR CASE DATA: ["Rectangle", 10.0]
-  Got expected error: expected a JSON array of length 3
+  Got expected error: expected a JSON array of length 3 but got ["Rectangle", 10]
   ERROR CASE DATA: ["Point", 1.0, 2.0]
-  Got expected error: expected a JSON array of length 2
+  Got expected error: expected a JSON array of length 2 but got ["Point", 1, 2]
   *** json_string deriver tests ***
   ** To_json_string **
   A 42 -> ["A",42]
