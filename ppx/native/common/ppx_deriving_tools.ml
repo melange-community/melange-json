@@ -359,6 +359,23 @@ module Conv = struct
     | Vrt_ctx_variant of type_declaration
     | Vrt_ctx_polyvariant of core_type
 
+  let get_of_variant_case ?mark_as_seen ~variant ~polyvariant = function
+    | Vcs_ctx_variant ctx -> Attribute.get ?mark_as_seen variant ctx
+    | Vcs_ctx_polyvariant ctx ->
+        Attribute.get ?mark_as_seen polyvariant ctx
+
+  let attr_json_name ctx =
+    Attribute.declare "json.name" ctx
+      Ast_pattern.(single_expr_payload (estring __'))
+      (fun x -> x)
+
+  let vcs_attr_json_name =
+    let variant =
+      attr_json_name Attribute.Context.constructor_declaration
+    in
+    let polyvariant = attr_json_name Attribute.Context.rtag in
+    get_of_variant_case ~variant ~polyvariant
+
   let repr_polyvariant_cases cs =
     List.rev cs |> List.map ~f:(fun c -> c, Schema.repr_row_field c)
 
@@ -507,7 +524,11 @@ module Conv = struct
            Printf.sprintf "expected %s"
              (cs
              |> List.map ~f:(fun c ->
-                    let name = c.pcd_name in
+                    let name =
+                      let name = c.pcd_name in
+                      Option.value ~default:name
+                        (vcs_attr_json_name (Vcs_ctx_variant c))
+                    in
                     match c.pcd_args with
                     | Pcstr_record _fs ->
                         Printf.sprintf {|["%s", { _ }]|} name.txt
@@ -706,5 +727,7 @@ module Conv = struct
      end
       :> deriving)
 end
+
+let vcs_attr_json_name = Conv.vcs_attr_json_name
 
 include Schema
