@@ -524,8 +524,8 @@ module Conv = struct
            Printf.sprintf "expected %s"
              (cs
              |> List.map ~f:(fun c ->
-                    let name = c.pcd_name in
                     let name =
+                      let name = c.pcd_name in
                       Option.value ~default:name
                         (vcs_attr_json_name (Vcs_ctx_variant c))
                     in
