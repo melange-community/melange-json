@@ -15,7 +15,7 @@ external jsonDict : Js.Json.t Js.Dict.t -> Js.Json.t = "%identity"
 
 let dict encode d =
   let pairs = Js.Dict.entries d in
-  let encodedPairs = Array.map (fun (k, v) -> (k, encode v)) pairs in
+  let encodedPairs = Array.map (fun (k, v) -> k, encode v) pairs in
   jsonDict (Js.Dict.fromArray encodedPairs)
 
 let object_ props : Js.Json.t = props |> Js.Dict.fromList |> jsonDict
