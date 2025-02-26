@@ -1,14 +1,12 @@
-(** Provides a set of low level combinator primitives to decode Js.Json.t data
-structures
-A decoder combinator will return the decoded value if successful, or raise a 
-[DecodeError of string] if unsuccessful, where the string argument contains the
-error message.
-Decoders are designed to be combined to produce more complex decoders that can
-decode arbitrary data structures, though the emphasis for this library is for
-it to be {i possible} to decode any given data structure, not necessarily for
-it to be {i convenient}. For convenience you should look towards opinionated
-third-party libraries.
-*)
+(** Provides a set of low level combinator primitives to decode Js.Json.t
+    data structures A decoder combinator will return the decoded value if
+    successful, or raise a [DecodeError of string] if unsuccessful, where
+    the string argument contains the error message. Decoders are designed
+    to be combined to produce more complex decoders that can decode
+    arbitrary data structures, though the emphasis for this library is for
+    it to be {i possible} to decode any given data structure, not
+    necessarily for it to be {i convenient}. For convenience you should
+    look towards opinionated third-party libraries. *)
 
 type 'a decoder = Js.Json.t -> 'a
 (** The type of a decoder combinator *)
@@ -134,11 +132,11 @@ val char : char decoder
 
 val date : Js.Date.t decoder
 (** Decodes an ISO8601-formatted JSON string into a [Js.Date.t]
-    
-{b Returns} a [Js.Date.t] if the JSON value is an IS8601-formatted string.
 
-@raise [DecodeError] if unsuccessful 
-*)
+    {b Returns} a [Js.Date.t] if the JSON value is an IS8601-formatted
+    string.
+
+    @raise [DecodeError] if unsuccessful *)
 
 val nullable : 'a decoder -> 'a Js.null decoder
 (** Decodes a JSON value into an ['a Js.null]
@@ -261,25 +259,29 @@ val tuple2 : 'a decoder -> 'b decoder -> ('a * 'b) decoder
 ]}
 *)
 
-val tuple3 : 'a decoder -> 'b decoder -> 'c decoder -> ('a * 'b * 'c) decoder
-(** Decodes a JSON array with three elements into an ['a * 'b * 'c] tuple using
-    each of the given decoders in order.
-
-{b Returns} an ['a * 'b * 'c] if the JSON value is a JSON array of length 3 and
-    all its elements are successfully decoded.
-
-@raise [DecodeError] if unsuccessful
-*)
-
-val tuple4 : 'a decoder -> 'b decoder -> 'c decoder -> 'd decoder -> ('a * 'b * 'c * 'd) decoder
-(** Decodes a JSON array with four elements into an ['a * 'b * 'c * 'd] tuple
+val tuple3 :
+  'a decoder -> 'b decoder -> 'c decoder -> ('a * 'b * 'c) decoder
+(** Decodes a JSON array with three elements into an ['a * 'b * 'c] tuple
     using each of the given decoders in order.
 
-{b Returns} an ['a * 'b * 'c * 'd] if the JSON value is a JSON array of length 4
-    and all its elements are successfully decoded.
+    {b Returns} an ['a * 'b * 'c] if the JSON value is a JSON array of
+    length 3 and all its elements are successfully decoded.
 
-@raise [DecodeError] if unsuccessful
-*)
+    @raise [DecodeError] if unsuccessful *)
+
+val tuple4 :
+  'a decoder ->
+  'b decoder ->
+  'c decoder ->
+  'd decoder ->
+  ('a * 'b * 'c * 'd) decoder
+(** Decodes a JSON array with four elements into an ['a * 'b * 'c * 'd]
+    tuple using each of the given decoders in order.
+
+    {b Returns} an ['a * 'b * 'c * 'd] if the JSON value is a JSON array
+    of length 4 and all its elements are successfully decoded.
+
+    @raise [DecodeError] if unsuccessful *)
 
 val dict : 'a decoder -> 'a Js.Dict.t decoder
 (** Decodes a JSON object into a dict using the given decoder on each of its values

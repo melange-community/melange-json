@@ -5,6 +5,5 @@
  (wrapped false)
  (modes melange))
 
-
 (copy_files#
  (files ../common/ppx_deriving_json_errors.ml))

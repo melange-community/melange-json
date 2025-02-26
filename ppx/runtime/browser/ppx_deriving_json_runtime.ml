@@ -4,7 +4,6 @@ let to_json t = t
 let of_json t = t
 let to_string t = Js.Json.stringify t
 
-
 include Ppx_deriving_json_errors
 
 let of_string s =

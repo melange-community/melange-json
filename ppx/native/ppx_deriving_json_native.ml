@@ -81,7 +81,8 @@ module Of_json = struct
                       | Some default -> default
                       | None ->
                           [%expr
-                            Ppx_deriving_json_runtime.of_json_error ~json:x
+                            Ppx_deriving_json_runtime.of_json_error
+                              ~json:x
                               [%e
                                 estring ~loc:key.loc
                                   (sprintf "expected field %S" key.txt)]]]]
