@@ -1,11 +1,14 @@
   $ dune build ./prettify.exe
 Uncomment to debug
-  $ ocamlopt -dsource _build/default/prettify.pp.ml
+
+  $ temp_file=$(mktemp)
+  $ ocamlopt -dsource _build/default/prettify.pp.ml > "$temp_file" 2>&1
+  [2]
+  $ cat "$temp_file" | grep -v -E '(hidden_include_dirs|load_path)'
   [@@@ocaml.ppx.context
     {
       tool_name = "ppx_driver";
       include_dirs = [];
-      load_path = [];
       open_modules = [];
       for_package = None;
       debug = false;
@@ -102,7 +105,6 @@ Uncomment to debug
   4 | [ `Other of Yojson.Basic.t [@allow_any]
                   ^^^^^^^^^^^^^^
   Error: Unbound module Yojson
-  [2]
   $ dune exec ./prettify.exe -- '{ "a": ["Foo"] }'
   got Foo
   { "a": [ "Foo" ] }
