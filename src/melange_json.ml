@@ -1,7 +1,7 @@
 type t = Js.Json.t
 type json = t
 
-module Classify = Classify
+let classify = Classify.classify
 
 let to_json t = t
 let of_json t = t
