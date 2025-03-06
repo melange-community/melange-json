@@ -8,12 +8,12 @@ Based on [@glennsl/bs-json](https://github.com/glennsl/bs-json).
 The Decode module in particular provides a basic set of decoder functions to be
 composed into more complex decoders. A decoder is a function that takes a
 `Js.Json.t` and either returns a value of the desired type if successful or
-raises a `DecodeError` exception if not. Other functions accept a decoder and
+raises an `Of_json_error` exception if not. Other functions accept a decoder and
 produce another decoder. Like `array`, which when given a decoder for type `t`
 will return a decoder that tries to produce a value of type `t array`. So to
-decode an `int array` you combine `Json.Decode.int` with `Json.Decode.array`
-into `Json.Decode.(array int)`. An array of arrays of ints? `Json.Decode.(array
-(array int))`. Dict containing arrays of ints? `Json.Decode.(dict (array int))`.
+decode an `int array` you combine `Melange_json.Of_json.int` with `Melange_json.Of_json.array`
+into `Melange_json.Of_json.(array int)`. An array of arrays of ints? `Melange_json.Of_json.(array
+(array int))`. Dict containing arrays of ints? `Melange_json.Of_json.(dict (array int))`.
 
 ## Example
 
@@ -30,16 +30,16 @@ and point = {
 
 module Decode = {
   let point = json =>
-    Json.Decode.{
+    Melange_json.Of_json.{
       x: json |> field("x", int),
       y: json |> field("y", int)
     };
 
   let line = json =>
-    Json.Decode.{
+    Melange_json.Of_json.{
       start:     json |> field("start", point),
       end_:      json |> field("end", point),
-      thickness: json |> optional(field("thickness", int))
+      thickness: json |> try_or_none(field("thickness", int))
     };
 };
 
@@ -48,14 +48,14 @@ let data = {| {
   "end":   { "x": 5, "y": 8 }
 } |};
 
-let line = data |> Json.parseOrRaise
+let line = data |> Melange_json.of_string
                 |> Decode.line;
 ```
 
-NOTE: `Json.Decode.{ ... }` creates an ordinary record, but also opens the
-`Json.Decode` module locally, within the scope delimited by the curly braces, so
+NOTE: `Melange_json.Of_json.{ ... }` creates an ordinary record, but also opens the
+`Melange_json.Of_json` module locally, within the scope delimited by the curly braces, so
 we don't have to qualify the functions we use from it, like `field`, `int` and
-`optional` here. You can also use `Json.Decode.( ... )` to open the module
+`try_or_none` here. You can also use `Melange_json.Of_json.( ... )` to open the module
 locally within the parentheses, if you're not creating a record.
 
 See [examples](./examples/) for more.
@@ -86,13 +86,11 @@ Add `melange-json` to the `libraries` field in your `dune` file:
 
 For the moment, please see the interface files:
 
-* [Json](./src/Json.mli)
-* [Json.Encode](./src/Json_encode.mli)
-* [Json.Decode](./src/Json_decode.mli)
+* [Melange_json](./src/melange_json.mli)
 
 ### Writing custom decoders and encoders
 
-If you look at the type signature of `Json.Decode.array`, for example, you'll
+If you look at the type signature of `Melange_json.Decode.array`, for example, you'll
 see it takes an `'a decoder` and returns an `'a array decoder`. `'a decoder` is
 just an alias for `Js.Json.t -> 'a`, so if we expand the type signature of
 `array` we'll get `(Js.Json.t -> 'a) -> Js.Json.t -> 'a array`. We can now see
@@ -106,7 +104,7 @@ Let's look at `Decode.point` from the example above:
 
 ```reason
 let point = json => {
-  open! Json.Decode;
+  open! Melange_json.Decode;
   {
     x: json |> field("x", int),
     y: json |> field("y", int)
@@ -115,12 +113,12 @@ let point = json => {
 ```
 
 This is a function `Js.Json.t -> point`, or a `point decoder`. So if we'd like
-to decode an array of points, we can just pass it to `Json.Decode.array` to get
+to decode an array of points, we can just pass it to `Melange_json.Of_json.array` to get
 a `point array decoder` in return.
 
 #### Builders
 
-To write a decoder _builder_ like `Json.Decode.array` we need to take another
+To write a decoder _builder_ like `Melange_json.Of_json.array` we need to take another
 decoder as an argument, and thanks to currying we just need to apply it where
 we'd otherwise use a fixed decoder. Say we want to be able to decode both `int
 point`s and `float point`s. First we'd have to parameterize the type:
@@ -137,7 +135,7 @@ argument:
 
 ```reason
 let point = (decodeNumber, json) => {
-  open! Json.Decode;
+  open! Melange_json.Decode;
   {
     x: json |> field("x", decodeNumber),
     y: json |> field("y", decodeNumber)
@@ -148,8 +146,8 @@ let point = (decodeNumber, json) => {
 And if we wish we can now create aliases for each variant:
 
 ```reason
-let intPoint = point(Json.Decode.int);
-let floatPoint = point(Json.Decode.float);
+let intPoint = point(Melange_json.Of_json.int);
+let floatPoint = point(Melange_json.Of_json.float);
 ```
 
 #### Encoders
@@ -182,7 +180,7 @@ add the `[@@deriving json]` attribute to the type declaration,
 ensuring the converters for primitives like `int` and `string` are in scope if necessary:
 
 ```ocaml
-open Ppx_deriving_json_runtime.Primitives
+open Melange_json.Primitives
 
 type t = {
   a: int;
@@ -217,7 +215,7 @@ type t = {
   b: string [@json.default "-"];
 } [@@deriving of_json]
 
-let t = of_json (Json.parseOrRaise {|{"a": 42}|})
+let t = of_json (Melange_json.of_string {|{"a": 42}|})
 (* t = { a = 42; b = "-"; } *)
 ```
 
@@ -232,7 +230,7 @@ type t = {
   b: string option [@json.option];
 } [@@deriving of_json]
 
-let t = of_json (Json.parseOrRaise {|{"a": 42}|})
+let t = of_json (Melange_json.of_string {|{"a": 42}|})
 (* t = { a = 42; b = None; } *)
 ```
 
@@ -263,7 +261,7 @@ type t = {
   b: string [@json.key "B"];
 } [@@deriving of_json]
 
-let t = of_json (Json.parseOrRaise {|{"A": 42, "B": "foo"}|})
+let t = of_json (Melange_json.of_string {|{"A": 42, "B": "foo"}|})
 (* t = { a = 42; b = "foo"; } *)
 ```
 

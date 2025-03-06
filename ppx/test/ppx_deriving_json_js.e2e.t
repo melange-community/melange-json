@@ -7,7 +7,7 @@
   >  (name lib)
   >  (modes melange)
   >  (modules example example_json_string main)
-  >  (flags :standard -w -20-37-69 -open Ppx_deriving_json_runtime.Primitives)
+  >  (flags :standard -w -20-37-69 -open Melange_json.Primitives)
   >  (preprocess (pps melange.ppx melange-json.ppx)))
   > (melange.emit
   >  (alias js)
@@ -99,6 +99,34 @@
   JSON REPRINT: {"a":1,"b_opt":2}
   JSON    DATA: {"a":[1],"b":[2]}
   JSON REPRINT: {"a":[1],"b":[2]}
+  JSON    DATA: ["Circle", 5.0]
+  JSON REPRINT: ["Circle",5]
+  JSON    DATA: ["Rectangle", 10.0, 20.0]
+  JSON REPRINT: ["Rectangle",10,20]
+  JSON    DATA: ["Point", {"x": 1.0, "y": 2.0}]
+  JSON REPRINT: ["Point",{"x":1,"y":2}]
+  
+  Testing error cases:
+  ERROR CASE DATA: 42
+  Got expected error: expected a JSON object but got 42
+  ERROR CASE DATA: [1]
+  Got expected error: expected a JSON array of length 2 but got [1]
+  ERROR CASE DATA: [1,2,3]
+  Got expected error: expected a JSON array of length 2 but got [1, 2, 3]
+  ERROR CASE DATA: [1,2]
+  Got expected error: expected a JSON array of length 3 but got [1, 2]
+  ERROR CASE DATA: [1,2,3,4]
+  Got expected error: expected a JSON array of length 3 but got [1, 2, 3, 4]
+  ERROR CASE DATA: 42
+  Got expected error: expected a non empty JSON array but got 42
+  ERROR CASE DATA: "Yellow"
+  Got expected error: expected a non empty JSON array but got "Yellow"
+  ERROR CASE DATA: ["Circle"]
+  Got expected error: expected a JSON array of length 2 but got ["Circle"]
+  ERROR CASE DATA: ["Rectangle", 10.0]
+  Got expected error: expected a JSON array of length 3 but got ["Rectangle", 10]
+  ERROR CASE DATA: ["Point", 1.0, 2.0]
+  Got expected error: expected a JSON array of length 2 but got ["Point", 1, 2]
   *** json_string deriver tests ***
   ** To_json_string **
   A 42 -> ["A",42]

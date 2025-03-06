@@ -23,8 +23,15 @@ type allow_extra_fields = {a: int} [@@deriving json] [@@json.allow_extra_fields]
 type allow_extra_fields2 = A of {a: int} [@json.allow_extra_fields] [@@deriving json]
 type drop_default_option = { a: int; b_opt: int option; [@option] [@json.drop_default] } [@@deriving json]
 type array_list = { a: int array; b: int list} [@@deriving json]
-type json = Ppx_deriving_json_runtime.t
+type json = Melange_json.t
 type of_json = C : string * (json -> 'a) * ('a -> json) * 'a -> of_json
+type color = Red | Green | Blue [@@deriving json]
+
+type shape = 
+  | Circle of float  (* radius *)
+  | Rectangle of float * float  (* width * height *)
+  | Point of { x: float; y: float } [@@deriving json]
+
 let of_json_cases = [
   C ({|1|}, user_of_json, user_to_json, 1);
   C ({|"9223372036854775807"|}, userid_of_json, userid_to_json, 9223372036854775807L);
@@ -62,14 +69,56 @@ let of_json_cases = [
   C ({|{"a":1}|}, drop_default_option_of_json, drop_default_option_to_json, {a=1; b_opt=None});
   C ({|{"a":1,"b_opt":2}|}, drop_default_option_of_json, drop_default_option_to_json, {a=1; b_opt=Some 2});
   C ({|{"a":[1],"b":[2]}|}, array_list_of_json, array_list_to_json, {a=[|1|]; b=[2]});
+  C ({|["Circle", 5.0]|}, shape_of_json, shape_to_json, Circle 5.0);
+  C ({|["Rectangle", 10.0, 20.0]|}, shape_of_json, shape_to_json, Rectangle (10.0, 20.0));
+  C ({|["Point", {"x": 1.0, "y": 2.0}]|}, shape_of_json, shape_to_json, Point {x=1.0; y=2.0});
 ]
 let run' (C (data, of_json, to_json, v)) =
   print_endline (Printf.sprintf "JSON    DATA: %s" data);
-  let json = Ppx_deriving_json_runtime.of_string data in
+  let json = Melange_json.of_string data in
   let v' = of_json json in
   assert (v' = v);
   let json' = to_json v' in
-  let data' = Ppx_deriving_json_runtime.to_string json' in
+  let data' = Melange_json.to_string json' in
   print_endline (Printf.sprintf "JSON REPRINT: %s" data')
+
+(* Error cases for object validation *)
+type must_be_object = { field: int } [@@deriving json]
+type must_be_array_2 = (int * int) [@@deriving json]
+type must_be_array_3 = (int * int * int) [@@deriving json]
+
+let error_cases = [
+  (* Should fail with "expected a JSON object" *)
+  C ({|42|}, must_be_object_of_json, must_be_object_to_json, {field=1});
+  
+  (* Should fail with "expected a JSON array of length 2" *)
+  C ({|[1]|}, must_be_array_2_of_json, must_be_array_2_to_json, (1, 2));
+  C ({|[1,2,3]|}, must_be_array_2_of_json, must_be_array_2_to_json, (1, 2));
+  
+  (* Should fail with "expected a JSON array of length 3" *)
+  C ({|[1,2]|}, must_be_array_3_of_json, must_be_array_3_to_json, (1, 2, 3));
+  C ({|[1,2,3,4]|}, must_be_array_3_of_json, must_be_array_3_to_json, (1, 2, 3));
+
+  (* Should fail with "expected a JSON string representing a variant" *)
+  C ({|42|}, color_of_json, color_to_json, Red);
+  C ({|"Yellow"|}, color_of_json, color_to_json, Red);
+
+  (* Should fail with shape validation *)
+  C ({|["Circle"]|}, shape_of_json, shape_to_json, Circle 1.0);
+  C ({|["Rectangle", 10.0]|}, shape_of_json, shape_to_json, Rectangle (10.0, 20.0));
+  C ({|["Point", 1.0, 2.0]|}, shape_of_json, shape_to_json, Point {x=1.0; y=2.0});
+]
+
+let run_error_case' (C (data, of_json, _to_json, _v)) =
+  print_endline (Printf.sprintf "ERROR CASE DATA: %s" data);
+  let json = Melange_json.of_string data in
+  try
+    let _v' = of_json json in
+    print_endline "Error: should have failed"
+  with Melange_json.Of_json_error (Json_error msg) ->
+    print_endline (Printf.sprintf "Got expected error: %s" msg)
+
 let test () =
-  List.iter run' of_json_cases
+  List.iter run' of_json_cases;
+  print_endline "\nTesting error cases:";
+  List.iter run_error_case' error_cases
