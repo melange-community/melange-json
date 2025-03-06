@@ -2,6 +2,7 @@ type t = Js.Json.t
 type json = t
 
 let classify = Classify.classify
+let declassify = Classify.declassify
 
 let to_json t = t
 let of_json t = t
