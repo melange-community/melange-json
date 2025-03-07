@@ -28,7 +28,7 @@
    (run echo "let () = Ppxlib.Driver.standalone ()"))))
 
 (copy_files#
- (files ../common/ppx_deriving_json_common.ml))
+ (files ../native/common/ppx_deriving_json_common.ml))
 
 (copy_files#
- (files ../common/ppx_deriving_tools.{ml,mli}))
+ (files ../native/common/ppx_deriving_tools.{ml,mli}))
