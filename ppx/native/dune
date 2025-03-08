@@ -27,4 +27,17 @@
    %{target}
    (run echo "let () = Ppxlib.Driver.standalone ()"))))
 
-(include_subdirs (unqualified))
+(copy_files#
+ (files ./common/ppx_deriving_json_common.ml))
+
+(copy_files#
+ (files ./common/ppx_deriving_tools.{ml,mli}))
+
+; include_subdirs triggers a dependency cycle
+; $ dune runtest
+; Error: Dependency cycle between:       
+;   alias .melange-json-files
+; -> alias .melange-json-native-files
+; -> alias .melange-json-files
+; -> required by alias ppx/test/runtest
+; (include_subdirs (unqualified))
