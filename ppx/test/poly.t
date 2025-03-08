@@ -65,16 +65,16 @@ We can alias poly variants:
                       (if Stdlib.(<>) len 1
                        then
                          Melange_json.of_json_error ~json:x
-                           "expected a JSON array of length 1";
-                       `A)
+                           "expected a JSON array of length 1"
+                       else `A)
                     else
                       if Stdlib.(=) tag "B"
                       then
                         (if Stdlib.(<>) len 1
                          then
                            Melange_json.of_json_error ~json:x
-                             "expected a JSON array of length 1";
-                         `B)
+                             "expected a JSON array of length 1"
+                         else `B)
                       else
                         raise
                           (Melange_json.Of_json_error
@@ -203,16 +203,16 @@ We can extend aliased polyvariants:
                       (if Stdlib.(<>) len 1
                        then
                          Melange_json.of_json_error ~json:x
-                           "expected a JSON array of length 1";
-                       `A)
+                           "expected a JSON array of length 1"
+                       else `A)
                     else
                       if Stdlib.(=) tag "B"
                       then
                         (if Stdlib.(<>) len 1
                          then
                            Melange_json.of_json_error ~json:x
-                             "expected a JSON array of length 1";
-                         `B)
+                             "expected a JSON array of length 1"
+                         else `B)
                       else
                         raise
                           (Melange_json.Of_json_error
@@ -263,8 +263,8 @@ We can extend aliased polyvariants:
                           (if Stdlib.(<>) len 1
                            then
                              Melange_json.of_json_error ~json:x
-                               "expected a JSON array of length 1";
-                           `C)
+                               "expected a JSON array of length 1"
+                           else `C)
                         else
                           raise
                             (Melange_json.Of_json_error
@@ -414,16 +414,16 @@ We can extend poly variants which are placed behind signatures:
                           (if Stdlib.(<>) len 1
                            then
                              Melange_json.of_json_error ~json:x
-                               "expected a JSON array of length 1";
-                           `A)
+                               "expected a JSON array of length 1"
+                           else `A)
                         else
                           if Stdlib.(=) tag "B"
                           then
                             (if Stdlib.(<>) len 1
                              then
                                Melange_json.of_json_error ~json:x
-                                 "expected a JSON array of length 1";
-                             `B)
+                                 "expected a JSON array of length 1"
+                             else `B)
                           else
                             raise
                               (Melange_json.Of_json_error
@@ -475,8 +475,8 @@ We can extend poly variants which are placed behind signatures:
                           (if Stdlib.(<>) len 1
                            then
                              Melange_json.of_json_error ~json:x
-                               "expected a JSON array of length 1";
-                           `C)
+                               "expected a JSON array of length 1"
+                           else `C)
                         else
                           raise
                             (Melange_json.Of_json_error

@@ -1,0 +1,5 @@
+(executable
+  (name prettify)
+  (libraries yojson)
+  (preprocess
+   (pps melange-json-native.ppx)))

@@ -133,6 +133,9 @@ module Of_json = struct
 
   let derive_of_variant_case derive make vcs =
     match vcs with
+    | Vcs_tuple (n, t) when vcs_attr_json_allow_any t.tpl_ctx ->
+        let loc = n.loc in
+        [%pat? _] --> make (Some [%expr x])
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
@@ -158,10 +161,22 @@ module Of_json = struct
         --> build_record ~allow_extra_fields ~loc derive t.rcd_fields
               [%expr fs] (fun e -> make (Some e))
 
+  let cmp_sort_vcs vcs1 vcs2 =
+    let allow_any_1 =
+      Ppx_deriving_json_common.vcs_attr_json_allow_any vcs1
+    and allow_any_2 =
+      Ppx_deriving_json_common.vcs_attr_json_allow_any vcs2
+    in
+    match allow_any_1, allow_any_2 with
+    | true, true | false, false -> 0
+    | true, false -> -1
+    | false, true -> 1
+
   let deriving : Ppx_deriving_tools.deriving =
     deriving_of_match () ~name:"of_json"
       ~of_t:(fun ~loc -> [%type: Yojson.Basic.t])
-      ~derive_of_tuple ~derive_of_record ~derive_of_variant_case
+      ~cmp_sort_vcs ~derive_of_tuple ~derive_of_record
+      ~derive_of_variant_case
 end
 
 module To_json = struct
@@ -206,6 +221,13 @@ module To_json = struct
 
   let derive_of_variant_case derive vcs es =
     match vcs with
+    | Vcs_tuple (_n, t) when vcs_attr_json_allow_any t.tpl_ctx -> (
+        match es with
+        | [ x ] -> x
+        | es ->
+            failwith
+              (sprintf "expected a tuple of length 1, got %i"
+                 (List.length es)))
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
