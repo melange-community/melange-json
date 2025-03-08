@@ -6,7 +6,8 @@ type t = Yojson.Basic.t
 type json = t
 (** Defined for convenience. *)
 
-module Classify = Classify
+let classify = Classify.classify
+let declassify = Classify.declassify
 
 let to_string t = Yojson.Basic.to_string t
 
