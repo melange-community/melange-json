@@ -25,10 +25,6 @@ let () =
   Printexc.register_printer (function
     | Of_json_error (Json_error str) ->
         Some (sprintf "Melange_json.Of_json_error(Json_error {|%s|})" str)
-    | Of_json_error (Unexpected_variant str) ->
-        Some
-          (sprintf "Melange_json.Of_json_error(Unexpected_variant {|%s|})"
-             str)
     | _ -> None)
 
 type 'a of_json = json -> 'a

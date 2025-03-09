@@ -120,7 +120,7 @@ val to_json : json to_json
 (** JSON can be encoded as JSON, trivially. *)
 
 (** The type of a error which occurs during decoding JSON values. *)
-type of_json_error = Json_error of string | Unexpected_variant of string
+type of_json_error = Json_error of string
 
 val of_json_error_to_string : of_json_error -> string
 val of_json_error : ?depth:int -> ?width:int -> json:json -> string -> 'a
@@ -129,6 +129,9 @@ val of_json_msg_error : string -> 'a
 type exn +=
   | Of_json_error of of_json_error
         (** The exception raised when a decoding error occurs *)
+  | Internal_unexpected_variant of string
+        (** Internal error used by the runtime to signal an unexpected
+            variant. *)
 
 type 'a of_json = json -> 'a
 (** Describes how to decode a value out of JSON. *)

@@ -18,8 +18,7 @@ We can alias poly variants:
            | `List ((`String "B")::[]) -> `B
            | x ->
                raise
-                 (Melange_json.Of_json_error
-                    (Melange_json.Unexpected_variant "unexpected variant")) : 
+                 (Melange_json.Internal_unexpected_variant "unexpected variant") : 
         Yojson.Basic.t -> t)
       let _ = of_json
       [@@@ocaml.warning "-39-11-27"]
@@ -77,9 +76,8 @@ We can alias poly variants:
                          else `B)
                       else
                         raise
-                          (Melange_json.Of_json_error
-                             (Melange_json.Unexpected_variant
-                                "unexpected variant")))
+                          (Melange_json.Internal_unexpected_variant
+                             "unexpected variant"))
                  else
                    Melange_json.of_json_error ~json:x
                      "expected a non empty JSON array with element being a string")
@@ -139,8 +137,7 @@ We can extend aliased polyvariants:
            | `List ((`String "B")::[]) -> `B
            | x ->
                raise
-                 (Melange_json.Of_json_error
-                    (Melange_json.Unexpected_variant "unexpected variant")) : 
+                 (Melange_json.Internal_unexpected_variant "unexpected variant") : 
         Yojson.Basic.t -> t)
       let _ = of_json
       [@@@ocaml.warning "-39-11-27"]
@@ -162,12 +159,10 @@ We can extend aliased polyvariants:
            | x ->
                (match of_json x with
                 | x -> (x :> [ | t | `C ])
-                | exception Melange_json.Of_json_error
-                    (Melange_json.Unexpected_variant _) ->
+                | exception Melange_json.Internal_unexpected_variant _ ->
                     raise
-                      (Melange_json.Of_json_error
-                         (Melange_json.Unexpected_variant "unexpected variant"))) : 
-        Yojson.Basic.t -> u)
+                      (Melange_json.Internal_unexpected_variant
+                         "unexpected variant")) : Yojson.Basic.t -> u)
       let _ = u_of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec u_to_json =
@@ -215,9 +210,8 @@ We can extend aliased polyvariants:
                          else `B)
                       else
                         raise
-                          (Melange_json.Of_json_error
-                             (Melange_json.Unexpected_variant
-                                "unexpected variant")))
+                          (Melange_json.Internal_unexpected_variant
+                             "unexpected variant"))
                  else
                    Melange_json.of_json_error ~json:x
                      "expected a non empty JSON array with element being a string")
@@ -256,8 +250,7 @@ We can extend aliased polyvariants:
                    let tag = (Obj.magic tag : string) in
                    match of_json x with
                    | e -> (e :> [ | t | `C ])
-                   | exception Melange_json.Of_json_error
-                       (Melange_json.Unexpected_variant _) ->
+                   | exception Melange_json.Internal_unexpected_variant _ ->
                        (if Stdlib.(=) tag "C"
                         then
                           (if Stdlib.(<>) len 1
@@ -267,9 +260,8 @@ We can extend aliased polyvariants:
                            else `C)
                         else
                           raise
-                            (Melange_json.Of_json_error
-                               (Melange_json.Unexpected_variant
-                                  "unexpected variant")))
+                            (Melange_json.Internal_unexpected_variant
+                               "unexpected variant"))
                  else
                    Melange_json.of_json_error ~json:x
                      "expected a non empty JSON array with element being a string")
@@ -337,9 +329,8 @@ We can extend poly variants which are placed behind signatures:
                | `List ((`String "B")::[]) -> `B
                | x ->
                    raise
-                     (Melange_json.Of_json_error
-                        (Melange_json.Unexpected_variant "unexpected variant")) : 
-            Yojson.Basic.t -> t)
+                     (Melange_json.Internal_unexpected_variant
+                        "unexpected variant") : Yojson.Basic.t -> t)
           let _ = of_json
           [@@@ocaml.warning "-39-11-27"]
           let rec to_json =
@@ -362,12 +353,10 @@ We can extend poly variants which are placed behind signatures:
            | x ->
                (match P.of_json x with
                 | x -> (x :> [ | P.t | `C ])
-                | exception Melange_json.Of_json_error
-                    (Melange_json.Unexpected_variant _) ->
+                | exception Melange_json.Internal_unexpected_variant _ ->
                     raise
-                      (Melange_json.Of_json_error
-                         (Melange_json.Unexpected_variant "unexpected variant"))) : 
-        Yojson.Basic.t -> u)
+                      (Melange_json.Internal_unexpected_variant
+                         "unexpected variant")) : Yojson.Basic.t -> u)
       let _ = u_of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec u_to_json =
@@ -426,9 +415,8 @@ We can extend poly variants which are placed behind signatures:
                              else `B)
                           else
                             raise
-                              (Melange_json.Of_json_error
-                                 (Melange_json.Unexpected_variant
-                                    "unexpected variant")))
+                              (Melange_json.Internal_unexpected_variant
+                                 "unexpected variant"))
                      else
                        Melange_json.of_json_error ~json:x
                          "expected a non empty JSON array with element being a string")
@@ -468,8 +456,7 @@ We can extend poly variants which are placed behind signatures:
                    let tag = (Obj.magic tag : string) in
                    match P.of_json x with
                    | e -> (e :> [ | P.t | `C ])
-                   | exception Melange_json.Of_json_error
-                       (Melange_json.Unexpected_variant _) ->
+                   | exception Melange_json.Internal_unexpected_variant _ ->
                        (if Stdlib.(=) tag "C"
                         then
                           (if Stdlib.(<>) len 1
@@ -479,9 +466,8 @@ We can extend poly variants which are placed behind signatures:
                            else `C)
                         else
                           raise
-                            (Melange_json.Of_json_error
-                               (Melange_json.Unexpected_variant
-                                  "unexpected variant")))
+                            (Melange_json.Internal_unexpected_variant
+                               "unexpected variant"))
                  else
                    Melange_json.of_json_error ~json:x
                      "expected a non empty JSON array with element being a string")

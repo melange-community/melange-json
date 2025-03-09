@@ -3,7 +3,6 @@ type json = t
 
 let classify = Classify.classify
 let declassify = Classify.declassify
-
 let to_json t = t
 let of_json t = t
 
@@ -12,10 +11,7 @@ type 'a to_json = 'a -> Js.Json.t
 
 include Errors
 
-let of_json_error_to_string = function
-  | Json_error msg -> msg
-  | Unexpected_variant tag -> "unexpected variant: " ^ tag
-
+let of_json_error_to_string = function Json_error msg -> msg
 let to_string t = Js.Json.stringify t
 
 external _unsafeCreateUninitializedArray : int -> 'a array = "Array"

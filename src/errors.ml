@@ -1,8 +1,9 @@
 exception Of_string_error of string
 
-type of_json_error = Json_error of string | Unexpected_variant of string
+type of_json_error = Json_error of string
 
 exception Of_json_error of of_json_error
+exception Internal_unexpected_variant of string
 
 let with_buffer f =
   let buffer = Buffer.create 1 in
