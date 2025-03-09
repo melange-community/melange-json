@@ -1,8 +1,8 @@
 exception Of_string_error of string
 
-type of_json_error = Json_error of string
+type of_json_error = string
 
-exception Of_json_error of of_json_error
+exception Of_json_error of string
 exception Internal_unexpected_variant of string
 
 let with_buffer f =
@@ -91,7 +91,7 @@ let show_json_error ?depth ?width json =
 
       (loop ?depth:(Option.map (fun i -> i + 1) depth)) json)
 
-let of_json_msg_error msg = raise (Of_json_error (Json_error msg))
+let of_json_msg_error msg = raise (Of_json_error msg)
 
 let of_json_error ?(depth = 2) ?(width = 8) ~json msg =
   of_json_msg_error

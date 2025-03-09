@@ -40,7 +40,7 @@ let wrap_exn exp =
   try
     let _ = exp () in
     "not called"
-  with Melange_json.Of_json_error (Json_error str) -> str
+  with Melange_json.Of_json_error str -> str
 
 let () =
   describe "id" (fun () ->

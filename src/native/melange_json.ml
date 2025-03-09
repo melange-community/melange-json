@@ -23,8 +23,8 @@ let to_json : json to_json = fun x -> x
 
 let () =
   Printexc.register_printer (function
-    | Of_json_error (Json_error str) ->
-        Some (sprintf "Melange_json.Of_json_error(Json_error {|%s|})" str)
+    | Of_json_error str ->
+        Some (sprintf "Melange_json.Of_json_error({|%s|})" str)
     | _ -> None)
 
 type 'a of_json = json -> 'a
