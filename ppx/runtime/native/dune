@@ -1,8 +1,0 @@
-(library
- (public_name melange-json-native.ppx-runtime)
- (name ppx_deriving_json_native_runtime)
- (wrapped false)
- (libraries yojson))
-
-(copy_files#
- (files ../common/ppx_deriving_json_errors.ml))

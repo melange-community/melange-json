@@ -31,7 +31,7 @@ module Of_json = struct
         [%expr
           match
             Js.Undefined.toOption
-              [%e fs] ## [%e pexp_ident ~loc:n.loc (map_loc lident n)]
+              [%e fs]##[%e pexp_ident ~loc:n.loc (map_loc lident n)]
           with
           | Stdlib.Option.Some v -> [%e derive ld.pld_type [%expr v]]
           | Stdlib.Option.None ->
@@ -40,7 +40,7 @@ module Of_json = struct
                 | Some default -> default
                 | None ->
                     [%expr
-                      Ppx_deriving_json_runtime.of_json_error ~json:x
+                      Melange_json.of_json_error ~json:x
                         [%e
                           estring ~loc
                             (sprintf "expected field %S to be present"
@@ -66,7 +66,7 @@ module Of_json = struct
   let ensure_json_object ~loc x =
     [%expr
       if Stdlib.not [%e eis_json_object ~loc x] then
-        Ppx_deriving_json_runtime.of_json_msg_error
+        Melange_json.of_json_error ~json:[%e x]
           [%e estring ~loc (sprintf "expected a JSON object")]]
 
   let ensure_json_array_len ~loc ~allow_any_constr ~else_ n len x =
@@ -77,7 +77,7 @@ module Of_json = struct
           | Some allow_any_constr -> allow_any_constr x
           | None ->
               [%expr
-                Ppx_deriving_json_runtime.of_json_msg_error ~json:[%e x]
+                Melange_json.of_json_error ~json:[%e x]
                   [%e
                     estring ~loc
                       (sprintf "expected a JSON array of length %i" n)]]]
@@ -97,7 +97,7 @@ module Of_json = struct
         let es = (Obj.magic [%e x] : Js.Json.t array) in
         [%e build_tuple ~loc derive 0 t.tpl_types [%expr es]]
       else
-        Ppx_deriving_json_runtime.of_json_error ~json:[%e x]
+        Melange_json.of_json_error ~json:[%e x]
           [%e
             estring ~loc (sprintf "expected a JSON array of length %i" n)]]
 
@@ -124,7 +124,7 @@ module Of_json = struct
               | Some allow_any_constr -> allow_any_constr x
               | None ->
                   [%expr
-                    Ppx_deriving_json_runtime.of_json_error ~json:[%e x]
+                    Melange_json.of_json_error ~json:[%e x]
                       "expected a non empty JSON array with element \
                        being a string"]]
         else
@@ -133,7 +133,7 @@ module Of_json = struct
             | Some allow_any_constr -> allow_any_constr x
             | None ->
                 [%expr
-                  Ppx_deriving_json_runtime.of_json_error ~json:[%e x]
+                  Melange_json.of_json_error ~json:[%e x]
                     "expected a non empty JSON array"]]
       else
         [%e
@@ -141,7 +141,7 @@ module Of_json = struct
           | Some allow_any_constr -> allow_any_constr x
           | None ->
               [%expr
-                Ppx_deriving_json_runtime.of_json_error ~json:[%e x]
+                Melange_json.of_json_error ~json:[%e x]
                   "expected a non empty JSON array"]]]
 
   let derive_of_variant_case derive make c ~allow_any_constr next =

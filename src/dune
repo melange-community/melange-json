@@ -1,7 +1,7 @@
 (dirs :standard __tests__)
 
 (library
- (name json)
+ (name melange_json)
  (public_name melange-json)
  (modes melange)
  (preprocess
