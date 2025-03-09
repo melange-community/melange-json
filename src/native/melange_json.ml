@@ -8,7 +8,6 @@ type json = t
 
 let classify = Classify.classify
 let declassify = Classify.declassify
-
 let to_string t = Yojson.Basic.to_string t
 
 include Errors
@@ -25,15 +24,10 @@ let to_json : json to_json = fun x -> x
 let () =
   Printexc.register_printer (function
     | Of_json_error (Json_error str) ->
-        Some
-          (sprintf
-             "Ppx_deriving_json_runtime.Of_json_error(Json_error {|%s|})"
-             str)
+        Some (sprintf "Melange_json.Of_json_error(Json_error {|%s|})" str)
     | Of_json_error (Unexpected_variant str) ->
         Some
-          (sprintf
-             "Ppx_deriving_json_runtime.Of_json_error(Unexpected_variant \
-              {|%s|})"
+          (sprintf "Melange_json.Of_json_error(Unexpected_variant {|%s|})"
              str)
     | _ -> None)
 
