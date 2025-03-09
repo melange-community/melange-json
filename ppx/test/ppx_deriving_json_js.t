@@ -511,8 +511,8 @@
                  else `C
                else
                  raise
-                   (Melange_json.Of_json_error
-                      (Melange_json.Unexpected_variant "unexpected variant"))
+                   (Melange_json.Internal_unexpected_variant
+                      "unexpected variant")
              else
                Melange_json.of_json_error ~json:x
                  "expected a non empty JSON array with element being a \
@@ -567,13 +567,10 @@
                else
                  match other_of_json x with
                  | e -> (e :> [ `A | `B of int | other ])
-                 | exception
-                     Melange_json.Of_json_error
-                       (Melange_json.Unexpected_variant _) ->
+                 | exception Melange_json.Internal_unexpected_variant _ ->
                      raise
-                       (Melange_json.Of_json_error
-                          (Melange_json.Unexpected_variant
-                             "unexpected variant"))
+                       (Melange_json.Internal_unexpected_variant
+                          "unexpected variant")
              else
                Melange_json.of_json_error ~json:x
                  "expected a non empty JSON array with element being a \
@@ -632,8 +629,8 @@
                        string_of_json (Js.Array.unsafe_get array 2) )
                else
                  raise
-                   (Melange_json.Of_json_error
-                      (Melange_json.Unexpected_variant "unexpected variant"))
+                   (Melange_json.Internal_unexpected_variant
+                      "unexpected variant")
              else
                Melange_json.of_json_error ~json:x
                  "expected a non empty JSON array with element being a \
@@ -692,8 +689,8 @@
                  else `C (a_of_json (Js.Array.unsafe_get array 1))
                else
                  raise
-                   (Melange_json.Of_json_error
-                      (Melange_json.Unexpected_variant "unexpected variant"))
+                   (Melange_json.Internal_unexpected_variant
+                      "unexpected variant")
              else
                Melange_json.of_json_error ~json:x
                  "expected a non empty JSON array with element being a \
@@ -813,8 +810,8 @@
                  else `Fix (polyrecur_of_json (Js.Array.unsafe_get array 1))
                else
                  raise
-                   (Melange_json.Of_json_error
-                      (Melange_json.Unexpected_variant "unexpected variant"))
+                   (Melange_json.Internal_unexpected_variant
+                      "unexpected variant")
              else
                Melange_json.of_json_error ~json:x
                  "expected a non empty JSON array with element being a \
@@ -935,8 +932,8 @@
                  else `b
                else
                  raise
-                   (Melange_json.Of_json_error
-                      (Melange_json.Unexpected_variant "unexpected variant"))
+                   (Melange_json.Internal_unexpected_variant
+                      "unexpected variant")
              else
                Melange_json.of_json_error ~json:x
                  "expected a non empty JSON array with element being a \

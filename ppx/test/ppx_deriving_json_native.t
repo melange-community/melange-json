@@ -457,8 +457,8 @@
          | `List (`String "C" :: []) -> `C
          | x ->
              raise
-               (Melange_json.Of_json_error
-                  (Melange_json.Unexpected_variant "unexpected variant"))
+               (Melange_json.Internal_unexpected_variant
+                  "unexpected variant")
         : Yojson.Basic.t -> other)
   
     let _ = other_of_json
@@ -487,13 +487,10 @@
          | x -> (
              match other_of_json x with
              | x -> (x :> [ `A | `B of int | other ])
-             | exception
-                 Melange_json.Of_json_error
-                   (Melange_json.Unexpected_variant _) ->
+             | exception Melange_json.Internal_unexpected_variant _ ->
                  raise
-                   (Melange_json.Of_json_error
-                      (Melange_json.Unexpected_variant "unexpected variant"))
-             )
+                   (Melange_json.Internal_unexpected_variant
+                      "unexpected variant"))
         : Yojson.Basic.t -> poly)
   
     let _ = poly_of_json
@@ -528,8 +525,8 @@
              `P2 (int_of_json x_0, string_of_json x_1)
          | x ->
              raise
-               (Melange_json.Of_json_error
-                  (Melange_json.Unexpected_variant "unexpected variant"))
+               (Melange_json.Internal_unexpected_variant
+                  "unexpected variant")
         : Yojson.Basic.t -> poly2)
   
     let _ = poly2_of_json
@@ -562,8 +559,8 @@
          | `List [ `String "C"; x_0 ] -> `C (a_of_json x_0)
          | x ->
              raise
-               (Melange_json.Of_json_error
-                  (Melange_json.Unexpected_variant "unexpected variant"))
+               (Melange_json.Internal_unexpected_variant
+                  "unexpected variant")
         : Yojson.Basic.t -> 'a c)
   
     let _ = c_of_json
@@ -629,8 +626,8 @@
          | `List [ `String "Fix"; x_0 ] -> `Fix (polyrecur_of_json x_0)
          | x ->
              raise
-               (Melange_json.Of_json_error
-                  (Melange_json.Unexpected_variant "unexpected variant"))
+               (Melange_json.Internal_unexpected_variant
+                  "unexpected variant")
         : Yojson.Basic.t -> polyrecur)
   
     let _ = polyrecur_of_json
@@ -698,8 +695,8 @@
          | `List (`String "b" :: []) -> `b
          | x ->
              raise
-               (Melange_json.Of_json_error
-                  (Melange_json.Unexpected_variant "unexpected variant"))
+               (Melange_json.Internal_unexpected_variant
+                  "unexpected variant")
         : Yojson.Basic.t -> epoly)
   
     let _ = epoly_of_json
