@@ -6,8 +6,8 @@ $ ocamlopt -dsource _build/default/prettify.pp.ml
   $ dune exec ./prettify.exe -- ok_child.json
   { "extended": [ "C", 123, "hello" ], "not_extended": [ "C", 123, "hello" ] }
   $ dune exec ./prettify.exe -- wrong_parent_tag.json
-  Fatal error: exception Melange_json__Errors.Internal_unexpected_variant("unexpected variant")
+  Fatal error: exception Melange_json.Of_json_error({|expected ["P"] but got ["Wrong"]|})
   [2]
   $ dune exec ./prettify.exe -- wrong_child_tag.json
-  Fatal error: exception Melange_json__Errors.Internal_unexpected_variant("unexpected variant")
+  Fatal error: exception Melange_json.Of_json_error({|expected ["P"] but got ["Wrong", 123, "hello"]|})
   [2]

@@ -128,9 +128,6 @@ val of_json_msg_error : string -> 'a
 type exn +=
   | Of_json_error of of_json_error
         (** The exception raised when a decoding error occurs *)
-  | Internal_unexpected_variant of string
-        (** Internal error used by the runtime to signal an unexpected
-            variant. *)
 
 type 'a of_json = json -> 'a
 (** Describes how to decode a value out of JSON. *)

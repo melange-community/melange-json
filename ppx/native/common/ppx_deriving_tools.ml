@@ -328,6 +328,28 @@ module Schema = struct
     end
 end
 
+let rec get_variant_names ~loc c =
+  match Schema.repr_row_field c with
+  | `Rtag (name, ts) ->
+      [
+        Printf.sprintf {|["%s"%s]|} name.txt
+          (ts |> List.map ~f:(fun _ -> ", _") |> String.concat ~sep:"");
+      ]
+  | `Rinherit (n, ts) -> (
+      match Schema.repr_core_type (ptyp_constr ~loc:n.loc n ts) with
+      | `Ptyp_variant fields ->
+          List.concat_map fields ~f:(get_variant_names ~loc)
+      | _ -> [])
+
+let get_constructor_names cs =
+  List.map cs ~f:(fun c ->
+      let name = c.pcd_name in
+      match c.pcd_args with
+      | Pcstr_record _fs -> Printf.sprintf {|["%s", { _ }]|} name.txt
+      | Pcstr_tuple li ->
+          Printf.sprintf {|["%s"%s]|} name.txt
+            (li |> List.map ~f:(fun _ -> ", _") |> String.concat ~sep:""))
+
 module Conv = struct
   type 'ctx tuple = {
     tpl_loc : location;
@@ -403,18 +425,7 @@ module Conv = struct
                | None ->
                    let error_message =
                      Printf.sprintf "expected %s"
-                       (cs
-                       |> List.map ~f:(fun c ->
-                              let name = c.pcd_name in
-                              match c.pcd_args with
-                              | Pcstr_record _fs ->
-                                  Printf.sprintf {|["%s", { _ }]|}
-                                    name.txt
-                              | Pcstr_tuple li ->
-                                  Printf.sprintf {|["%s"%s]|} name.txt
-                                    (li
-                                    |> List.map ~f:(fun _ -> ", _")
-                                    |> String.concat ~sep:""))
+                       (get_constructor_names cs
                        |> String.concat ~sep:" or ")
                    in
                    ( [%expr
@@ -489,10 +500,15 @@ module Conv = struct
                (match allow_any_constr with
                | Some allow_any_constr -> allow_any_constr x, []
                | None ->
+                   let error_message =
+                     Printf.sprintf "expected %s"
+                       (cs
+                       |> List.concat_map ~f:(get_variant_names ~loc)
+                       |> String.concat ~sep:" or ")
+                   in
                    ( [%expr
-                       raise
-                         (Melange_json.Internal_unexpected_variant
-                            "unexpected variant")],
+                       Melange_json.of_json_error ~json:x
+                         [%e estring ~loc error_message]],
                      [] ))
              ~f:(fun (next, cases) (c, r) ->
                let ctx = Vcs_ctx_polyvariant c in
@@ -519,8 +535,7 @@ module Conv = struct
                      [%expr
                        match [%e maybe_e] with
                        | e -> (e :> [%t t])
-                       | exception
-                           Melange_json.Internal_unexpected_variant _ ->
+                       | exception Melange_json.Of_json_error _ ->
                            [%e next]]
                    in
                    next, cases)
@@ -558,18 +573,7 @@ module Conv = struct
          let loc = td.ptype_loc in
          let error_message =
            Printf.sprintf "expected %s"
-             (cs
-             |> List.map ~f:(fun c ->
-                    let name = c.pcd_name in
-                    match c.pcd_args with
-                    | Pcstr_record _fs ->
-                        Printf.sprintf {|["%s", { _ }]|} name.txt
-                    | Pcstr_tuple li ->
-                        Printf.sprintf {|["%s"%s]|} name.txt
-                          (li
-                          |> List.map ~f:(fun _ -> ", _")
-                          |> String.concat ~sep:""))
-             |> String.concat ~sep:" or ")
+             (get_constructor_names cs |> String.concat ~sep:" or ")
          in
          let cs = repr_variant_cases cs in
          let cs =
@@ -645,10 +649,16 @@ module Conv = struct
            [%pat? x]
            --> List.fold_left (List.rev inherits)
                  ~init:
-                   [%expr
-                     raise
-                       (Melange_json.Internal_unexpected_variant
-                          "unexpected variant")] ~f:(fun next (n, ts) ->
+                   (let error_message =
+                      Printf.sprintf "expected %s"
+                        (cs
+                        |> List.concat_map ~f:(get_variant_names ~loc)
+                        |> String.concat ~sep:" or ")
+                    in
+                    [%expr
+                      Melange_json.of_json_error ~json:x
+                        [%e estring ~loc error_message]])
+                 ~f:(fun next (n, ts) ->
                    let maybe =
                      self#derive_type_ref ~loc self#name n ts x
                    in
@@ -656,9 +666,7 @@ module Conv = struct
                    [%expr
                      match [%e maybe] with
                      | x -> (x :> [%t t])
-                     | exception
-                         Melange_json.Internal_unexpected_variant _ ->
-                         [%e next]])
+                     | exception Melange_json.Of_json_error _ -> [%e next]])
          in
          let cases =
            List.fold_left ctors ~init:[ catch_all ]

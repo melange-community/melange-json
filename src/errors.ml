@@ -3,7 +3,6 @@ exception Of_string_error of string
 type of_json_error = string
 
 exception Of_json_error of string
-exception Internal_unexpected_variant of string
 
 let with_buffer f =
   let buffer = Buffer.create 1 in
