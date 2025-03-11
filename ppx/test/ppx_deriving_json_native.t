@@ -488,7 +488,7 @@
              | x -> (x :> [ `A | `B of int | other ])
              | exception
                  Melange_json.Of_json_error
-                   (Melange_json.Unexpected_variant msg) ->
+                   (Melange_json.Unexpected_variant _) ->
                  Melange_json.of_json_unexpected_variant ~json:x
                    "expected [\"A\"] or [\"B\", _]")
         : Yojson.Basic.t -> poly)

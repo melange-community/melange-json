@@ -157,7 +157,7 @@ We can extend aliased polyvariants:
                (match of_json x with
                 | x -> (x :> [ | t | `C ])
                 | exception Melange_json.Of_json_error
-                    (Melange_json.Unexpected_variant msg) ->
+                    (Melange_json.Unexpected_variant _) ->
                     Melange_json.of_json_unexpected_variant ~json:x
                       "expected [\"C\"]") : Yojson.Basic.t -> u)
       let _ = u_of_json
@@ -247,7 +247,7 @@ We can extend aliased polyvariants:
                    match of_json x with
                    | e -> (e :> [ | t | `C ])
                    | exception Melange_json.Of_json_error
-                       (Melange_json.Unexpected_variant msg) ->
+                       (Melange_json.Unexpected_variant _) ->
                        (if Stdlib.(=) tag "C"
                         then
                           (if Stdlib.(<>) len 1
@@ -349,7 +349,7 @@ We can extend poly variants which are placed behind signatures:
                (match P.of_json x with
                 | x -> (x :> [ | P.t | `C ])
                 | exception Melange_json.Of_json_error
-                    (Melange_json.Unexpected_variant msg) ->
+                    (Melange_json.Unexpected_variant _) ->
                     Melange_json.of_json_unexpected_variant ~json:x
                       "expected [\"C\"]") : Yojson.Basic.t -> u)
       let _ = u_of_json
@@ -451,7 +451,7 @@ We can extend poly variants which are placed behind signatures:
                    match P.of_json x with
                    | e -> (e :> [ | P.t | `C ])
                    | exception Melange_json.Of_json_error
-                       (Melange_json.Unexpected_variant msg) ->
+                       (Melange_json.Unexpected_variant _) ->
                        (if Stdlib.(=) tag "C"
                         then
                           (if Stdlib.(<>) len 1

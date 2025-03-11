@@ -86,7 +86,8 @@ module Of_json = struct
           try v_of_json (Array.unsafe_get source i)
           with Of_json_error err ->
             of_json_msg_error
-              (of_json_error_to_string err ^ "\n\tin array at index "
+              (of_json_error_to_string err
+              ^ "\n\tin array at index "
               ^ string_of_int i)
         in
         Array.unsafe_set target i value
@@ -116,7 +117,8 @@ module Of_json = struct
           ( decodeA (Array.unsafe_get source 0),
             decodeB (Array.unsafe_get source 1) )
         with Of_json_error err ->
-          of_json_msg_error (of_json_error_to_string err ^ "\n\tin pair/tuple2")
+          of_json_msg_error
+            (of_json_error_to_string err ^ "\n\tin pair/tuple2")
       else of_json_error ~json "expected tuple as array of length 2"
     else of_json_error ~json "expected tuple as array"
 
@@ -165,7 +167,10 @@ module Of_json = struct
           try decode (Js.Dict.unsafeGet source key)
           with Of_json_error err ->
             of_json_msg_error
-              (of_json_error_to_string err ^ "\n\tin object at key '" ^ key ^ "'")
+              (of_json_error_to_string err
+              ^ "\n\tin object at key '"
+              ^ key
+              ^ "'")
         in
         Js.Dict.set target key value
       done;
@@ -213,7 +218,8 @@ module Of_json = struct
           try decode value
           with Of_json_error err ->
             of_json_msg_error
-              (of_json_error_to_string err ^ "\n\tat field '" ^ key ^ "'"))
+              (of_json_error_to_string err ^ "\n\tat field '" ^ key ^ "'")
+          )
       | None ->
           of_json_error ~json {j|expected object with field '$(key)'|j}
     else of_json_error ~json "expected object"
@@ -240,7 +246,8 @@ module Of_json = struct
             ^ Js.Json.stringify json)
       | decode :: rest -> (
           try decode json
-          with Of_json_error e -> inner rest (e :: errors))
+          with Of_json_error e ->
+            inner rest (of_json_error_to_string e :: errors))
     in
     inner decoders []
 

@@ -537,7 +537,7 @@ module Conv = struct
                        | e -> (e :> [%t t])
                        | exception
                            Melange_json.Of_json_error
-                             (Melange_json.Unexpected_variant msg) ->
+                             (Melange_json.Unexpected_variant _) ->
                            [%e next]]
                    in
                    next, cases)
@@ -670,7 +670,7 @@ module Conv = struct
                      | x -> (x :> [%t t])
                      | exception
                          Melange_json.Of_json_error
-                           (Melange_json.Unexpected_variant msg) ->
+                           (Melange_json.Unexpected_variant _) ->
                          [%e next]])
          in
          let cases =
