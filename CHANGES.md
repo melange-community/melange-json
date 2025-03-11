@@ -1,4 +1,4 @@
-## Unpublished
+## 2.0.0 (2025-03-11)
 
 - **[breaking]** Library, PPX: Unify runtimes (`*.ppx-runtime` libraries are
   removed, can use `melange-json` and `melange-json-native` instead), replace
