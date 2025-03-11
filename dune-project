@@ -34,7 +34,8 @@
    (and
     (>= "3.10.0")
     :with-test))
-  ppxlib
+  (ppxlib
+   (>= "0.32.0"))
   (opam-check-npm-deps :with-test) ; todo: use with-dev-setup once opam 2.2 is out
   (ocaml-lsp-server :with-test)
   (ocamlformat
@@ -52,6 +53,6 @@
   (ocaml
    (>= "4.12"))
   (ppxlib
-   (>= "0.29.0"))
+   (>= "0.32.0"))
   (yojson
    (>= "1.6.0"))))
