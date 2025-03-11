@@ -1,5 +1,3 @@
-(* open Ppx_deriving_json_runtime.Primitives *)
-
 type variant =
 | Other of Yojson.Basic.t [@allow_any]
 | Foo

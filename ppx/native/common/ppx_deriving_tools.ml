@@ -198,38 +198,38 @@ module Schema = struct
       method virtual t
           : loc:location -> label loc -> core_type -> core_type
 
-      method derive_of_tuple
-          : core_type -> core_type list -> expression -> expression =
+      method derive_of_tuple :
+          core_type -> core_type list -> expression -> expression =
         fun t _ _ ->
           let loc = t.ptyp_loc in
           not_supported "tuple types" ~loc
 
-      method derive_of_record
-          : type_declaration ->
-            label_declaration list ->
-            expression ->
-            expression =
+      method derive_of_record :
+          type_declaration ->
+          label_declaration list ->
+          expression ->
+          expression =
         fun td _ _ ->
           let loc = td.ptype_loc in
           not_supported "record types" ~loc
 
-      method derive_of_variant
-          : type_declaration ->
-            constructor_declaration list ->
-            expression ->
-            expression =
+      method derive_of_variant :
+          type_declaration ->
+          constructor_declaration list ->
+          expression ->
+          expression =
         fun td _ _ ->
           let loc = td.ptype_loc in
           not_supported "variant types" ~loc
 
-      method derive_of_polyvariant
-          : core_type -> row_field list -> expression -> expression =
+      method derive_of_polyvariant :
+          core_type -> row_field list -> expression -> expression =
         fun t _ _ ->
           let loc = t.ptyp_loc in
           not_supported "polyvariant types" ~loc
 
-      method private derive_type_ref_name
-          : label -> longident loc -> expression =
+      method private derive_type_ref_name :
+          label -> longident loc -> expression =
         fun name n -> ederiver name n
 
       method private derive_type_ref' ~loc name n ts =
@@ -299,16 +299,16 @@ module Schema = struct
             ~expr;
         ]
 
-      method extension
-          : loc:location -> path:label -> core_type -> expression =
+      method extension :
+          loc:location -> path:label -> core_type -> expression =
         fun ~loc:_ ~path:_ ty ->
           let loc = ty.ptyp_loc in
           as_fun ~loc (self#derive_of_core_type' ty)
 
-      method str_type_decl
-          : ctxt:Expansion_context.Deriver.t ->
-            rec_flag * type_declaration list ->
-            structure =
+      method str_type_decl :
+          ctxt:Expansion_context.Deriver.t ->
+          rec_flag * type_declaration list ->
+          structure =
         fun ~ctxt (_rec_flag, tds) ->
           let loc = Expansion_context.Deriver.derived_item_loc ctxt in
           let bindings =
@@ -319,14 +319,36 @@ module Schema = struct
 
             [%%i pstr_value ~loc Recursive bindings]]
 
-      method sig_type_decl
-          : ctxt:Expansion_context.Deriver.t ->
-            rec_flag * type_declaration list ->
-            signature =
+      method sig_type_decl :
+          ctxt:Expansion_context.Deriver.t ->
+          rec_flag * type_declaration list ->
+          signature =
         derive_sig_type_decl ~derive_t:self#t
           ~derive_label:self#derive_type_decl_label
     end
 end
+
+let rec get_variant_names ~loc c =
+  match Schema.repr_row_field c with
+  | `Rtag (name, ts) ->
+      [
+        Printf.sprintf {|["%s"%s]|} name.txt
+          (ts |> List.map ~f:(fun _ -> ", _") |> String.concat ~sep:"");
+      ]
+  | `Rinherit (n, ts) -> (
+      match Schema.repr_core_type (ptyp_constr ~loc:n.loc n ts) with
+      | `Ptyp_variant fields ->
+          List.concat_map fields ~f:(get_variant_names ~loc)
+      | _ -> [])
+
+let get_constructor_names cs =
+  List.map cs ~f:(fun c ->
+      let name = c.pcd_name in
+      match c.pcd_args with
+      | Pcstr_record _fs -> Printf.sprintf {|["%s", { _ }]|} name.txt
+      | Pcstr_tuple li ->
+          Printf.sprintf {|["%s"%s]|} name.txt
+            (li |> List.map ~f:(fun _ -> ", _") |> String.concat ~sep:""))
 
 module Conv = struct
   type 'ctx tuple = {
@@ -403,22 +425,11 @@ module Conv = struct
                | None ->
                    let error_message =
                      Printf.sprintf "expected %s"
-                       (cs
-                       |> List.map ~f:(fun c ->
-                              let name = c.pcd_name in
-                              match c.pcd_args with
-                              | Pcstr_record _fs ->
-                                  Printf.sprintf {|["%s", { _ }]|}
-                                    name.txt
-                              | Pcstr_tuple li ->
-                                  Printf.sprintf {|["%s"%s]|} name.txt
-                                    (li
-                                    |> List.map ~f:(fun _ -> ", _")
-                                    |> String.concat ~sep:""))
+                       (get_constructor_names cs
                        |> String.concat ~sep:" or ")
                    in
                    ( [%expr
-                       Ppx_deriving_json_errors.of_json_error ~json:[%e x]
+                       Melange_json.of_json_error ~json:[%e x]
                          [%e estring ~loc error_message]],
                      [] ))
              ~f:(fun (next, cases) c ->
@@ -489,11 +500,15 @@ module Conv = struct
                (match allow_any_constr with
                | Some allow_any_constr -> allow_any_constr x, []
                | None ->
+                   let error_message =
+                     Printf.sprintf "expected %s"
+                       (cs
+                       |> List.concat_map ~f:(get_variant_names ~loc)
+                       |> String.concat ~sep:" or ")
+                   in
                    ( [%expr
-                       raise
-                         (Ppx_deriving_json_runtime.Of_json_error
-                            (Ppx_deriving_json_runtime.Unexpected_variant
-                               "unexpected variant"))],
+                       Melange_json.of_json_unexpected_variant ~json:x
+                         [%e estring ~loc error_message]],
                      [] ))
              ~f:(fun (next, cases) (c, r) ->
                let ctx = Vcs_ctx_polyvariant c in
@@ -521,9 +536,8 @@ module Conv = struct
                        match [%e maybe_e] with
                        | e -> (e :> [%t t])
                        | exception
-                           Ppx_deriving_json_runtime.Of_json_error
-                             (Ppx_deriving_json_runtime.Unexpected_variant
-                               _) ->
+                           Melange_json.Of_json_error
+                             (Melange_json.Unexpected_variant _) ->
                            [%e next]]
                    in
                    next, cases)
@@ -561,18 +575,7 @@ module Conv = struct
          let loc = td.ptype_loc in
          let error_message =
            Printf.sprintf "expected %s"
-             (cs
-             |> List.map ~f:(fun c ->
-                    let name = c.pcd_name in
-                    match c.pcd_args with
-                    | Pcstr_record _fs ->
-                        Printf.sprintf {|["%s", { _ }]|} name.txt
-                    | Pcstr_tuple li ->
-                        Printf.sprintf {|["%s"%s]|} name.txt
-                          (li
-                          |> List.map ~f:(fun _ -> ", _")
-                          |> String.concat ~sep:""))
-             |> String.concat ~sep:" or ")
+             (get_constructor_names cs |> String.concat ~sep:" or ")
          in
          let cs = repr_variant_cases cs in
          let cs =
@@ -589,7 +592,7 @@ module Conv = struct
                [
                  [%pat? _]
                  --> [%expr
-                       Ppx_deriving_json_runtime.of_json_error ~json:x
+                       Melange_json.of_json_error ~json:x
                          [%e estring ~loc error_message]];
                ]
              ~f:(fun next (c : constructor_declaration) ->
@@ -648,11 +651,15 @@ module Conv = struct
            [%pat? x]
            --> List.fold_left (List.rev inherits)
                  ~init:
-                   [%expr
-                     raise
-                       (Ppx_deriving_json_runtime.Of_json_error
-                          (Ppx_deriving_json_runtime.Unexpected_variant
-                             "unexpected variant"))]
+                   (let error_message =
+                      Printf.sprintf "expected %s"
+                        (cs
+                        |> List.concat_map ~f:(get_variant_names ~loc)
+                        |> String.concat ~sep:" or ")
+                    in
+                    [%expr
+                      Melange_json.of_json_unexpected_variant ~json:x
+                        [%e estring ~loc error_message]])
                  ~f:(fun next (n, ts) ->
                    let maybe =
                      self#derive_type_ref ~loc self#name n ts x
@@ -662,9 +669,8 @@ module Conv = struct
                      match [%e maybe] with
                      | x -> (x :> [%t t])
                      | exception
-                         Ppx_deriving_json_runtime.Of_json_error
-                           (Ppx_deriving_json_runtime.Unexpected_variant
-                             _) ->
+                         Melange_json.Of_json_error
+                           (Melange_json.Unexpected_variant _) ->
                          [%e next]])
          in
          let cases =

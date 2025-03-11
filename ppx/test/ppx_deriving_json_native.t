@@ -128,7 +128,7 @@
          match x with
          | `List [ x_0; x_1 ] -> int_of_json x_0, string_of_json x_1
          | _ ->
-             Ppx_deriving_json_runtime.of_json_error ~json:x
+             Melange_json.of_json_error ~json:x
                "expected a JSON array of length 2"
         : Yojson.Basic.t -> tuple)
   
@@ -169,7 +169,7 @@
                        x_name := Stdlib.Option.Some (string_of_json v)
                    | "age" -> x_age := Stdlib.Option.Some (int_of_json v)
                    | name ->
-                       Ppx_deriving_json_runtime.of_json_error ~json:x
+                       Melange_json.of_json_error ~json:x
                          (Stdlib.Printf.sprintf
                             {|did not expect field "%s"|} name));
                    iter fs
@@ -180,18 +180,16 @@
                  (match Stdlib.( ! ) x_name with
                  | Stdlib.Option.Some v -> v
                  | Stdlib.Option.None ->
-                     Ppx_deriving_json_runtime.of_json_error ~json:x
+                     Melange_json.of_json_error ~json:x
                        "expected field \"name\"");
                age =
                  (match Stdlib.( ! ) x_age with
                  | Stdlib.Option.Some v -> v
                  | Stdlib.Option.None ->
-                     Ppx_deriving_json_runtime.of_json_error ~json:x
+                     Melange_json.of_json_error ~json:x
                        "expected field \"age\"");
              }
-         | _ ->
-             Ppx_deriving_json_runtime.of_json_error ~json:x
-               "expected a JSON object"
+         | _ -> Melange_json.of_json_error ~json:x "expected a JSON object"
         : Yojson.Basic.t -> record)
   
     let _ = record_of_json
@@ -242,7 +240,7 @@
                        x_name := Stdlib.Option.Some (string_of_json v)
                    | "my_age" -> x_age := Stdlib.Option.Some (int_of_json v)
                    | name ->
-                       Ppx_deriving_json_runtime.of_json_error ~json:x
+                       Melange_json.of_json_error ~json:x
                          (Stdlib.Printf.sprintf
                             {|did not expect field "%s"|} name));
                    iter fs
@@ -253,16 +251,14 @@
                  (match Stdlib.( ! ) x_name with
                  | Stdlib.Option.Some v -> v
                  | Stdlib.Option.None ->
-                     Ppx_deriving_json_runtime.of_json_error ~json:x
+                     Melange_json.of_json_error ~json:x
                        "expected field \"my_name\"");
                age =
                  (match Stdlib.( ! ) x_age with
                  | Stdlib.Option.Some v -> v
                  | Stdlib.Option.None -> 100);
              }
-         | _ ->
-             Ppx_deriving_json_runtime.of_json_error ~json:x
-               "expected a JSON object"
+         | _ -> Melange_json.of_json_error ~json:x "expected a JSON object"
         : Yojson.Basic.t -> record_aliased)
   
     let _ = record_aliased_of_json
@@ -310,7 +306,7 @@
                        x_k :=
                          Stdlib.Option.Some ((option_of_json int_of_json) v)
                    | name ->
-                       Ppx_deriving_json_runtime.of_json_error ~json:x
+                       Melange_json.of_json_error ~json:x
                          (Stdlib.Printf.sprintf
                             {|did not expect field "%s"|} name));
                    iter fs
@@ -322,9 +318,7 @@
                  | Stdlib.Option.Some v -> v
                  | Stdlib.Option.None -> Stdlib.Option.None);
              }
-         | _ ->
-             Ppx_deriving_json_runtime.of_json_error ~json:x
-               "expected a JSON object"
+         | _ -> Melange_json.of_json_error ~json:x "expected a JSON object"
         : Yojson.Basic.t -> record_opt)
   
     let _ = record_opt_of_json
@@ -370,7 +364,7 @@
                    | "name" ->
                        x_name := Stdlib.Option.Some (string_of_json v)
                    | name ->
-                       Ppx_deriving_json_runtime.of_json_error ~json:x
+                       Melange_json.of_json_error ~json:x
                          (Stdlib.Printf.sprintf
                             {|did not expect field "%s"|} name));
                    iter fs
@@ -382,11 +376,11 @@
                    (match Stdlib.( ! ) x_name with
                    | Stdlib.Option.Some v -> v
                    | Stdlib.Option.None ->
-                       Ppx_deriving_json_runtime.of_json_error ~json:x
+                       Melange_json.of_json_error ~json:x
                          "expected field \"name\"");
                }
          | _ ->
-             Ppx_deriving_json_runtime.of_json_error ~json:x
+             Melange_json.of_json_error ~json:x
                "expected [\"A\"] or [\"B\", _] or [\"C\", { _ }]"
         : Yojson.Basic.t -> sum)
   
@@ -430,9 +424,7 @@
          match x with
          | `List [ `String "S2"; x_0; x_1 ] ->
              S2 (int_of_json x_0, string_of_json x_1)
-         | _ ->
-             Ppx_deriving_json_runtime.of_json_error ~json:x
-               "expected [\"S2\", _, _]"
+         | _ -> Melange_json.of_json_error ~json:x "expected [\"S2\", _, _]"
         : Yojson.Basic.t -> sum2)
   
     let _ = sum2_of_json
@@ -464,10 +456,8 @@
          match x with
          | `List (`String "C" :: []) -> `C
          | x ->
-             raise
-               (Ppx_deriving_json_runtime.Of_json_error
-                  (Ppx_deriving_json_runtime.Unexpected_variant
-                     "unexpected variant"))
+             Melange_json.of_json_unexpected_variant ~json:x
+               "expected [\"C\"]"
         : Yojson.Basic.t -> other)
   
     let _ = other_of_json
@@ -497,12 +487,10 @@
              match other_of_json x with
              | x -> (x :> [ `A | `B of int | other ])
              | exception
-                 Ppx_deriving_json_runtime.Of_json_error
-                   (Ppx_deriving_json_runtime.Unexpected_variant _) ->
-                 raise
-                   (Ppx_deriving_json_runtime.Of_json_error
-                      (Ppx_deriving_json_runtime.Unexpected_variant
-                         "unexpected variant")))
+                 Melange_json.Of_json_error
+                   (Melange_json.Unexpected_variant _) ->
+                 Melange_json.of_json_unexpected_variant ~json:x
+                   "expected [\"A\"] or [\"B\", _]")
         : Yojson.Basic.t -> poly)
   
     let _ = poly_of_json
@@ -536,10 +524,8 @@
          | `List [ `String "P2"; x_0; x_1 ] ->
              `P2 (int_of_json x_0, string_of_json x_1)
          | x ->
-             raise
-               (Ppx_deriving_json_runtime.Of_json_error
-                  (Ppx_deriving_json_runtime.Unexpected_variant
-                     "unexpected variant"))
+             Melange_json.of_json_unexpected_variant ~json:x
+               "expected [\"P2\", _, _]"
         : Yojson.Basic.t -> poly2)
   
     let _ = poly2_of_json
@@ -571,10 +557,8 @@
          match x with
          | `List [ `String "C"; x_0 ] -> `C (a_of_json x_0)
          | x ->
-             raise
-               (Ppx_deriving_json_runtime.Of_json_error
-                  (Ppx_deriving_json_runtime.Unexpected_variant
-                     "unexpected variant"))
+             Melange_json.of_json_unexpected_variant ~json:x
+               "expected [\"C\", _]"
         : Yojson.Basic.t -> 'a c)
   
     let _ = c_of_json
@@ -605,7 +589,7 @@
          | `List (`String "A" :: []) -> A
          | `List [ `String "Fix"; x_0 ] -> Fix (recur_of_json x_0)
          | _ ->
-             Ppx_deriving_json_runtime.of_json_error ~json:x
+             Melange_json.of_json_error ~json:x
                "expected [\"A\"] or [\"Fix\", _]"
         : Yojson.Basic.t -> recur)
   
@@ -639,10 +623,8 @@
          | `List (`String "A" :: []) -> `A
          | `List [ `String "Fix"; x_0 ] -> `Fix (polyrecur_of_json x_0)
          | x ->
-             raise
-               (Ppx_deriving_json_runtime.Of_json_error
-                  (Ppx_deriving_json_runtime.Unexpected_variant
-                     "unexpected variant"))
+             Melange_json.of_json_unexpected_variant ~json:x
+               "expected [\"A\"] or [\"Fix\", _]"
         : Yojson.Basic.t -> polyrecur)
   
     let _ = polyrecur_of_json
@@ -675,7 +657,7 @@
          | `List (`String "A" :: []) -> A
          | `List (`String "b_aliased" :: []) -> B
          | _ ->
-             Ppx_deriving_json_runtime.of_json_error ~json:x
+             Melange_json.of_json_error ~json:x
                "expected [\"A\"] or [\"B\"]"
         : Yojson.Basic.t -> evar)
   
@@ -709,10 +691,8 @@
          | `List (`String "A_aliased" :: []) -> `a
          | `List (`String "b" :: []) -> `b
          | x ->
-             raise
-               (Ppx_deriving_json_runtime.Of_json_error
-                  (Ppx_deriving_json_runtime.Unexpected_variant
-                     "unexpected variant"))
+             Melange_json.of_json_unexpected_variant ~json:x
+               "expected [\"a\"] or [\"b\"]"
         : Yojson.Basic.t -> epoly)
   
     let _ = epoly_of_json
@@ -745,7 +725,7 @@
          | `List [ `String "A"; x_0 ] -> A (a_of_json x_0)
          | `List [ `String "B"; x_0 ] -> B (b_of_json x_0)
          | _ ->
-             Ppx_deriving_json_runtime.of_json_error ~json:x
+             Melange_json.of_json_error ~json:x
                "expected [\"A\", _] or [\"B\", _]"
         : Yojson.Basic.t -> ('a, 'b) p2)
   
@@ -793,12 +773,10 @@
                  (match Stdlib.( ! ) x_a with
                  | Stdlib.Option.Some v -> v
                  | Stdlib.Option.None ->
-                     Ppx_deriving_json_runtime.of_json_error ~json:x
+                     Melange_json.of_json_error ~json:x
                        "expected field \"a\"");
              }
-         | _ ->
-             Ppx_deriving_json_runtime.of_json_error ~json:x
-               "expected a JSON object"
+         | _ -> Melange_json.of_json_error ~json:x "expected a JSON object"
         : Yojson.Basic.t -> allow_extra_fields)
   
     let _ = allow_extra_fields_of_json
@@ -849,12 +827,10 @@
                    (match Stdlib.( ! ) x_a with
                    | Stdlib.Option.Some v -> v
                    | Stdlib.Option.None ->
-                       Ppx_deriving_json_runtime.of_json_error ~json:x
+                       Melange_json.of_json_error ~json:x
                          "expected field \"a\"");
                }
-         | _ ->
-             Ppx_deriving_json_runtime.of_json_error ~json:x
-               "expected [\"A\", { _ }]"
+         | _ -> Melange_json.of_json_error ~json:x "expected [\"A\", { _ }]"
         : Yojson.Basic.t -> allow_extra_fields2)
   
     let _ = allow_extra_fields2_of_json
@@ -907,7 +883,7 @@
                        x_b_opt :=
                          Stdlib.Option.Some ((option_of_json int_of_json) v)
                    | name ->
-                       Ppx_deriving_json_runtime.of_json_error ~json:x
+                       Melange_json.of_json_error ~json:x
                          (Stdlib.Printf.sprintf
                             {|did not expect field "%s"|} name));
                    iter fs
@@ -918,16 +894,14 @@
                  (match Stdlib.( ! ) x_a with
                  | Stdlib.Option.Some v -> v
                  | Stdlib.Option.None ->
-                     Ppx_deriving_json_runtime.of_json_error ~json:x
+                     Melange_json.of_json_error ~json:x
                        "expected field \"a\"");
                b_opt =
                  (match Stdlib.( ! ) x_b_opt with
                  | Stdlib.Option.Some v -> v
                  | Stdlib.Option.None -> Stdlib.Option.None);
              }
-         | _ ->
-             Ppx_deriving_json_runtime.of_json_error ~json:x
-               "expected a JSON object"
+         | _ -> Melange_json.of_json_error ~json:x "expected a JSON object"
         : Yojson.Basic.t -> drop_default_option)
   
     let _ = drop_default_option_of_json

@@ -5,7 +5,7 @@
   $ echo '
   > (executable
   >   (name main)
-  >   (flags :standard -w -37-69 -open Ppx_deriving_json_runtime.Primitives)
+  >   (flags :standard -w -37-69 -open Melange_json.Primitives)
   >   (preprocess (pps melange-json-native.ppx)))' > dune
 
   $ echo '
@@ -89,6 +89,34 @@
   JSON REPRINT: {"a":1,"b_opt":2}
   JSON    DATA: {"a":[1],"b":[2]}
   JSON REPRINT: {"a":[1],"b":[2]}
+  JSON    DATA: ["Circle", 5.0]
+  JSON REPRINT: ["Circle",5.0]
+  JSON    DATA: ["Rectangle", 10.0, 20.0]
+  JSON REPRINT: ["Rectangle",10.0,20.0]
+  JSON    DATA: ["Point", {"x": 1.0, "y": 2.0}]
+  JSON REPRINT: ["Point",{"x":1.0,"y":2.0}]
+  
+  Testing error cases:
+  ERROR CASE DATA: 42
+  Got expected error: expected a JSON object but got 42
+  ERROR CASE DATA: [1]
+  Got expected error: expected a JSON array of length 2 but got [1]
+  ERROR CASE DATA: [1,2,3]
+  Got expected error: expected a JSON array of length 2 but got [1, 2, 3]
+  ERROR CASE DATA: [1,2]
+  Got expected error: expected a JSON array of length 3 but got [1, 2]
+  ERROR CASE DATA: [1,2,3,4]
+  Got expected error: expected a JSON array of length 3 but got [1, 2, 3, 4]
+  ERROR CASE DATA: 42
+  Got expected error: expected ["Red"] or ["Green"] or ["Blue"] but got 42
+  ERROR CASE DATA: "Yellow"
+  Got expected error: expected ["Red"] or ["Green"] or ["Blue"] but got "Yellow"
+  ERROR CASE DATA: ["Circle"]
+  Got expected error: expected ["Circle", _] or ["Rectangle", _, _] or ["Point", { _ }] but got ["Circle"]
+  ERROR CASE DATA: ["Rectangle", 10.0]
+  Got expected error: expected ["Circle", _] or ["Rectangle", _, _] or ["Point", { _ }] but got ["Rectangle", 10.]
+  ERROR CASE DATA: ["Point", 1.0, 2.0]
+  Got expected error: expected ["Circle", _] or ["Rectangle", _, _] or ["Point", { _ }] but got ["Point", 1., 2.]
   *** json_string deriver tests ***
   ** To_json_string **
   A 42 -> ["A",42]

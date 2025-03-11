@@ -1,4 +1,5 @@
-(** A collection of tools to make it easy to build ppx deriving plugins. *)
+(** A collection of tools to make it easy to build ppx deriving plugins.
+*)
 
 open Ppxlib
 
@@ -34,13 +35,12 @@ val register_combined :
 module Conv : sig
   (** A simplified parsetree representation.
 
-      We define a few types to represent the data we want to derive conversions
-      for. Such types are less verbose but less precise than the original
-      parsetree, though it is enough for conversion purposes.
+      We define a few types to represent the data we want to derive
+      conversions for. Such types are less verbose but less precise than
+      the original parsetree, though it is enough for conversion purposes.
 
-      The types still keep the original parsetree nodes as context (this is
-      also needed to play well with Ppxlib.Attributes API).
-    *)
+      The types still keep the original parsetree nodes as context (this
+      is also needed to play well with Ppxlib.Attributes API). *)
 
   type 'ctx tuple = {
     tpl_loc : location;
@@ -145,17 +145,18 @@ module Conv : sig
     deriving
   (** Define a deserializer using pattern matching.
 
-      This is a less general but more compact variant of [deriving_of], for
-      cases where the serialized data can be inspected with pattern matching.
-    *)
+      This is a less general but more compact variant of [deriving_of],
+      for cases where the serialized data can be inspected with pattern
+      matching. *)
 end
 
 val not_supported : loc:location -> string -> 'a
-(** [not_supported what] terminates ppx with an error message telling [what] unsupported. *)
+(** [not_supported what] terminates ppx with an error message telling
+    [what] unsupported. *)
 
 val gen_tuple : loc:location -> label -> int -> pattern list * expression
-(** [let patts, expr = gen_tuple label n in ...] creates a tuple expression
-      and a corresponding list of patterns. *)
+(** [let patts, expr = gen_tuple label n in ...] creates a tuple
+    expression and a corresponding list of patterns. *)
 
 (** Auxiliary functions to generate record expressions and patterns. *)
 
@@ -164,33 +165,33 @@ val gen_record :
   label ->
   (label loc * attributes * 'a) list ->
   pattern list * expression
-(** [let patts, expr = gen_tuple label n in ...] creates a record expression
-      and a corresponding list of patterns. *)
+(** [let patts, expr = gen_tuple label n in ...] creates a record
+    expression and a corresponding list of patterns. *)
 
 val gen_pat_tuple :
   loc:location -> string -> int -> pattern * expression list
-(** [let patt, exprs = gen_pat_tuple ~loc prefix n in ...]
-      generates a pattern to match a tuple of size [n] and a list of expressions
-      [exprs] to refer to names bound in this pattern. *)
+(** [let patt, exprs = gen_pat_tuple ~loc prefix n in ...] generates a
+    pattern to match a tuple of size [n] and a list of expressions [exprs]
+    to refer to names bound in this pattern. *)
 
 val gen_pat_record :
   loc:location -> string -> label loc list -> pattern * expression list
-(** [let patt, exprs = gen_pat_record ~loc prefix fs in ...]
-      generates a pattern to match record with fields [fs] and a list of expressions
-      [exprs] to refer to names bound in this pattern. *)
+(** [let patt, exprs = gen_pat_record ~loc prefix fs in ...] generates a
+    pattern to match record with fields [fs] and a list of expressions
+    [exprs] to refer to names bound in this pattern. *)
 
 val gen_pat_list :
   loc:location -> string -> int -> pattern * expression list
-(** [let patt, exprs = gen_pat_list ~loc prefix n in ...]
-      generates a pattern to match a list of size [n] and a list of expressions
-      [exprs] to refer to names bound in this pattern. *)
+(** [let patt, exprs = gen_pat_list ~loc prefix n in ...] generates a
+    pattern to match a list of size [n] and a list of expressions [exprs]
+    to refer to names bound in this pattern. *)
 
 val ( --> ) : pattern -> expression -> case
 (** A shortcut to define a pattern matching case. *)
 
 val map_loc : ('a -> 'b) -> 'a loc -> 'b loc
 (** Map over data with location, useful to lift derive_of_label,
-      derive_of_longident *)
+    derive_of_longident *)
 
 (** Low-level deriver classes. *)
 

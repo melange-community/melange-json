@@ -1,19 +1,15 @@
 open Melange_json.Primitives
 
-type variant =
-  | A
-  | Foo
-  | B of int
-  | C of int * string
-  | D of { x : int; y : string }
+
+type polyvar = [ `C of int * string ]
 [@@deriving json]
 
-type j = {
-  a : variant;
-  foo: variant list;
-  b : string;
-  c : int list;
-  d : int * float list * string;
+type parent = [ `P | polyvar ]
+[@@deriving json]
+
+type polyvars = 
+{ extended : parent;
+  not_extended : polyvar;
 }
 [@@deriving json]
 
@@ -22,7 +18,7 @@ let () =
       file
       |> In_channel.input_all
       |> Yojson.Basic.from_string
-      |> j_of_json
-      |> j_to_json
+      |> polyvars_of_json
+      |> polyvars_to_json
       |> Yojson.Basic.pretty_to_string
       |> print_endline)

@@ -2,4 +2,5 @@
  (target examples)
  (alias examples)
  (libraries melange-json)
- (preprocess (pps melange.ppx)))
+ (preprocess
+  (pps melange.ppx)))
