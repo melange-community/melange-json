@@ -17,10 +17,8 @@ We can alias poly variants:
            | `List ((`String "A")::[]) -> `A
            | `List ((`String "B")::[]) -> `B
            | x ->
-               raise
-                 (Melange_json.Of_json_error
-                    (Melange_json.Unexpected_variant "unexpected variant")) : 
-        Yojson.Basic.t -> t)
+               Melange_json.of_json_unexpected_variant ~json:x
+                 "expected [\"A\"] or [\"B\"]" : Yojson.Basic.t -> t)
       let _ = of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec to_json =
@@ -76,10 +74,8 @@ We can alias poly variants:
                              "expected a JSON array of length 1"
                          else `B)
                       else
-                        raise
-                          (Melange_json.Of_json_error
-                             (Melange_json.Unexpected_variant
-                                "unexpected variant")))
+                        Melange_json.of_json_unexpected_variant ~json:x
+                          "expected [\"A\"] or [\"B\"]")
                  else
                    Melange_json.of_json_error ~json:x
                      "expected a non empty JSON array with element being a string")
@@ -138,10 +134,8 @@ We can extend aliased polyvariants:
            | `List ((`String "A")::[]) -> `A
            | `List ((`String "B")::[]) -> `B
            | x ->
-               raise
-                 (Melange_json.Of_json_error
-                    (Melange_json.Unexpected_variant "unexpected variant")) : 
-        Yojson.Basic.t -> t)
+               Melange_json.of_json_unexpected_variant ~json:x
+                 "expected [\"A\"] or [\"B\"]" : Yojson.Basic.t -> t)
       let _ = of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec to_json =
@@ -164,10 +158,8 @@ We can extend aliased polyvariants:
                 | x -> (x :> [ | t | `C ])
                 | exception Melange_json.Of_json_error
                     (Melange_json.Unexpected_variant _) ->
-                    raise
-                      (Melange_json.Of_json_error
-                         (Melange_json.Unexpected_variant "unexpected variant"))) : 
-        Yojson.Basic.t -> u)
+                    Melange_json.of_json_unexpected_variant ~json:x
+                      "expected [\"C\"]") : Yojson.Basic.t -> u)
       let _ = u_of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec u_to_json =
@@ -214,10 +206,8 @@ We can extend aliased polyvariants:
                              "expected a JSON array of length 1"
                          else `B)
                       else
-                        raise
-                          (Melange_json.Of_json_error
-                             (Melange_json.Unexpected_variant
-                                "unexpected variant")))
+                        Melange_json.of_json_unexpected_variant ~json:x
+                          "expected [\"A\"] or [\"B\"]")
                  else
                    Melange_json.of_json_error ~json:x
                      "expected a non empty JSON array with element being a string")
@@ -266,10 +256,8 @@ We can extend aliased polyvariants:
                                "expected a JSON array of length 1"
                            else `C)
                         else
-                          raise
-                            (Melange_json.Of_json_error
-                               (Melange_json.Unexpected_variant
-                                  "unexpected variant")))
+                          Melange_json.of_json_unexpected_variant ~json:x
+                            "expected [\"C\"]")
                  else
                    Melange_json.of_json_error ~json:x
                      "expected a non empty JSON array with element being a string")
@@ -336,10 +324,8 @@ We can extend poly variants which are placed behind signatures:
                | `List ((`String "A")::[]) -> `A
                | `List ((`String "B")::[]) -> `B
                | x ->
-                   raise
-                     (Melange_json.Of_json_error
-                        (Melange_json.Unexpected_variant "unexpected variant")) : 
-            Yojson.Basic.t -> t)
+                   Melange_json.of_json_unexpected_variant ~json:x
+                     "expected [\"A\"] or [\"B\"]" : Yojson.Basic.t -> t)
           let _ = of_json
           [@@@ocaml.warning "-39-11-27"]
           let rec to_json =
@@ -364,10 +350,8 @@ We can extend poly variants which are placed behind signatures:
                 | x -> (x :> [ | P.t | `C ])
                 | exception Melange_json.Of_json_error
                     (Melange_json.Unexpected_variant _) ->
-                    raise
-                      (Melange_json.Of_json_error
-                         (Melange_json.Unexpected_variant "unexpected variant"))) : 
-        Yojson.Basic.t -> u)
+                    Melange_json.of_json_unexpected_variant ~json:x
+                      "expected [\"C\"]") : Yojson.Basic.t -> u)
       let _ = u_of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec u_to_json =
@@ -425,10 +409,8 @@ We can extend poly variants which are placed behind signatures:
                                  "expected a JSON array of length 1"
                              else `B)
                           else
-                            raise
-                              (Melange_json.Of_json_error
-                                 (Melange_json.Unexpected_variant
-                                    "unexpected variant")))
+                            Melange_json.of_json_unexpected_variant ~json:x
+                              "expected [\"A\"] or [\"B\"]")
                      else
                        Melange_json.of_json_error ~json:x
                          "expected a non empty JSON array with element being a string")
@@ -478,10 +460,8 @@ We can extend poly variants which are placed behind signatures:
                                "expected a JSON array of length 1"
                            else `C)
                         else
-                          raise
-                            (Melange_json.Of_json_error
-                               (Melange_json.Unexpected_variant
-                                  "unexpected variant")))
+                          Melange_json.of_json_unexpected_variant ~json:x
+                            "expected [\"C\"]")
                  else
                    Melange_json.of_json_error ~json:x
                      "expected a non empty JSON array with element being a string")

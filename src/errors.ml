@@ -99,6 +99,15 @@ let of_json_error ?(depth = 2) ?(width = 8) ~json msg =
          emit " but got ";
          emit (show_json_error ~depth ~width json)))
 
+let of_json_msg_unexpected_variant msg = raise (Of_json_error (Unexpected_variant msg))
+
+let of_json_unexpected_variant ?(depth = 2) ?(width = 8) ~json msg =
+  of_json_msg_unexpected_variant
+    (with_buffer (fun emit ->
+         emit msg;
+         emit " but got ";
+         emit (show_json_error ~depth ~width json)))
+
 (* only use for cases where we need granular handling of the error (e.g. arr)*)
 let dangerous_of_json_error ?(depth = 2) ?(width = 8) ~json msg =
   of_json_msg_error

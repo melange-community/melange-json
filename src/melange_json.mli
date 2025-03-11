@@ -126,6 +126,11 @@ val of_json_error_to_string : of_json_error -> string
 val of_json_error : ?depth:int -> ?width:int -> json:json -> string -> 'a
 val of_json_msg_error : string -> 'a
 
+val of_json_unexpected_variant :
+  ?depth:int -> ?width:int -> json:json -> string -> 'a
+
+val of_json_msg_unexpected_variant : string -> 'a
+
 type exn +=
   | Of_json_error of of_json_error
         (** The exception raised when a decoding error occurs *)

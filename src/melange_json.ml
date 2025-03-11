@@ -3,7 +3,6 @@ type json = t
 
 let classify = Classify.classify
 let declassify = Classify.declassify
-
 let to_json t = t
 let of_json t = t
 
@@ -14,7 +13,7 @@ include Errors
 
 let of_json_error_to_string = function
   | Json_error msg -> msg
-  | Unexpected_variant tag -> "unexpected variant: " ^ tag
+  | Unexpected_variant msg -> "unexpected variant: " ^ msg
 
 let to_string t = Js.Json.stringify t
 
@@ -85,9 +84,11 @@ module Of_json = struct
       for i = 0 to length - 1 do
         let value =
           try v_of_json (Array.unsafe_get source i)
-          with Of_json_error (Json_error err) ->
+          with Of_json_error err ->
             of_json_msg_error
-              (err ^ "\n\tin array at index " ^ string_of_int i)
+              (of_json_error_to_string err
+              ^ "\n\tin array at index "
+              ^ string_of_int i)
         in
         Array.unsafe_set target i value
       done;
@@ -238,16 +239,15 @@ module Of_json = struct
       | [] ->
           let formattedErrors =
             "\n- "
-            ^ Js.Array.join ~sep:"\n- "
-                (Array.of_list
-                   (List.rev_map of_json_error_to_string errors))
+            ^ Js.Array.join ~sep:"\n- " (Array.of_list (List.rev errors))
           in
           of_json_msg_error
             ({j|All decoders given to oneOf failed. Here are all the errors: $formattedErrors\nAnd the JSON being decoded: |j}
             ^ Js.Json.stringify json)
       | decode :: rest -> (
           try decode json
-          with Of_json_error e -> inner rest (e :: errors))
+          with Of_json_error e ->
+            inner rest (of_json_error_to_string e :: errors))
     in
     inner decoders []
 
