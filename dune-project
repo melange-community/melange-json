@@ -28,7 +28,7 @@
  (depends
   ocaml
   (melange
-   (>= "3.0.0"))
+   (>= "4.0.0"))
   (melange-jest :with-test)
   (reason
    (and
