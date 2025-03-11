@@ -11,6 +11,10 @@ type 'a to_json = 'a -> Js.Json.t
 
 include Errors
 
+let of_json_error_to_string = function
+  | Json_error msg -> msg
+  | Unexpected_variant msg -> "unexpected variant: " ^ msg
+
 let to_string t = Js.Json.stringify t
 
 external _unsafeCreateUninitializedArray : int -> 'a array = "Array"
@@ -82,7 +86,8 @@ module Of_json = struct
           try v_of_json (Array.unsafe_get source i)
           with Of_json_error err ->
             of_json_msg_error
-              (err ^ "\n\tin array at index " ^ string_of_int i)
+              (of_json_error_to_string err ^ "\n\tin array at index "
+              ^ string_of_int i)
         in
         Array.unsafe_set target i value
       done;
@@ -111,7 +116,7 @@ module Of_json = struct
           ( decodeA (Array.unsafe_get source 0),
             decodeB (Array.unsafe_get source 1) )
         with Of_json_error err ->
-          of_json_msg_error (err ^ "\n\tin pair/tuple2")
+          of_json_msg_error (of_json_error_to_string err ^ "\n\tin pair/tuple2")
       else of_json_error ~json "expected tuple as array of length 2"
     else of_json_error ~json "expected tuple as array"
 
@@ -125,7 +130,7 @@ module Of_json = struct
             decodeB (Array.unsafe_get source 1),
             decodeC (Array.unsafe_get source 2) )
         with Of_json_error err ->
-          of_json_msg_error (err ^ "\n\tin tuple3")
+          of_json_msg_error (of_json_error_to_string err ^ "\n\tin tuple3")
       else of_json_error ~json "expected tuple as array of length 3"
     else of_json_error ~json "expected tuple as array"
 
@@ -140,7 +145,7 @@ module Of_json = struct
             decodeC (Array.unsafe_get source 2),
             decodeD (Array.unsafe_get source 3) )
         with Of_json_error err ->
-          of_json_msg_error (err ^ "\n\tin tuple4")
+          of_json_msg_error (of_json_error_to_string err ^ "\n\tin tuple4")
       else of_json_error ~json "expected tuple as array of length 4"
     else of_json_error ~json "expected tuple as array"
 
@@ -159,7 +164,8 @@ module Of_json = struct
         let value =
           try decode (Js.Dict.unsafeGet source key)
           with Of_json_error err ->
-            of_json_msg_error (err ^ "\n\tin object at key '" ^ key ^ "'")
+            of_json_msg_error
+              (of_json_error_to_string err ^ "\n\tin object at key '" ^ key ^ "'")
         in
         Js.Dict.set target key value
       done;
@@ -206,7 +212,8 @@ module Of_json = struct
       | Some value -> (
           try decode value
           with Of_json_error err ->
-            of_json_msg_error (err ^ "\n\tat field '" ^ key ^ "'"))
+            of_json_msg_error
+              (of_json_error_to_string err ^ "\n\tat field '" ^ key ^ "'"))
       | None ->
           of_json_error ~json {j|expected object with field '$(key)'|j}
     else of_json_error ~json "expected object"

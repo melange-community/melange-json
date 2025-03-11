@@ -509,7 +509,9 @@
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 1"
                  else `C
-               else Melange_json.of_json_error ~json:x "expected [\"C\"]"
+               else
+                 Melange_json.of_json_unexpected_variant ~json:x
+                   "expected [\"C\"]"
              else
                Melange_json.of_json_error ~json:x
                  "expected a non empty JSON array with element being a \
@@ -564,8 +566,10 @@
                else
                  match other_of_json x with
                  | e -> (e :> [ `A | `B of int | other ])
-                 | exception Melange_json.Of_json_error _ ->
-                     Melange_json.of_json_error ~json:x
+                 | exception
+                     Melange_json.Of_json_error
+                       (Melange_json.Unexpected_variant msg) ->
+                     Melange_json.of_json_unexpected_variant ~json:x
                        "expected [\"A\"] or [\"B\", _]"
              else
                Melange_json.of_json_error ~json:x
@@ -624,7 +628,7 @@
                      ( int_of_json (Js.Array.unsafe_get array 1),
                        string_of_json (Js.Array.unsafe_get array 2) )
                else
-                 Melange_json.of_json_error ~json:x
+                 Melange_json.of_json_unexpected_variant ~json:x
                    "expected [\"P2\", _, _]"
              else
                Melange_json.of_json_error ~json:x
@@ -682,7 +686,9 @@
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 2"
                  else `C (a_of_json (Js.Array.unsafe_get array 1))
-               else Melange_json.of_json_error ~json:x "expected [\"C\", _]"
+               else
+                 Melange_json.of_json_unexpected_variant ~json:x
+                   "expected [\"C\", _]"
              else
                Melange_json.of_json_error ~json:x
                  "expected a non empty JSON array with element being a \
@@ -801,7 +807,7 @@
                      "expected a JSON array of length 2"
                  else `Fix (polyrecur_of_json (Js.Array.unsafe_get array 1))
                else
-                 Melange_json.of_json_error ~json:x
+                 Melange_json.of_json_unexpected_variant ~json:x
                    "expected [\"A\"] or [\"Fix\", _]"
              else
                Melange_json.of_json_error ~json:x
@@ -922,7 +928,7 @@
                      "expected a JSON array of length 1"
                  else `b
                else
-                 Melange_json.of_json_error ~json:x
+                 Melange_json.of_json_unexpected_variant ~json:x
                    "expected [\"a\"] or [\"b\"]"
              else
                Melange_json.of_json_error ~json:x

@@ -26,4 +26,4 @@ let () =
   let json = {|{ "y": 42 } |} |> Melange_json.of_string in
   match Melange_json.Of_json.(field "x" int json) with
   | x -> Js.log x
-  | exception Melange_json.Of_json_error err -> Js.log ("Error:" ^ err)
+  | exception Melange_json.Of_json_error err -> Js.log ("Error:" ^ Melange_json.of_json_error_to_string err)

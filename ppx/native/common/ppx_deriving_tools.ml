@@ -507,7 +507,7 @@ module Conv = struct
                        |> String.concat ~sep:" or ")
                    in
                    ( [%expr
-                       Melange_json.of_json_error ~json:x
+                       Melange_json.of_json_unexpected_variant ~json:x
                          [%e estring ~loc error_message]],
                      [] ))
              ~f:(fun (next, cases) (c, r) ->
@@ -535,7 +535,9 @@ module Conv = struct
                      [%expr
                        match [%e maybe_e] with
                        | e -> (e :> [%t t])
-                       | exception Melange_json.Of_json_error _ ->
+                       | exception
+                           Melange_json.Of_json_error
+                             (Melange_json.Unexpected_variant msg) ->
                            [%e next]]
                    in
                    next, cases)
@@ -656,7 +658,7 @@ module Conv = struct
                         |> String.concat ~sep:" or ")
                     in
                     [%expr
-                      Melange_json.of_json_error ~json:x
+                      Melange_json.of_json_unexpected_variant ~json:x
                         [%e estring ~loc error_message]])
                  ~f:(fun next (n, ts) ->
                    let maybe =
@@ -666,7 +668,10 @@ module Conv = struct
                    [%expr
                      match [%e maybe] with
                      | x -> (x :> [%t t])
-                     | exception Melange_json.Of_json_error _ -> [%e next]])
+                     | exception
+                         Melange_json.Of_json_error
+                           (Melange_json.Unexpected_variant msg) ->
+                         [%e next]])
          in
          let cases =
            List.fold_left ctors ~init:[ catch_all ]

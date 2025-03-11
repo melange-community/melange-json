@@ -119,11 +119,17 @@ type 'a to_json = 'a -> json
 val to_json : json to_json
 (** JSON can be encoded as JSON, trivially. *)
 
-type of_json_error = string
 (** The type of a error which occurs during decoding JSON values. *)
+type of_json_error = Json_error of string | Unexpected_variant of string
 
+val of_json_error_to_string : of_json_error -> string
 val of_json_error : ?depth:int -> ?width:int -> json:json -> string -> 'a
 val of_json_msg_error : string -> 'a
+
+val of_json_unexpected_variant :
+  ?depth:int -> ?width:int -> json:json -> string -> 'a
+
+val of_json_msg_unexpected_variant : string -> 'a
 
 type exn +=
   | Of_json_error of of_json_error

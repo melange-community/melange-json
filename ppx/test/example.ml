@@ -115,7 +115,7 @@ let run_error_case' (C (data, of_json, _to_json, _v)) =
   try
     let _v' = of_json json in
     print_endline "Error: should have failed"
-  with Melange_json.Of_json_error (msg) ->
+  with Melange_json.Of_json_error (Melange_json.Json_error msg) ->
     print_endline (Printf.sprintf "Got expected error: %s" msg)
 
 let test () =

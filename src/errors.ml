@@ -1,8 +1,8 @@
 exception Of_string_error of string
 
-type of_json_error = string
+type of_json_error = Json_error of string | Unexpected_variant of string
 
-exception Of_json_error of string
+exception Of_json_error of of_json_error
 
 let with_buffer f =
   let buffer = Buffer.create 1 in
@@ -90,10 +90,19 @@ let show_json_error ?depth ?width json =
 
       (loop ?depth:(Option.map (fun i -> i + 1) depth)) json)
 
-let of_json_msg_error msg = raise (Of_json_error msg)
+let of_json_msg_error msg = raise (Of_json_error (Json_error msg))
 
 let of_json_error ?(depth = 2) ?(width = 8) ~json msg =
   of_json_msg_error
+    (with_buffer (fun emit ->
+         emit msg;
+         emit " but got ";
+         emit (show_json_error ~depth ~width json)))
+
+let of_json_msg_unexpected_variant msg = raise (Of_json_error (Unexpected_variant msg))
+
+let of_json_unexpected_variant ?(depth = 2) ?(width = 8) ~json msg =
+  of_json_msg_unexpected_variant
     (with_buffer (fun emit ->
          emit msg;
          emit " but got ";
