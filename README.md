@@ -231,6 +231,11 @@ deserialization.
 This attribute can be used on records, even when they are embedded in other
 types.
 
+> **Note:** For the Melange PPX, ignoring extra fields is the default behavior -
+> you don't need to explicitly add the `[@json.allow_extra_fields]` attribute.
+> The attribute is primarily useful for the native PPX where strict field
+> checking is the default.
+
 **Example 1: Ignoring extra fields in records**
 
 ```ocaml
