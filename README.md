@@ -175,9 +175,9 @@ The PPX is included in the `melange-json` package. To use it, just add the
 
 ### Usage
 
-To generate JSON converters for a type,
-add the `[@@deriving json]` attribute to the type declaration,
-ensuring the converters for primitives like `int` and `string` are in scope if necessary:
+To generate JSON converters for a type, add the `[@@deriving json]` attribute to
+the type declaration, ensuring the converters for primitives like `int` and
+`string` are in scope if necessary:
 
 ```ocaml
 open Melange_json.Primitives
@@ -218,6 +218,51 @@ type t = {
 let t = of_json (Melange_json.of_string {|{"a": 42}|})
 (* t = { a = 42; b = "-"; } *)
 ```
+
+#### `[@json.allow_extra_fields]` on records
+
+Sometimes, the JSON objects might contain keys that are not part of the OCaml
+type definition. The `[@json.allow_extra_fields]` attribute allows you to
+gracefully ignore such additional fields instead of raising an error during
+deserialization.
+
+This attribute can be used on records, even when they are embedded in other
+types.
+
+> **Note:** For the Melange PPX, ignoring extra fields is the default behavior -
+> you don't need to explicitly add the `[@json.allow_extra_fields]` attribute.
+> The attribute is primarily useful for the native PPX where strict field
+> checking is the default.
+
+**Example 1: Ignoring extra fields in records**
+
+```ocaml
+type allow_extra_fields = {
+  a: int;
+} [@@deriving json] [@@json.allow_extra_fields]
+
+let t = allow_extra_fields_of_json (Json.parseOrRaise {|{"a": 42, "extra": "ignore me"}|})
+(* t = { a = 42 } *)
+```
+
+The additional key `"extra"` in the JSON input is ignored, and the record is
+successfully deserialized.
+
+**Example 2: Ignoring extra fields in inline records**
+
+```ocaml
+type allow_extra_fields2 = 
+  | A of { a: int } [@json.allow_extra_fields] 
+  [@@deriving json]
+
+let t = allow_extra_fields2_of_json (Json.parseOrRaise {|{"tag": "A", "a": 42, "extra": "ignore me"}|})
+(* t = A { a = 42 } *)
+```
+
+In this case, the `[@json.allow_extra_fields]` attribute is applied directly to
+the inline record in the variant constructor. This allows the variant to ignore
+extra fields in the JSON payload while properly deserializing the fields that
+match the type definition.
 
 #### `[@json.option]`: a shortcut for `[@json.default None]`
 
