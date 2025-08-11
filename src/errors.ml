@@ -125,3 +125,7 @@ let of_json_error_type_mismatch json expected =
          emit (show_json_type json);
          emit ": ";
          emit (show_json_error ~depth:2 ~width:8 json)))
+
+let of_json_error_to_string = function
+  | Json_error msg -> msg
+  | Unexpected_variant msg -> "unexpected variant: " ^ msg
