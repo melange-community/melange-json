@@ -4,10 +4,34 @@ open Ast_builder.Default
 open StdLabels
 open Expansion_helpers
 
+module Lid = struct
+  let flatten =
+    let rec flat accu = function
+      | Lident s -> s :: accu
+      | Ldot (lid, s) -> flat (s :: accu) lid
+      | Lapply (_, _) -> failwith "Longident.flat"
+    in
+    fun lid -> flat [] lid
+
+  let unflatten l =
+    match l with
+    | [] -> None
+    | hd :: tl ->
+        Some
+          (List.fold_left
+             ~f:(fun p s -> Ldot (p, s))
+             ~init:(Lident hd) tl)
+end
+
 let not_supported ~loc what =
   Location.raise_errorf ~loc "%s are not supported" what
 
 let map_loc f a_loc = { a_loc with txt = f a_loc.txt }
+
+let lident_with_optional_open ?opn label =
+  match opn with
+  | Some { txt = lid; _ } -> Longident.Ldot (lid, label)
+  | None -> lident label
 
 let gen_bindings ~loc prefix n =
   List.split
@@ -129,13 +153,14 @@ module Schema = struct
     | Rinherit _ ->
         not_supported ~loc:field.prf_loc "this polyvariant inherit"
 
-  let repr_core_type ty =
+  let rec repr_core_type ty =
     let loc = ty.ptyp_loc in
     match ty.ptyp_desc with
     | Ptyp_tuple ts -> `Ptyp_tuple ts
     | Ptyp_constr (id, ts) -> `Ptyp_constr (id, ts)
     | Ptyp_var txt -> `Ptyp_var { txt; loc = ty.ptyp_loc }
     | Ptyp_variant (fs, Closed, None) -> `Ptyp_variant fs
+    | Ptyp_open (id, ct) -> `Ptyp_open (id, repr_core_type ct)
     | Ptyp_variant _ -> not_supported ~loc "non closed polyvariants"
     | Ptyp_arrow _ -> not_supported ~loc "function types"
     | Ptyp_any -> not_supported ~loc "type placeholders"
@@ -246,11 +271,31 @@ module Schema = struct
 
       method private derive_of_core_type' t =
         let loc = t.ptyp_loc in
-        match repr_core_type t with
+        self#derive_of_core_type_repr ~loc t (repr_core_type t)
+
+      method private derive_of_core_type_repr ?opn ~loc t repr =
+        match repr with
         | `Ptyp_tuple ts -> As_fun (self#derive_of_tuple t ts)
         | `Ptyp_var label ->
-            As_val (ederiver self#name (map_loc lident label))
+            As_val
+              (ederiver self#name
+                 (map_loc (lident_with_optional_open ?opn) label))
+        | `Ptyp_open (_, `Ptyp_open _) -> assert false
+        | `Ptyp_open (lid, ct) ->
+            self#derive_of_core_type_repr ~opn:lid ~loc t ct
         | `Ptyp_constr (id, ts) ->
+            let id =
+              match opn with
+              | Some { txt = lid; loc } ->
+                  {
+                    txt =
+                      Lid.flatten lid @ Lid.flatten id.txt
+                      |> Lid.unflatten
+                      |> Option.get;
+                    loc;
+                  }
+              | None -> id
+            in
             self#derive_type_ref' self#name ~loc id ts
         | `Ptyp_variant fs -> As_fun (self#derive_of_polyvariant t fs)
 
