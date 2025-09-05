@@ -3,7 +3,7 @@ Uncomment to debug
 $ ocamlopt -dsource _build/default/prettify.pp.ml
   $ dune exec ./prettify.exe -- '{ "a": ["Foo"] }'
   got Foo
-  { "a": [ "Foo" ] }
+  { "a": "Foo" }
   $ dune exec ./prettify.exe -- '{ "a": [ "Bar" ] }'
   got Other
   { "a": [ "Bar" ] }

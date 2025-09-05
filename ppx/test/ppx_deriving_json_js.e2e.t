@@ -50,33 +50,33 @@
   JSON    DATA: {"name":"N","age":1}
   JSON REPRINT: {"name":"N","age":1}
   JSON    DATA: ["A"]
-  JSON REPRINT: ["A"]
+  JSON REPRINT: "A"
   JSON    DATA: ["B", 42]
   JSON REPRINT: ["B",42]
   JSON    DATA: ["C", {"name": "cname"}]
   JSON REPRINT: ["C",{"name":"cname"}]
   JSON    DATA: ["A"]
-  JSON REPRINT: ["A"]
+  JSON REPRINT: "A"
   JSON    DATA: ["S2", 42, "hello"]
   JSON REPRINT: ["S2",42,"hello"]
   JSON    DATA: ["B", 42]
   JSON REPRINT: ["B",42]
   JSON    DATA: ["C"]
-  JSON REPRINT: ["C"]
+  JSON REPRINT: "C"
   JSON    DATA: ["P2", 42, "hello"]
   JSON REPRINT: ["P2",42,"hello"]
   JSON    DATA: ["Fix",["Fix",["Fix",["A"]]]]
-  JSON REPRINT: ["Fix",["Fix",["Fix",["A"]]]]
+  JSON REPRINT: ["Fix",["Fix",["Fix","A"]]]
   JSON    DATA: ["Fix",["Fix",["Fix",["A"]]]]
-  JSON REPRINT: ["Fix",["Fix",["Fix",["A"]]]]
+  JSON REPRINT: ["Fix",["Fix",["Fix","A"]]]
   JSON    DATA: ["A"]
-  JSON REPRINT: ["A"]
+  JSON REPRINT: "A"
   JSON    DATA: ["b_aliased"]
-  JSON REPRINT: ["b_aliased"]
+  JSON REPRINT: "b_aliased"
   JSON    DATA: ["b"]
-  JSON REPRINT: ["b"]
+  JSON REPRINT: "b"
   JSON    DATA: ["A_aliased"]
-  JSON REPRINT: ["A_aliased"]
+  JSON REPRINT: "A_aliased"
   JSON    DATA: {"my_name":"N","my_age":1}
   JSON REPRINT: {"my_name":"N","my_age":1}
   JSON    DATA: {"my_name":"N"}
@@ -105,6 +105,10 @@
   JSON REPRINT: ["Rectangle",10,20]
   JSON    DATA: ["Point", {"x": 1.0, "y": 2.0}]
   JSON REPRINT: ["Point",{"x":1,"y":2}]
+  JSON    DATA: ["Empty"]
+  JSON REPRINT: "Empty"
+  JSON    DATA: "Empty"
+  JSON REPRINT: "Empty"
   
   Testing error cases:
   ERROR CASE DATA: 42

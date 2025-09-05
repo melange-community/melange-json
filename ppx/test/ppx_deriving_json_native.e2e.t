@@ -40,33 +40,33 @@
   JSON    DATA: {"name":"N","age":1}
   JSON REPRINT: {"name":"N","age":1}
   JSON    DATA: ["A"]
-  JSON REPRINT: ["A"]
+  JSON REPRINT: "A"
   JSON    DATA: ["B", 42]
   JSON REPRINT: ["B",42]
   JSON    DATA: ["C", {"name": "cname"}]
   JSON REPRINT: ["C",{"name":"cname"}]
   JSON    DATA: ["A"]
-  JSON REPRINT: ["A"]
+  JSON REPRINT: "A"
   JSON    DATA: ["S2", 42, "hello"]
   JSON REPRINT: ["S2",42,"hello"]
   JSON    DATA: ["B", 42]
   JSON REPRINT: ["B",42]
   JSON    DATA: ["C"]
-  JSON REPRINT: ["C"]
+  JSON REPRINT: "C"
   JSON    DATA: ["P2", 42, "hello"]
   JSON REPRINT: ["P2",42,"hello"]
   JSON    DATA: ["Fix",["Fix",["Fix",["A"]]]]
-  JSON REPRINT: ["Fix",["Fix",["Fix",["A"]]]]
+  JSON REPRINT: ["Fix",["Fix",["Fix","A"]]]
   JSON    DATA: ["Fix",["Fix",["Fix",["A"]]]]
-  JSON REPRINT: ["Fix",["Fix",["Fix",["A"]]]]
+  JSON REPRINT: ["Fix",["Fix",["Fix","A"]]]
   JSON    DATA: ["A"]
-  JSON REPRINT: ["A"]
+  JSON REPRINT: "A"
   JSON    DATA: ["b_aliased"]
-  JSON REPRINT: ["b_aliased"]
+  JSON REPRINT: "b_aliased"
   JSON    DATA: ["b"]
-  JSON REPRINT: ["b"]
+  JSON REPRINT: "b"
   JSON    DATA: ["A_aliased"]
-  JSON REPRINT: ["A_aliased"]
+  JSON REPRINT: "A_aliased"
   JSON    DATA: {"my_name":"N","my_age":1}
   JSON REPRINT: {"my_name":"N","my_age":1}
   JSON    DATA: {"my_name":"N"}
@@ -95,6 +95,10 @@
   JSON REPRINT: ["Rectangle",10.0,20.0]
   JSON    DATA: ["Point", {"x": 1.0, "y": 2.0}]
   JSON REPRINT: ["Point",{"x":1.0,"y":2.0}]
+  JSON    DATA: ["Empty"]
+  JSON REPRINT: "Empty"
+  JSON    DATA: "Empty"
+  JSON REPRINT: "Empty"
   
   Testing error cases:
   ERROR CASE DATA: 42
@@ -112,11 +116,11 @@
   ERROR CASE DATA: "Yellow"
   Got expected error: expected ["Red"] or ["Green"] or ["Blue"] but got "Yellow"
   ERROR CASE DATA: ["Circle"]
-  Got expected error: expected ["Circle", _] or ["Rectangle", _, _] or ["Point", { _ }] but got ["Circle"]
+  Got expected error: expected ["Circle", _] or ["Rectangle", _, _] or ["Point", { _ }] or ["Empty"] but got ["Circle"]
   ERROR CASE DATA: ["Rectangle", 10.0]
-  Got expected error: expected ["Circle", _] or ["Rectangle", _, _] or ["Point", { _ }] but got ["Rectangle", 10.]
+  Got expected error: expected ["Circle", _] or ["Rectangle", _, _] or ["Point", { _ }] or ["Empty"] but got ["Rectangle", 10.]
   ERROR CASE DATA: ["Point", 1.0, 2.0]
-  Got expected error: expected ["Circle", _] or ["Rectangle", _, _] or ["Point", { _ }] but got ["Point", 1., 2.]
+  Got expected error: expected ["Circle", _] or ["Rectangle", _, _] or ["Point", { _ }] or ["Empty"] but got ["Point", 1., 2.]
   *** json_string deriver tests ***
   ** To_json_string **
   A 42 -> ["A",42]

@@ -30,7 +30,9 @@ type color = Red | Green | Blue [@@deriving json]
 type shape = 
   | Circle of float  (* radius *)
   | Rectangle of float * float  (* width * height *)
-  | Point of { x: float; y: float } [@@deriving json]
+  | Point of { x: float; y: float } 
+  | Empty
+  [@@deriving json]
 
 let of_json_cases = [
   C ({|1|}, user_of_json, user_to_json, 1);
@@ -72,6 +74,8 @@ let of_json_cases = [
   C ({|["Circle", 5.0]|}, shape_of_json, shape_to_json, Circle 5.0);
   C ({|["Rectangle", 10.0, 20.0]|}, shape_of_json, shape_to_json, Rectangle (10.0, 20.0));
   C ({|["Point", {"x": 1.0, "y": 2.0}]|}, shape_of_json, shape_to_json, Point {x=1.0; y=2.0});
+  C ({|["Empty"]|}, shape_of_json, shape_to_json, Empty);
+  C ({|"Empty"|}, shape_of_json, shape_to_json, Empty);
 ]
 let run' (C (data, of_json, to_json, v)) =
   print_endline (Printf.sprintf "JSON    DATA: %s" data);

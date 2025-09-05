@@ -141,8 +141,16 @@ module Of_json = struct
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
         let arity = List.length t.tpl_types in
         if arity = 0 then
-          [%pat? `List [ `String [%p pstring ~loc:n.loc n.txt] ]]
-          --> make None
+          let p_list =
+            [%pat? `List [ `String [%p pstring ~loc:n.loc n.txt] ]]
+          in
+          let vcs = Vcs_tuple (n, t) in
+          let p =
+            if vcs_should_serialize_as_string vcs then
+              [%pat? [%p p_list] | `String [%p pstring ~loc:n.loc n.txt]]
+            else p_list
+          in
+          p --> make None
         else
           let xpatt, xexprs = gen_pat_list ~loc "x" arity in
           [%pat?
@@ -231,10 +239,15 @@ module To_json = struct
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
-        [%expr
-          `List
-            (`String [%e estring ~loc:n.loc n.txt]
-            :: [%e elist ~loc (List.map2 t.tpl_types es ~f:derive)])]
+        let arity = List.length t.tpl_types in
+        let vcs = Vcs_tuple (n, t) in
+        if arity = 0 && vcs_should_serialize_as_string vcs then
+          [%expr `String [%e estring ~loc:n.loc n.txt]]
+        else
+          [%expr
+            `List
+              (`String [%e estring ~loc:n.loc n.txt]
+              :: [%e elist ~loc (List.map2 t.tpl_types es ~f:derive)])]
     | Vcs_record (n, t) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.rcd_ctx) in

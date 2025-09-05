@@ -109,24 +109,80 @@ module Of_json = struct
 
   let derive_of_variant _derive t ~allow_any_constr body x =
     let loc = t.vrt_loc in
-    [%expr
-      if Js.Array.isArray [%e x] then
-        let array = (Obj.magic [%e x] : Js.Json.t array) in
-        let len = Js.Array.length array in
-        if Stdlib.( > ) len 0 then
-          let tag = Js.Array.unsafe_get array 0 in
-          if Stdlib.( = ) (Js.typeof tag) "string" then
-            let tag = (Obj.magic tag : string) in
-            [%e body]
-          else
+    (* Check if we have zero-arity cases that need string tag decoding *)
+    let has_string_tag_cases =
+      List.exists t.vrt_cases ~f:(function
+        | Vcs_record _ -> false
+        | Vcs_tuple (_, tcase) ->
+            let arity = List.length tcase.tpl_types in
+            Stdlib.( = ) arity 0)
+    in
+    (* Check if we have any cases that need tag comparison (non-allow_any cases) *)
+    let has_tag_comparison_cases =
+      List.exists t.vrt_cases ~f:(function
+        | Vcs_record (_, r) -> not (vcs_attr_json_allow_any r.rcd_ctx)
+        | Vcs_tuple (_, t) -> not (vcs_attr_json_allow_any t.tpl_ctx))
+    in
+    let needs_tag = has_string_tag_cases || has_tag_comparison_cases in
+
+    let decode_string_tag =
+      let pairs =
+        List.filter_map t.vrt_cases ~f:(function
+          | Vcs_record _ -> None
+          | Vcs_tuple (n, tcase) ->
+              let arity = List.length tcase.tpl_types in
+              if Stdlib.( = ) arity 0 then
+                let n' =
+                  Option.value ~default:n
+                    (vcs_attr_json_name tcase.tpl_ctx)
+                in
+                let tag_name = estring ~loc:n'.loc n'.txt in
+                let ctor =
+                  match tcase.tpl_ctx with
+                  | Vcs_ctx_variant _ ->
+                      pexp_construct (map_loc lident n) ~loc:n.loc None
+                  | Vcs_ctx_polyvariant _ ->
+                      pexp_variant ~loc:n.loc n.txt None
+                in
+                Some (tag_name, ctor)
+              else None)
+      in
+      List.fold_right pairs
+        ~init:
+          [%expr
             [%e
               match allow_any_constr with
               | Some allow_any_constr -> allow_any_constr x
               | None ->
                   [%expr
                     Melange_json.of_json_error ~json:[%e x]
-                      "expected a non empty JSON array with element \
-                       being a string"]]
+                      "expected a non empty JSON array"]]]
+        ~f:(fun (tag_name, ctor) acc ->
+          [%expr
+            if Stdlib.( = ) tag [%e tag_name] then [%e ctor] else [%e acc]])
+    in
+    [%expr
+      if Js.Array.isArray [%e x] then
+        let array = (Obj.magic [%e x] : Js.Json.t array) in
+        let len = Js.Array.length array in
+        if Stdlib.( > ) len 0 then
+          [%e
+            if needs_tag then
+              [%expr
+                let tag = Js.Array.unsafe_get array 0 in
+                if Stdlib.( = ) (Js.typeof tag) "string" then
+                  let tag = (Obj.magic tag : string) in
+                  [%e body]
+                else
+                  [%e
+                    match allow_any_constr with
+                    | Some allow_any_constr -> allow_any_constr x
+                    | None ->
+                        [%expr
+                          Melange_json.of_json_error ~json:[%e x]
+                            "expected a non empty JSON array with \
+                             element being a string"]]]
+            else body]
         else
           [%e
             match allow_any_constr with
@@ -135,6 +191,13 @@ module Of_json = struct
                 [%expr
                   Melange_json.of_json_error ~json:[%e x]
                     "expected a non empty JSON array"]]
+      else if Stdlib.( = ) (Js.typeof [%e x]) "string" then
+        [%e
+          if has_string_tag_cases then
+            [%expr
+              let tag = (Obj.magic [%e x] : string) in
+              [%e decode_string_tag]]
+          else decode_string_tag]
       else
         [%e
           match allow_any_constr with
@@ -243,8 +306,13 @@ module To_json = struct
         let tag =
           [%expr (Obj.magic [%e estring ~loc:n.loc n.txt] : Js.Json.t)]
         in
-        let es = List.map2 t.tpl_types es ~f:derive in
-        as_json ~loc (pexp_array ~loc (tag :: es))
+        let arity = List.length t.tpl_types in
+        if arity = 0 then
+          as_json ~loc
+            [%expr (Obj.magic [%e estring ~loc:n.loc n.txt] : Js.Json.t)]
+        else
+          let es = List.map2 t.tpl_types es ~f:derive in
+          as_json ~loc (pexp_array ~loc (tag :: es))
 
   let deriving : Ppx_deriving_tools.deriving =
     deriving_to () ~name:"to_json"
