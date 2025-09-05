@@ -310,6 +310,25 @@ let t = of_json (Melange_json.of_string {|{"A": 42, "B": "foo"}|})
 (* t = { a = 42; b = "foo"; } *)
 ```
 
+#### Variant serialization behavior
+
+The PPX serializes variants differently based on whether they have payloads:
+
+- **Variants without payloads** are serialized as **strings**
+- **Variants with payloads** are serialized as **lists** with the first element being the constructor name
+
+```ocaml
+type string_option = 
+| None
+| Some of string
+[@@deriving json]
+
+(* None serializes to: "None" *)
+(* Some "hello" serializes to: ["Some", "hello"] *)
+```
+
+For backward compatibility, the old list format (e.g., `["None"]`) can still be parsed when deserializing.
+
 #### `[@json.name "S"]`: customizing the representation of a variant case
 
 You can specify custom representation for a variant case using the `[@json.name

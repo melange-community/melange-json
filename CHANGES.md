@@ -1,3 +1,9 @@
+## 2.1.0
+- **[breaking]** PPX: Serialize/deserialize variants with no payload as strings 
+  instead of single-element lists, while variants with payloads are serialized 
+  as lists. Backward compatibility is preserved - lists with only one value 
+  (the constructor) can still be parsed.
+
 ## 2.0.0 (2025-03-11)
 
 - **[breaking]** Library, PPX: Unify runtimes (`*.ppx-runtime` libraries are
