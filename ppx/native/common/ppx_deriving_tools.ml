@@ -778,8 +778,8 @@ module Conv = struct
                       Vcs_record (n, t)
                     in
                     ctor_pat n (Some p)
-                    --> derive_of_variant_case self#derive_of_core_type t
-                          es
+                    --> derive_of_variant_case self#derive_of_core_type
+                          (Some td) t es
                 | Pcstr_tuple ts ->
                     let arity = List.length ts in
                     let t =
@@ -790,8 +790,8 @@ module Conv = struct
                     in
                     let p, es = gen_pat_tuple ~loc "x" arity in
                     ctor_pat n (if arity = 0 then None else Some p)
-                    --> derive_of_variant_case self#derive_of_core_type t
-                          es))
+                    --> derive_of_variant_case self#derive_of_core_type
+                          (Some td) t es))
 
        method! derive_of_polyvariant t (cs : row_field list) x =
          let loc = t.ptyp_loc in
@@ -808,8 +808,8 @@ module Conv = struct
                      Vcs_tuple (n, t)
                    in
                    ppat_variant ~loc n.txt None
-                   --> derive_of_variant_case self#derive_of_core_type t
-                         []
+                   --> derive_of_variant_case self#derive_of_core_type
+                         None t []
                | `Rtag (n, ts) ->
                    let t =
                      { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
@@ -817,6 +817,7 @@ module Conv = struct
                    let ps, es = gen_pat_tuple ~loc "x" (List.length ts) in
                    ppat_variant ~loc n.txt (Some ps)
                    --> derive_of_variant_case self#derive_of_core_type
+                         None
                          (Vcs_tuple (n, t))
                          es
                | `Rinherit (n, ts) ->

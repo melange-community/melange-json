@@ -3,15 +3,12 @@ Uncomment to debug
 $ ocamlopt -dsource _build/default/prettify.pp.ml
   $ dune exec ./prettify.exe -- ok.json
   {
-    "a": [ "Foo" ],
-    "foo": [ [ "A" ], [ "Foo" ], [ "B", 123 ], [ "C", 234, "hello" ] ],
+    "a": "Foo",
+    "foo": [ "A", "Foo", [ "B", 123 ], [ "C", 234, "hello" ] ],
     "b": "where are you ?",
     "c": [ 123, 234, 345 ],
     "d": [ 123, [ 1.2, 2.3, 2.4 ], "i am here" ]
   }
-  $ dune exec ./prettify.exe -- tag_as_string.json
-  Fatal error: exception Melange_json.Of_json_error(Json_error {|expected ["A"] or ["Foo"] or ["B", _] or ["C", _, _] or ["D", { _ }] but got "A"|})
-  [2]
   $ dune exec ./prettify.exe -- wrong_core_type.json
   Fatal error: exception Melange_json.Of_json_error(Json_error {|expected int but got string: "i am a string"|})
   [2]
