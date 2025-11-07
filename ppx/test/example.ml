@@ -26,13 +26,7 @@ type array_list = { a: int array; b: int list} [@@deriving json]
 type json = Melange_json.t
 type of_json = C : string * (json -> 'a) * ('a -> json) * 'a -> of_json
 type color = Red | Green | Blue [@@deriving json]
-
-type shape = 
-  | Circle of float  (* radius *)
-  | Rectangle of float * float  (* width * height *)
-  | Point of { x: float; y: float } 
-  | Empty
-  [@@deriving json]
+type shape = | Circle of float  (* radius *) | Rectangle of float * float  (* width * height *) | Point of { x: float; y: float } | Empty [@@deriving json]
 
 let of_json_cases = [
   C ({|1|}, user_of_json, user_to_json, 1);
@@ -94,11 +88,11 @@ type must_be_array_3 = (int * int * int) [@@deriving json]
 let error_cases = [
   (* Should fail with "expected a JSON object" *)
   C ({|42|}, must_be_object_of_json, must_be_object_to_json, {field=1});
-  
+
   (* Should fail with "expected a JSON array of length 2" *)
   C ({|[1]|}, must_be_array_2_of_json, must_be_array_2_to_json, (1, 2));
   C ({|[1,2,3]|}, must_be_array_2_of_json, must_be_array_2_to_json, (1, 2));
-  
+
   (* Should fail with "expected a JSON array of length 3" *)
   C ({|[1,2]|}, must_be_array_3_of_json, must_be_array_3_to_json, (1, 2, 3));
   C ({|[1,2,3,4]|}, must_be_array_3_of_json, must_be_array_3_to_json, (1, 2, 3));
