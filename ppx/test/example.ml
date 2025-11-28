@@ -26,11 +26,8 @@ type array_list = { a: int array; b: int list} [@@deriving json]
 type json = Melange_json.t
 type of_json = C : string * (json -> 'a) * ('a -> json) * 'a -> of_json
 type color = Red | Green | Blue [@@deriving json]
-
-type shape = 
-  | Circle of float  (* radius *)
-  | Rectangle of float * float  (* width * height *)
-  | Point of { x: float; y: float } [@@deriving json]
+type shape = | Circle of float  (* radius *) | Rectangle of float * float  (* width * height *) | Point of { x: float; y: float } | Empty [@@deriving json]
+type legacy_variant = LegacyA | LegacyB of int [@@deriving json] [@@json.legacy_variant]
 
 let of_json_cases = [
   C ({|1|}, user_of_json, user_to_json, 1);
@@ -72,6 +69,12 @@ let of_json_cases = [
   C ({|["Circle", 5.0]|}, shape_of_json, shape_to_json, Circle 5.0);
   C ({|["Rectangle", 10.0, 20.0]|}, shape_of_json, shape_to_json, Rectangle (10.0, 20.0));
   C ({|["Point", {"x": 1.0, "y": 2.0}]|}, shape_of_json, shape_to_json, Point {x=1.0; y=2.0});
+  C ({|["Empty"]|}, shape_of_json, shape_to_json, Empty);
+  C ({|"Empty"|}, shape_of_json, shape_to_json, Empty);
+  (* legacy_variant: with [@@json.legacy_variant], payloadless variants serialize as lists *)
+  C ({|["LegacyA"]|}, legacy_variant_of_json, legacy_variant_to_json, LegacyA);
+  C ({|"LegacyA"|}, legacy_variant_of_json, legacy_variant_to_json, LegacyA);  (* can still parse string format *)
+  C ({|["LegacyB", 42]|}, legacy_variant_of_json, legacy_variant_to_json, LegacyB 42);
 ]
 let run' (C (data, of_json, to_json, v)) =
   print_endline (Printf.sprintf "JSON    DATA: %s" data);
@@ -90,11 +93,11 @@ type must_be_array_3 = (int * int * int) [@@deriving json]
 let error_cases = [
   (* Should fail with "expected a JSON object" *)
   C ({|42|}, must_be_object_of_json, must_be_object_to_json, {field=1});
-  
+
   (* Should fail with "expected a JSON array of length 2" *)
   C ({|[1]|}, must_be_array_2_of_json, must_be_array_2_to_json, (1, 2));
   C ({|[1,2,3]|}, must_be_array_2_of_json, must_be_array_2_to_json, (1, 2));
-  
+
   (* Should fail with "expected a JSON array of length 3" *)
   C ({|[1,2]|}, must_be_array_3_of_json, must_be_array_3_to_json, (1, 2, 3));
   C ({|[1,2,3,4]|}, must_be_array_3_of_json, must_be_array_3_to_json, (1, 2, 3));

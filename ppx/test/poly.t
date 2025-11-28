@@ -14,16 +14,15 @@ We can alias poly variants:
       let rec of_json =
         (fun x ->
            match x with
-           | `List ((`String "A")::[]) -> `A
-           | `List ((`String "B")::[]) -> `B
+           | `List ((`String "A")::[]) | `String "A" -> `A
+           | `List ((`String "B")::[]) | `String "B" -> `B
            | x ->
                Melange_json.of_json_unexpected_variant ~json:x
                  "expected [\"A\"] or [\"B\"]" : Yojson.Basic.t -> t)
       let _ = of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec to_json =
-        (fun x ->
-           match x with | `A -> `List [`String "A"] | `B -> `List [`String "B"] : 
+        (fun x -> match x with | `A -> `String "A" | `B -> `String "B" : 
         t -> Yojson.Basic.t)
       let _ = to_json
     end[@@ocaml.doc "@inline"][@@merlin.hide ]
@@ -83,15 +82,27 @@ We can alias poly variants:
                 Melange_json.of_json_error ~json:x
                   "expected a non empty JSON array")
            else
-             Melange_json.of_json_error ~json:x
-               "expected a non empty JSON array" : Js.Json.t -> t)
+             if Stdlib.(=) (Js.typeof x) "string"
+             then
+               (let tag = (Obj.magic x : string) in
+                if Stdlib.(=) tag "A"
+                then `A
+                else
+                  if Stdlib.(=) tag "B"
+                  then `B
+                  else
+                    Melange_json.of_json_error ~json:x
+                      "expected a non empty JSON array")
+             else
+               Melange_json.of_json_error ~json:x
+                 "expected a non empty JSON array" : Js.Json.t -> t)
       let _ = of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec to_json =
         (fun x ->
            match x with
-           | `A -> (Obj.magic [|(Obj.magic "A" : Js.Json.t)|] : Js.Json.t)
-           | `B -> (Obj.magic [|(Obj.magic "B" : Js.Json.t)|] : Js.Json.t) : 
+           | `A -> (Obj.magic (Obj.magic "A" : Js.Json.t) : Js.Json.t)
+           | `B -> (Obj.magic (Obj.magic "B" : Js.Json.t) : Js.Json.t) : 
         t -> Js.Json.t)
       let _ = to_json
     end[@@ocaml.doc "@inline"][@@merlin.hide ]
@@ -109,9 +120,9 @@ We can alias poly variants:
   let () = print_endline (Melange_json.to_string (u_to_json `A))
   let () = assert ((u_of_json (Melange_json.of_string {|["B"]|})) = `B)
   === stdout:native ===
-  ["A"]
+  "A"
   === stdout:js ===
-  ["A"]
+  "A"
 
 We can extend aliased polyvariants:
   $ echo '
@@ -131,16 +142,15 @@ We can extend aliased polyvariants:
       let rec of_json =
         (fun x ->
            match x with
-           | `List ((`String "A")::[]) -> `A
-           | `List ((`String "B")::[]) -> `B
+           | `List ((`String "A")::[]) | `String "A" -> `A
+           | `List ((`String "B")::[]) | `String "B" -> `B
            | x ->
                Melange_json.of_json_unexpected_variant ~json:x
                  "expected [\"A\"] or [\"B\"]" : Yojson.Basic.t -> t)
       let _ = of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec to_json =
-        (fun x ->
-           match x with | `A -> `List [`String "A"] | `B -> `List [`String "B"] : 
+        (fun x -> match x with | `A -> `String "A" | `B -> `String "B" : 
         t -> Yojson.Basic.t)
       let _ = to_json
     end[@@ocaml.doc "@inline"][@@merlin.hide ]
@@ -152,7 +162,7 @@ We can extend aliased polyvariants:
       let rec u_of_json =
         (fun x ->
            match x with
-           | `List ((`String "C")::[]) -> `C
+           | `List ((`String "C")::[]) | `String "C" -> `C
            | x ->
                (match of_json x with
                 | x -> (x :> [ | t | `C ])
@@ -163,8 +173,7 @@ We can extend aliased polyvariants:
       let _ = u_of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec u_to_json =
-        (fun x ->
-           match x with | #t as x -> to_json x | `C -> `List [`String "C"] : 
+        (fun x -> match x with | #t as x -> to_json x | `C -> `String "C" : 
         u -> Yojson.Basic.t)
       let _ = u_to_json
     end[@@ocaml.doc "@inline"][@@merlin.hide ]
@@ -215,15 +224,27 @@ We can extend aliased polyvariants:
                 Melange_json.of_json_error ~json:x
                   "expected a non empty JSON array")
            else
-             Melange_json.of_json_error ~json:x
-               "expected a non empty JSON array" : Js.Json.t -> t)
+             if Stdlib.(=) (Js.typeof x) "string"
+             then
+               (let tag = (Obj.magic x : string) in
+                if Stdlib.(=) tag "A"
+                then `A
+                else
+                  if Stdlib.(=) tag "B"
+                  then `B
+                  else
+                    Melange_json.of_json_error ~json:x
+                      "expected a non empty JSON array")
+             else
+               Melange_json.of_json_error ~json:x
+                 "expected a non empty JSON array" : Js.Json.t -> t)
       let _ = of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec to_json =
         (fun x ->
            match x with
-           | `A -> (Obj.magic [|(Obj.magic "A" : Js.Json.t)|] : Js.Json.t)
-           | `B -> (Obj.magic [|(Obj.magic "B" : Js.Json.t)|] : Js.Json.t) : 
+           | `A -> (Obj.magic (Obj.magic "A" : Js.Json.t) : Js.Json.t)
+           | `B -> (Obj.magic (Obj.magic "B" : Js.Json.t) : Js.Json.t) : 
         t -> Js.Json.t)
       let _ = to_json
     end[@@ocaml.doc "@inline"][@@merlin.hide ]
@@ -265,15 +286,24 @@ We can extend aliased polyvariants:
                 Melange_json.of_json_error ~json:x
                   "expected a non empty JSON array")
            else
-             Melange_json.of_json_error ~json:x
-               "expected a non empty JSON array" : Js.Json.t -> u)
+             if Stdlib.(=) (Js.typeof x) "string"
+             then
+               (let tag = (Obj.magic x : string) in
+                if Stdlib.(=) tag "C"
+                then `C
+                else
+                  Melange_json.of_json_error ~json:x
+                    "expected a non empty JSON array")
+             else
+               Melange_json.of_json_error ~json:x
+                 "expected a non empty JSON array" : Js.Json.t -> u)
       let _ = u_of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec u_to_json =
         (fun x ->
            match x with
            | #t as x -> to_json x
-           | `C -> (Obj.magic [|(Obj.magic "C" : Js.Json.t)|] : Js.Json.t) : 
+           | `C -> (Obj.magic (Obj.magic "C" : Js.Json.t) : Js.Json.t) : 
         u -> Js.Json.t)
       let _ = u_to_json
     end[@@ocaml.doc "@inline"][@@merlin.hide ]
@@ -282,11 +312,11 @@ We can extend aliased polyvariants:
   let () = assert ((u_of_json (Melange_json.of_string {|["B"]|})) = `B)
   let () = assert ((u_of_json (Melange_json.of_string {|["C"]|})) = `C)
   === stdout:native ===
-  ["A"]
-  ["C"]
+  "A"
+  "C"
   === stdout:js ===
-  ["A"]
-  ["C"]
+  "A"
+  "C"
 
 We can extend poly variants which are placed behind signatures:
   $ echo '
@@ -321,18 +351,16 @@ We can extend poly variants which are placed behind signatures:
           let rec of_json =
             (fun x ->
                match x with
-               | `List ((`String "A")::[]) -> `A
-               | `List ((`String "B")::[]) -> `B
+               | `List ((`String "A")::[]) | `String "A" -> `A
+               | `List ((`String "B")::[]) | `String "B" -> `B
                | x ->
                    Melange_json.of_json_unexpected_variant ~json:x
                      "expected [\"A\"] or [\"B\"]" : Yojson.Basic.t -> t)
           let _ = of_json
           [@@@ocaml.warning "-39-11-27"]
           let rec to_json =
-            (fun x ->
-               match x with
-               | `A -> `List [`String "A"]
-               | `B -> `List [`String "B"] : t -> Yojson.Basic.t)
+            (fun x -> match x with | `A -> `String "A" | `B -> `String "B" : 
+            t -> Yojson.Basic.t)
           let _ = to_json
         end[@@ocaml.doc "@inline"][@@merlin.hide ]
     end 
@@ -344,7 +372,7 @@ We can extend poly variants which are placed behind signatures:
       let rec u_of_json =
         (fun x ->
            match x with
-           | `List ((`String "C")::[]) -> `C
+           | `List ((`String "C")::[]) | `String "C" -> `C
            | x ->
                (match P.of_json x with
                 | x -> (x :> [ | P.t | `C ])
@@ -355,8 +383,7 @@ We can extend poly variants which are placed behind signatures:
       let _ = u_of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec u_to_json =
-        (fun x ->
-           match x with | #P.t as x -> P.to_json x | `C -> `List [`String "C"] : 
+        (fun x -> match x with | #P.t as x -> P.to_json x | `C -> `String "C" : 
         u -> Yojson.Basic.t)
       let _ = u_to_json
     end[@@ocaml.doc "@inline"][@@merlin.hide ]
@@ -418,15 +445,27 @@ We can extend poly variants which are placed behind signatures:
                     Melange_json.of_json_error ~json:x
                       "expected a non empty JSON array")
                else
-                 Melange_json.of_json_error ~json:x
-                   "expected a non empty JSON array" : Js.Json.t -> t)
+                 if Stdlib.(=) (Js.typeof x) "string"
+                 then
+                   (let tag = (Obj.magic x : string) in
+                    if Stdlib.(=) tag "A"
+                    then `A
+                    else
+                      if Stdlib.(=) tag "B"
+                      then `B
+                      else
+                        Melange_json.of_json_error ~json:x
+                          "expected a non empty JSON array")
+                 else
+                   Melange_json.of_json_error ~json:x
+                     "expected a non empty JSON array" : Js.Json.t -> t)
           let _ = of_json
           [@@@ocaml.warning "-39-11-27"]
           let rec to_json =
             (fun x ->
                match x with
-               | `A -> (Obj.magic [|(Obj.magic "A" : Js.Json.t)|] : Js.Json.t)
-               | `B -> (Obj.magic [|(Obj.magic "B" : Js.Json.t)|] : Js.Json.t) : 
+               | `A -> (Obj.magic (Obj.magic "A" : Js.Json.t) : Js.Json.t)
+               | `B -> (Obj.magic (Obj.magic "B" : Js.Json.t) : Js.Json.t) : 
             t -> Js.Json.t)
           let _ = to_json
         end[@@ocaml.doc "@inline"][@@merlin.hide ]
@@ -469,15 +508,24 @@ We can extend poly variants which are placed behind signatures:
                 Melange_json.of_json_error ~json:x
                   "expected a non empty JSON array")
            else
-             Melange_json.of_json_error ~json:x
-               "expected a non empty JSON array" : Js.Json.t -> u)
+             if Stdlib.(=) (Js.typeof x) "string"
+             then
+               (let tag = (Obj.magic x : string) in
+                if Stdlib.(=) tag "C"
+                then `C
+                else
+                  Melange_json.of_json_error ~json:x
+                    "expected a non empty JSON array")
+             else
+               Melange_json.of_json_error ~json:x
+                 "expected a non empty JSON array" : Js.Json.t -> u)
       let _ = u_of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec u_to_json =
         (fun x ->
            match x with
            | #P.t as x -> P.to_json x
-           | `C -> (Obj.magic [|(Obj.magic "C" : Js.Json.t)|] : Js.Json.t) : 
+           | `C -> (Obj.magic (Obj.magic "C" : Js.Json.t) : Js.Json.t) : 
         u -> Js.Json.t)
       let _ = u_to_json
     end[@@ocaml.doc "@inline"][@@merlin.hide ]
@@ -486,8 +534,8 @@ We can extend poly variants which are placed behind signatures:
   let () = assert ((u_of_json (Melange_json.of_string {|["B"]|})) = `B)
   let () = assert ((u_of_json (Melange_json.of_string {|["C"]|})) = `C)
   === stdout:native ===
-  ["A"]
-  ["C"]
+  "A"
+  "C"
   === stdout:js ===
-  ["A"]
-  ["C"]
+  "A"
+  "C"

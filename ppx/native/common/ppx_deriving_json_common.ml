@@ -7,7 +7,6 @@ let get_of_variant_case ?mark_as_seen ~variant ~polyvariant = function
   | Vcs_ctx_variant ctx -> Attribute.get ?mark_as_seen variant ctx
   | Vcs_ctx_polyvariant ctx -> Attribute.get ?mark_as_seen polyvariant ctx
 
-
 let get_of_variant ?mark_as_seen ~variant ~polyvariant = function
   | Vrt_ctx_variant ctx -> Attribute.get ?mark_as_seen variant ctx
   | Vrt_ctx_polyvariant ctx -> Attribute.get ?mark_as_seen polyvariant ctx
@@ -24,8 +23,6 @@ let vcs_attr_json_name =
   let polyvariant = attr_json_name Attribute.Context.rtag in
   get_of_variant_case ~variant ~polyvariant
 
-
-
 let attr_json_allow_any ctx = Attribute.declare_flag "json.allow_any" ctx
 
 let vcs_attr_json_allow_any =
@@ -37,6 +34,26 @@ let vcs_attr_json_allow_any =
     match get_of_variant_case ~variant ~polyvariant ?mark_as_seen ctx with
     | None -> false
     | Some () -> true
+
+let td_attr_json_legacy_variant =
+  Attribute.get
+    (Attribute.declare "json.legacy_variant"
+       Attribute.Context.type_declaration
+       Ast_pattern.(pstr nil)
+       ())
+
+(* Automatic variant serialization: zero-arity -> string, non-zero-arity -> list *)
+let vcs_should_serialize_as_string ?(legacy = false) vcs =
+  if legacy then false
+  else
+    match vcs with
+    | Vcs_tuple (_, t) ->
+        let arity = List.length t.tpl_types in
+        (* Automatically serialize as string if no payload, unless explicitly disabled *)
+        arity = 0 && not (vcs_attr_json_allow_any t.tpl_ctx)
+    | Vcs_record (_, _) ->
+        (* Records always serialize as lists (current behavior) *)
+        false
 
 let ld_attr_json_key =
   Attribute.get

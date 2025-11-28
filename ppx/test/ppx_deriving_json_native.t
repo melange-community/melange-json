@@ -20,6 +20,29 @@
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
   $ cat <<"EOF" | run
+  > type userid = int64 [@@deriving json]
+  > EOF
+  type userid = int64 [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : userid) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec userid_of_json =
+      (fun x -> int64_of_json x : Yojson.Basic.t -> userid)
+  
+    let _ = userid_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec userid_to_json =
+      (fun x -> int64_to_json x : userid -> Yojson.Basic.t)
+  
+    let _ = userid_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
   > type floaty = float [@@deriving json]
   > EOF
   type floaty = float [@@deriving json]
@@ -353,7 +376,7 @@
     let rec sum_of_json =
       (fun x ->
          match x with
-         | `List (`String "A" :: []) -> A
+         | `List (`String "A" :: []) | `String "A" -> A
          | `List [ `String "B"; x_0 ] -> B (int_of_json x_0)
          | `List [ `String "C"; `Assoc fs ] ->
              let x_name = ref Stdlib.Option.None in
@@ -391,7 +414,7 @@
     let rec sum_to_json =
       (fun x ->
          match x with
-         | A -> `List [ `String "A" ]
+         | A -> `String "A"
          | B x_0 -> `List [ `String "B"; int_to_json x_0 ]
          | C { name = x_name } ->
              `List
@@ -442,7 +465,7 @@
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
   $ cat <<"EOF" | run
-  > type other = [ `C ] [@@deriving json] type poly = [ `A | `B of int | other ] [@@deriving json]
+  > type other = [ `C ] [@@deriving json]
   > EOF
   type other = [ `C ] [@@deriving json]
   
@@ -454,7 +477,7 @@
     let rec other_of_json =
       (fun x ->
          match x with
-         | `List (`String "C" :: []) -> `C
+         | `List (`String "C" :: []) | `String "C" -> `C
          | x ->
              Melange_json.of_json_unexpected_variant ~json:x
                "expected [\"C\"]"
@@ -465,12 +488,14 @@
     [@@@ocaml.warning "-39-11-27"]
   
     let rec other_to_json =
-      (fun x -> match x with `C -> `List [ `String "C" ]
-        : other -> Yojson.Basic.t)
+      (fun x -> match x with `C -> `String "C" : other -> Yojson.Basic.t)
   
     let _ = other_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
-  
+
+  $ cat <<"EOF" | run
+  > type poly = [ `A | `B of int | other ] [@@deriving json]
+  > EOF
   type poly = [ `A | `B of int | other ] [@@deriving json]
   
   include struct
@@ -481,7 +506,7 @@
     let rec poly_of_json =
       (fun x ->
          match x with
-         | `List (`String "A" :: []) -> `A
+         | `List (`String "A" :: []) | `String "A" -> `A
          | `List [ `String "B"; x_0 ] -> `B (int_of_json x_0)
          | x -> (
              match other_of_json x with
@@ -500,7 +525,7 @@
     let rec poly_to_json =
       (fun x ->
          match x with
-         | `A -> `List [ `String "A" ]
+         | `A -> `String "A"
          | `B x_0 -> `List [ `String "B"; int_to_json x_0 ]
          | #other as x -> other_to_json x
         : poly -> Yojson.Basic.t)
@@ -586,7 +611,7 @@
     let rec recur_of_json =
       (fun x ->
          match x with
-         | `List (`String "A" :: []) -> A
+         | `List (`String "A" :: []) | `String "A" -> A
          | `List [ `String "Fix"; x_0 ] -> Fix (recur_of_json x_0)
          | _ ->
              Melange_json.of_json_error ~json:x
@@ -600,7 +625,7 @@
     let rec recur_to_json =
       (fun x ->
          match x with
-         | A -> `List [ `String "A" ]
+         | A -> `String "A"
          | Fix x_0 -> `List [ `String "Fix"; recur_to_json x_0 ]
         : recur -> Yojson.Basic.t)
   
@@ -620,7 +645,7 @@
     let rec polyrecur_of_json =
       (fun x ->
          match x with
-         | `List (`String "A" :: []) -> `A
+         | `List (`String "A" :: []) | `String "A" -> `A
          | `List [ `String "Fix"; x_0 ] -> `Fix (polyrecur_of_json x_0)
          | x ->
              Melange_json.of_json_unexpected_variant ~json:x
@@ -634,7 +659,7 @@
     let rec polyrecur_to_json =
       (fun x ->
          match x with
-         | `A -> `List [ `String "A" ]
+         | `A -> `String "A"
          | `Fix x_0 -> `List [ `String "Fix"; polyrecur_to_json x_0 ]
         : polyrecur -> Yojson.Basic.t)
   
@@ -654,8 +679,8 @@
     let rec evar_of_json =
       (fun x ->
          match x with
-         | `List (`String "A" :: []) -> A
-         | `List (`String "b_aliased" :: []) -> B
+         | `List (`String "A" :: []) | `String "A" -> A
+         | `List (`String "b_aliased" :: []) | `String "b_aliased" -> B
          | _ ->
              Melange_json.of_json_error ~json:x
                "expected [\"A\"] or [\"B\"]"
@@ -666,10 +691,7 @@
     [@@@ocaml.warning "-39-11-27"]
   
     let rec evar_to_json =
-      (fun x ->
-         match x with
-         | A -> `List [ `String "A" ]
-         | B -> `List [ `String "b_aliased" ]
+      (fun x -> match x with A -> `String "A" | B -> `String "b_aliased"
         : evar -> Yojson.Basic.t)
   
     let _ = evar_to_json
@@ -688,8 +710,8 @@
     let rec epoly_of_json =
       (fun x ->
          match x with
-         | `List (`String "A_aliased" :: []) -> `a
-         | `List (`String "b" :: []) -> `b
+         | `List (`String "A_aliased" :: []) | `String "A_aliased" -> `a
+         | `List (`String "b" :: []) | `String "b" -> `b
          | x ->
              Melange_json.of_json_unexpected_variant ~json:x
                "expected [\"a\"] or [\"b\"]"
@@ -700,10 +722,7 @@
     [@@@ocaml.warning "-39-11-27"]
   
     let rec epoly_to_json =
-      (fun x ->
-         match x with
-         | `a -> `List [ `String "A_aliased" ]
-         | `b -> `List [ `String "b" ]
+      (fun x -> match x with `a -> `String "A_aliased" | `b -> `String "b"
         : epoly -> Yojson.Basic.t)
   
     let _ = epoly_to_json
@@ -927,3 +946,371 @@
   
     let _ = drop_default_option_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
+  > type array_list = { a: int array; b: int list} [@@deriving json]
+  > EOF
+  type array_list = { a : int array; b : int list } [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : array_list) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec array_list_of_json =
+      (fun x ->
+         match x with
+         | `Assoc fs ->
+             let x_a = ref Stdlib.Option.None in
+             let x_b = ref Stdlib.Option.None in
+             let rec iter = function
+               | [] -> ()
+               | (n', v) :: fs ->
+                   (match n' with
+                   | "a" ->
+                       x_a :=
+                         Stdlib.Option.Some ((array_of_json int_of_json) v)
+                   | "b" ->
+                       x_b :=
+                         Stdlib.Option.Some ((list_of_json int_of_json) v)
+                   | name ->
+                       Melange_json.of_json_error ~json:x
+                         (Stdlib.Printf.sprintf
+                            {|did not expect field "%s"|} name));
+                   iter fs
+             in
+             iter fs;
+             {
+               a =
+                 (match Stdlib.( ! ) x_a with
+                 | Stdlib.Option.Some v -> v
+                 | Stdlib.Option.None ->
+                     Melange_json.of_json_error ~json:x
+                       "expected field \"a\"");
+               b =
+                 (match Stdlib.( ! ) x_b with
+                 | Stdlib.Option.Some v -> v
+                 | Stdlib.Option.None ->
+                     Melange_json.of_json_error ~json:x
+                       "expected field \"b\"");
+             }
+         | _ -> Melange_json.of_json_error ~json:x "expected a JSON object"
+        : Yojson.Basic.t -> array_list)
+  
+    let _ = array_list_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec array_list_to_json =
+      (fun x ->
+         match x with
+         | { a = x_a; b = x_b } ->
+             `Assoc
+               (let bnds__001_ = [] in
+                let bnds__001_ =
+                  ("b", (list_to_json int_to_json) x_b) :: bnds__001_
+                in
+                let bnds__001_ =
+                  ("a", (array_to_json int_to_json) x_a) :: bnds__001_
+                in
+                bnds__001_)
+        : array_list -> Yojson.Basic.t)
+  
+    let _ = array_list_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
+  > type json = Melange_json.t
+  > EOF
+  type json = Melange_json.t
+
+  $ cat <<"EOF" | run
+  > type of_json = C : string * (json -> 'a) * ('a -> json) * 'a -> of_json
+  > EOF
+  type of_json = C : string * (json -> 'a) * ('a -> json) * 'a -> of_json
+
+  $ cat <<"EOF" | run
+  > type color = Red | Green | Blue [@@deriving json]
+  > EOF
+  type color = Red | Green | Blue [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : color) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec color_of_json =
+      (fun x ->
+         match x with
+         | `List (`String "Red" :: []) | `String "Red" -> Red
+         | `List (`String "Green" :: []) | `String "Green" -> Green
+         | `List (`String "Blue" :: []) | `String "Blue" -> Blue
+         | _ ->
+             Melange_json.of_json_error ~json:x
+               "expected [\"Red\"] or [\"Green\"] or [\"Blue\"]"
+        : Yojson.Basic.t -> color)
+  
+    let _ = color_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec color_to_json =
+      (fun x ->
+         match x with
+         | Red -> `String "Red"
+         | Green -> `String "Green"
+         | Blue -> `String "Blue"
+        : color -> Yojson.Basic.t)
+  
+    let _ = color_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
+  > type shape = | Circle of float  (* radius *) | Rectangle of float * float  (* width * height *) | Point of { x: float; y: float } | Empty [@@deriving json]
+  > EOF
+  type shape =
+    | Circle of float
+    | Rectangle of float * float
+    | Point of { x : float; y : float }
+    | Empty
+  [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : shape) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec shape_of_json =
+      (fun x ->
+         match x with
+         | `List [ `String "Circle"; x_0 ] -> Circle (float_of_json x_0)
+         | `List [ `String "Rectangle"; x_0; x_1 ] ->
+             Rectangle (float_of_json x_0, float_of_json x_1)
+         | `List [ `String "Point"; `Assoc fs ] ->
+             let x_x = ref Stdlib.Option.None in
+             let x_y = ref Stdlib.Option.None in
+             let rec iter = function
+               | [] -> ()
+               | (n', v) :: fs ->
+                   (match n' with
+                   | "x" -> x_x := Stdlib.Option.Some (float_of_json v)
+                   | "y" -> x_y := Stdlib.Option.Some (float_of_json v)
+                   | name ->
+                       Melange_json.of_json_error ~json:x
+                         (Stdlib.Printf.sprintf
+                            {|did not expect field "%s"|} name));
+                   iter fs
+             in
+             iter fs;
+             Point
+               {
+                 x =
+                   (match Stdlib.( ! ) x_x with
+                   | Stdlib.Option.Some v -> v
+                   | Stdlib.Option.None ->
+                       Melange_json.of_json_error ~json:x
+                         "expected field \"x\"");
+                 y =
+                   (match Stdlib.( ! ) x_y with
+                   | Stdlib.Option.Some v -> v
+                   | Stdlib.Option.None ->
+                       Melange_json.of_json_error ~json:x
+                         "expected field \"y\"");
+               }
+         | `List (`String "Empty" :: []) | `String "Empty" -> Empty
+         | _ ->
+             Melange_json.of_json_error ~json:x
+               "expected [\"Circle\", _] or [\"Rectangle\", _, _] or \
+                [\"Point\", { _ }] or [\"Empty\"]"
+        : Yojson.Basic.t -> shape)
+  
+    let _ = shape_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec shape_to_json =
+      (fun x ->
+         match x with
+         | Circle x_0 -> `List [ `String "Circle"; float_to_json x_0 ]
+         | Rectangle (x_0, x_1) ->
+             `List
+               [ `String "Rectangle"; float_to_json x_0; float_to_json x_1 ]
+         | Point { x = x_x; y = x_y } ->
+             `List
+               [
+                 `String "Point";
+                 `Assoc
+                   (let bnds__001_ = [] in
+                    let bnds__001_ =
+                      ("y", float_to_json x_y) :: bnds__001_
+                    in
+                    let bnds__001_ =
+                      ("x", float_to_json x_x) :: bnds__001_
+                    in
+                    bnds__001_);
+               ]
+         | Empty -> `String "Empty"
+        : shape -> Yojson.Basic.t)
+  
+    let _ = shape_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
+  > type must_be_object = { field: int } [@@deriving json]
+  > EOF
+  type must_be_object = { field : int } [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : must_be_object) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec must_be_object_of_json =
+      (fun x ->
+         match x with
+         | `Assoc fs ->
+             let x_field = ref Stdlib.Option.None in
+             let rec iter = function
+               | [] -> ()
+               | (n', v) :: fs ->
+                   (match n' with
+                   | "field" ->
+                       x_field := Stdlib.Option.Some (int_of_json v)
+                   | name ->
+                       Melange_json.of_json_error ~json:x
+                         (Stdlib.Printf.sprintf
+                            {|did not expect field "%s"|} name));
+                   iter fs
+             in
+             iter fs;
+             {
+               field =
+                 (match Stdlib.( ! ) x_field with
+                 | Stdlib.Option.Some v -> v
+                 | Stdlib.Option.None ->
+                     Melange_json.of_json_error ~json:x
+                       "expected field \"field\"");
+             }
+         | _ -> Melange_json.of_json_error ~json:x "expected a JSON object"
+        : Yojson.Basic.t -> must_be_object)
+  
+    let _ = must_be_object_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec must_be_object_to_json =
+      (fun x ->
+         match x with
+         | { field = x_field } ->
+             `Assoc
+               (let bnds__001_ = [] in
+                let bnds__001_ =
+                  ("field", int_to_json x_field) :: bnds__001_
+                in
+                bnds__001_)
+        : must_be_object -> Yojson.Basic.t)
+  
+    let _ = must_be_object_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
+  > type must_be_array_2 = (int * int) [@@deriving json]
+  > EOF
+  type must_be_array_2 = int * int [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : must_be_array_2) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec must_be_array_2_of_json =
+      (fun x ->
+         match x with
+         | `List [ x_0; x_1 ] -> int_of_json x_0, int_of_json x_1
+         | _ ->
+             Melange_json.of_json_error ~json:x
+               "expected a JSON array of length 2"
+        : Yojson.Basic.t -> must_be_array_2)
+  
+    let _ = must_be_array_2_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec must_be_array_2_to_json =
+      (fun x ->
+         match x with
+         | x_0, x_1 -> `List [ int_to_json x_0; int_to_json x_1 ]
+        : must_be_array_2 -> Yojson.Basic.t)
+  
+    let _ = must_be_array_2_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
+  > type must_be_array_3 = (int * int * int) [@@deriving json]
+  > EOF
+  type must_be_array_3 = int * int * int [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : must_be_array_3) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec must_be_array_3_of_json =
+      (fun x ->
+         match x with
+         | `List [ x_0; x_1; x_2 ] ->
+             int_of_json x_0, int_of_json x_1, int_of_json x_2
+         | _ ->
+             Melange_json.of_json_error ~json:x
+               "expected a JSON array of length 3"
+        : Yojson.Basic.t -> must_be_array_3)
+  
+    let _ = must_be_array_3_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec must_be_array_3_to_json =
+      (fun x ->
+         match x with
+         | x_0, x_1, x_2 ->
+             `List [ int_to_json x_0; int_to_json x_1; int_to_json x_2 ]
+        : must_be_array_3 -> Yojson.Basic.t)
+  
+    let _ = must_be_array_3_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
+  > type legacy_variant = A | B of int [@@deriving json] [@@json.legacy_variant]
+  > EOF
+  type legacy_variant = A | B of int
+  [@@deriving json] [@@json.legacy_variant]
+  
+  include struct
+    let _ = fun (_ : legacy_variant) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec legacy_variant_of_json =
+      (fun x ->
+         match x with
+         | `List (`String "A" :: []) | `String "A" -> A
+         | `List [ `String "B"; x_0 ] -> B (int_of_json x_0)
+         | _ ->
+             Melange_json.of_json_error ~json:x
+               "expected [\"A\"] or [\"B\", _]"
+        : Yojson.Basic.t -> legacy_variant)
+  
+    let _ = legacy_variant_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec legacy_variant_to_json =
+      (fun x ->
+         match x with
+         | A -> `List [ `String "A" ]
+         | B x_0 -> `List [ `String "B"; int_to_json x_0 ]
+        : legacy_variant -> Yojson.Basic.t)
+  
+    let _ = legacy_variant_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+

@@ -310,6 +310,41 @@ let t = of_json (Melange_json.of_string {|{"A": 42, "B": "foo"}|})
 (* t = { a = 42; b = "foo"; } *)
 ```
 
+#### Variant serialization behavior
+
+The PPX serializes variants differently based on whether they have payloads:
+
+- **Variants without payloads** are serialized as **strings**
+- **Variants with payloads** are serialized as **lists** with the first element being the constructor name
+
+```ocaml
+type string_option = 
+| None
+| Some of string
+[@@deriving json]
+
+(* None serializes to: "None" *)
+(* Some "hello" serializes to: ["Some", "hello"] *)
+```
+
+For backward compatibility, the old list format (e.g., `["None"]`) can still be parsed when deserializing.
+
+#### `[@@json.legacy_variant]`: backward-compatible variant serialization
+
+When applied to a variant type, this attribute forces payloadless variants to
+serialize as single-element arrays instead of strings. This is useful when you
+need to produce JSON that's compatible with consumers expecting the old format:
+
+```ocaml
+type t = A | B of int [@@deriving json] [@@json.legacy_variant]
+
+(* A serializes to: ["A"] instead of "A" *)
+(* B 42 serializes to: ["B", 42] (unchanged) *)
+```
+
+Deserialization still accepts both formats (strings and single-element arrays)
+regardless of this attribute.
+
 #### `[@json.name "S"]`: customizing the representation of a variant case
 
 You can specify custom representation for a variant case using the `[@json.name
