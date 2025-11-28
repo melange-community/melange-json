@@ -1279,3 +1279,38 @@
     let _ = must_be_array_3_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
+  $ cat <<"EOF" | run
+  > type legacy_variant = A | B of int [@@deriving json] [@@json.legacy_variant]
+  > EOF
+  type legacy_variant = A | B of int
+  [@@deriving json] [@@json.legacy_variant]
+  
+  include struct
+    let _ = fun (_ : legacy_variant) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec legacy_variant_of_json =
+      (fun x ->
+         match x with
+         | `List (`String "A" :: []) | `String "A" -> A
+         | `List [ `String "B"; x_0 ] -> B (int_of_json x_0)
+         | _ ->
+             Melange_json.of_json_error ~json:x
+               "expected [\"A\"] or [\"B\", _]"
+        : Yojson.Basic.t -> legacy_variant)
+  
+    let _ = legacy_variant_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec legacy_variant_to_json =
+      (fun x ->
+         match x with
+         | A -> `List [ `String "A" ]
+         | B x_0 -> `List [ `String "B"; int_to_json x_0 ]
+        : legacy_variant -> Yojson.Basic.t)
+  
+    let _ = legacy_variant_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+

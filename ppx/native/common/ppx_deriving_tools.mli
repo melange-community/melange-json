@@ -89,6 +89,7 @@ module Conv : sig
       expression) ->
     derive_of_variant_case:
       (derive_of_core_type ->
+      type_declaration option ->
       variant_case ->
       expression list ->
       expression) ->

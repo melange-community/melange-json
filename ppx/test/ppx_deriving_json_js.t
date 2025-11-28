@@ -1716,3 +1716,70 @@
     let _ = must_be_array_3_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
+  $ cat <<"EOF" | run
+  > type legacy_variant = A | B of int [@@deriving json] [@@json.legacy_variant]
+  > EOF
+  type legacy_variant = A | B of int
+  [@@deriving json] [@@json.legacy_variant]
+  
+  include struct
+    let _ = fun (_ : legacy_variant) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec legacy_variant_of_json =
+      (fun x ->
+         if Js.Array.isArray x then
+           let array = (Obj.magic x : Js.Json.t array) in
+           let len = Js.Array.length array in
+           if Stdlib.( > ) len 0 then
+             let tag = Js.Array.unsafe_get array 0 in
+             if Stdlib.( = ) (Js.typeof tag) "string" then
+               let tag = (Obj.magic tag : string) in
+               if Stdlib.( = ) tag "A" then
+                 if Stdlib.( <> ) len 1 then
+                   Melange_json.of_json_error ~json:x
+                     "expected a JSON array of length 1"
+                 else A
+               else if Stdlib.( = ) tag "B" then
+                 if Stdlib.( <> ) len 2 then
+                   Melange_json.of_json_error ~json:x
+                     "expected a JSON array of length 2"
+                 else B (int_of_json (Js.Array.unsafe_get array 1))
+               else
+                 Melange_json.of_json_error ~json:x
+                   "expected [\"B\", _] or [\"A\"]"
+             else
+               Melange_json.of_json_error ~json:x
+                 "expected a non empty JSON array with element being a \
+                  string"
+           else
+             Melange_json.of_json_error ~json:x
+               "expected a non empty JSON array"
+         else if Stdlib.( = ) (Js.typeof x) "string" then
+           let tag = (Obj.magic x : string) in
+           if Stdlib.( = ) tag "A" then A
+           else
+             Melange_json.of_json_error ~json:x
+               "expected a non empty JSON array"
+         else
+           Melange_json.of_json_error ~json:x
+             "expected a non empty JSON array"
+        : Js.Json.t -> legacy_variant)
+  
+    let _ = legacy_variant_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec legacy_variant_to_json =
+      (fun x ->
+         match x with
+         | A -> (Obj.magic [| (Obj.magic "A" : Js.Json.t) |] : Js.Json.t)
+         | B x_0 ->
+             (Obj.magic [| (Obj.magic "B" : Js.Json.t); int_to_json x_0 |]
+               : Js.Json.t)
+        : legacy_variant -> Js.Json.t)
+  
+    let _ = legacy_variant_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+

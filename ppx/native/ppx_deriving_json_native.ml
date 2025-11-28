@@ -227,7 +227,12 @@ module To_json = struct
         (let [%p pbnds] = [] in
          [%e e])]
 
-  let derive_of_variant_case derive vcs es =
+  let derive_of_variant_case derive td_opt vcs es =
+    let legacy =
+      match td_opt with
+      | Some td -> Option.is_some (td_attr_json_legacy_variant td)
+      | None -> false
+    in
     match vcs with
     | Vcs_tuple (_n, t) when vcs_attr_json_allow_any t.tpl_ctx -> (
         match es with
@@ -241,7 +246,7 @@ module To_json = struct
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
         let arity = List.length t.tpl_types in
         let vcs = Vcs_tuple (n, t) in
-        if arity = 0 && vcs_should_serialize_as_string vcs then
+        if arity = 0 && vcs_should_serialize_as_string ~legacy vcs then
           [%expr `String [%e estring ~loc:n.loc n.txt]]
         else
           [%expr

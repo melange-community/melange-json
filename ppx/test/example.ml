@@ -27,6 +27,7 @@ type json = Melange_json.t
 type of_json = C : string * (json -> 'a) * ('a -> json) * 'a -> of_json
 type color = Red | Green | Blue [@@deriving json]
 type shape = | Circle of float  (* radius *) | Rectangle of float * float  (* width * height *) | Point of { x: float; y: float } | Empty [@@deriving json]
+type legacy_variant = LegacyA | LegacyB of int [@@deriving json] [@@json.legacy_variant]
 
 let of_json_cases = [
   C ({|1|}, user_of_json, user_to_json, 1);
@@ -70,6 +71,10 @@ let of_json_cases = [
   C ({|["Point", {"x": 1.0, "y": 2.0}]|}, shape_of_json, shape_to_json, Point {x=1.0; y=2.0});
   C ({|["Empty"]|}, shape_of_json, shape_to_json, Empty);
   C ({|"Empty"|}, shape_of_json, shape_to_json, Empty);
+  (* legacy_variant: with [@@json.legacy_variant], payloadless variants serialize as lists *)
+  C ({|["LegacyA"]|}, legacy_variant_of_json, legacy_variant_to_json, LegacyA);
+  C ({|"LegacyA"|}, legacy_variant_of_json, legacy_variant_to_json, LegacyA);  (* can still parse string format *)
+  C ({|["LegacyB", 42]|}, legacy_variant_of_json, legacy_variant_to_json, LegacyB 42);
 ]
 let run' (C (data, of_json, to_json, v)) =
   print_endline (Printf.sprintf "JSON    DATA: %s" data);

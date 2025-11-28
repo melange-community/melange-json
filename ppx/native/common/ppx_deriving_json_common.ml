@@ -35,16 +35,25 @@ let vcs_attr_json_allow_any =
     | None -> false
     | Some () -> true
 
+let td_attr_json_legacy_variant =
+  Attribute.get
+    (Attribute.declare "json.legacy_variant"
+       Attribute.Context.type_declaration
+       Ast_pattern.(pstr nil)
+       ())
+
 (* Automatic variant serialization: zero-arity -> string, non-zero-arity -> list *)
-let vcs_should_serialize_as_string vcs =
-  match vcs with
-  | Vcs_tuple (_, t) ->
-      let arity = List.length t.tpl_types in
-      (* Automatically serialize as string if no payload, unless explicitly disabled *)
-      arity = 0 && not (vcs_attr_json_allow_any t.tpl_ctx)
-  | Vcs_record (_, _) ->
-      (* Records always serialize as lists (current behavior) *)
-      false
+let vcs_should_serialize_as_string ?(legacy = false) vcs =
+  if legacy then false
+  else
+    match vcs with
+    | Vcs_tuple (_, t) ->
+        let arity = List.length t.tpl_types in
+        (* Automatically serialize as string if no payload, unless explicitly disabled *)
+        arity = 0 && not (vcs_attr_json_allow_any t.tpl_ctx)
+    | Vcs_record (_, _) ->
+        (* Records always serialize as lists (current behavior) *)
+        false
 
 let ld_attr_json_key =
   Attribute.get

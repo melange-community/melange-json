@@ -283,7 +283,12 @@ module To_json = struct
     let record = pexp_record ~loc fs None in
     as_json ~loc [%expr [%mel.obj [%e record]]]
 
-  let derive_of_variant_case derive c es =
+  let derive_of_variant_case derive td_opt c es =
+    let legacy =
+      match td_opt with
+      | Some td -> Option.is_some (td_attr_json_legacy_variant td)
+      | None -> false
+    in
     match c with
     | Vcs_record (n, r) ->
         let loc = n.loc in
@@ -307,7 +312,7 @@ module To_json = struct
           [%expr (Obj.magic [%e estring ~loc:n.loc n.txt] : Js.Json.t)]
         in
         let arity = List.length t.tpl_types in
-        if arity = 0 then
+        if arity = 0 && not legacy then
           as_json ~loc
             [%expr (Obj.magic [%e estring ~loc:n.loc n.txt] : Js.Json.t)]
         else

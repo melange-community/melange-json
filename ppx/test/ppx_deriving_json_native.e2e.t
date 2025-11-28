@@ -99,6 +99,12 @@
   JSON REPRINT: "Empty"
   JSON    DATA: "Empty"
   JSON REPRINT: "Empty"
+  JSON    DATA: ["LegacyA"]
+  JSON REPRINT: ["LegacyA"]
+  JSON    DATA: "LegacyA"
+  JSON REPRINT: ["LegacyA"]
+  JSON    DATA: ["LegacyB", 42]
+  JSON REPRINT: ["LegacyB",42]
   
   Testing error cases:
   ERROR CASE DATA: 42
