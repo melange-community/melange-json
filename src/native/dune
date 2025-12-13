@@ -1,7 +1,8 @@
 (library
  (name melange_json)
  (public_name melange-json-native)
- (libraries (re_export yojson)))
+ (libraries
+  (re_export yojson)))
 
 (copy_files
  (files ../errors.ml))
