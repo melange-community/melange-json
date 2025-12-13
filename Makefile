@@ -22,8 +22,8 @@ init: create-switch install ## Configure everything to develop this repository i
 install: ## Install development dependencies
 	yarn
 	opam update
-	opam install -y . --deps-only --with-test
-	opam-check-npm-deps
+	opam install -y . --deps-only --with-test --with-dev-setup
+	opam exec -- opam-check-npm-deps
 
 .PHONY: build
 build: ## Build the project
