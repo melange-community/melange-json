@@ -1,3 +1,8 @@
+## Unreleased
+
+- Support `Ptype_open`, e.g. `type u = X.(x) [@@deriving json]`
+  ([#60](https://github.com/melange-community/melange-json/pull/60))
+
 ## 2.0.0 (2025-03-11)
 
 - **[breaking]** Library, PPX: Unify runtimes (`*.ppx-runtime` libraries are
