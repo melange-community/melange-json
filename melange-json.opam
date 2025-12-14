@@ -38,3 +38,7 @@ build: [
   ]
 ]
 dev-repo: "git+https://github.com/melange-community/melange-json.git"
+pin-depends: [
+  [ "opam-check-npm-deps.dev" "git+https://github.com/ahrefs/opam-check-npm-deps.git#12e63761842c71dc3a688257f7827580ebe2b7f1"]
+]
+
