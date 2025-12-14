@@ -35,8 +35,8 @@
     (>= "3.10.0")
     :with-test))
   (ppxlib
-   (>= "0.32.0"))
-  (opam-check-npm-deps :with-dev-setup)
+   (>= "0.36.0"))
+  (opam-check-npm-deps (and :dev :with-dev-setup))
   (ocaml-lsp-server :with-dev-setup)
   (ocamlformat
    (and
@@ -53,6 +53,6 @@
   (ocaml
    (>= "4.12"))
   (ppxlib
-   (>= "0.32.0"))
+   (>= "0.36.0"))
   (yojson
    (>= "1.6.0"))))
