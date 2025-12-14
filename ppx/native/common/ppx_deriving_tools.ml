@@ -409,7 +409,7 @@ module Conv = struct
          let allow_any_constr =
            cs
            |> List.find_opt ~f:(fun cs ->
-                  is_allow_any_constr (Vcs_ctx_variant cs))
+               is_allow_any_constr (Vcs_ctx_variant cs))
            |> Option.map (fun cs e -> econstruct cs (Some e))
          in
          let cs =
@@ -479,13 +479,13 @@ module Conv = struct
          let allow_any_constr =
            cs
            |> List.find_opt ~f:(fun cs ->
-                  is_allow_any_constr (Vcs_ctx_polyvariant cs))
+               is_allow_any_constr (Vcs_ctx_polyvariant cs))
            |> Option.map (fun cs ->
-                  match cs.prf_desc with
-                  | Rinherit _ ->
-                      failwith "[@allow_any] placed on inherit clause"
-                  | Rtag (n, _, _) ->
-                      fun e -> pexp_variant ~loc:n.loc n.txt (Some e))
+               match cs.prf_desc with
+               | Rinherit _ ->
+                   failwith "[@allow_any] placed on inherit clause"
+               | Rtag (n, _, _) ->
+                   fun e -> pexp_variant ~loc:n.loc n.txt (Some e))
          in
          let cs =
            List.filter

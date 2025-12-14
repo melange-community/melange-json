@@ -2,7 +2,7 @@
 let mapJsonObjectString f decoder (encoder : int -> Js.Json.t) str =
   let json = Melange_json.of_string str in
   Melange_json.Of_json.(js_dict decoder json)
-  |> Js.Dict.map ~f:(fun [@u] v -> f v)
+  |> Js.Dict.map ~f:(fun[@u] v -> f v)
   |> Melange_json.To_json.js_dict encoder
   |> Melange_json.to_string
 
