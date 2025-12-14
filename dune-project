@@ -35,13 +35,13 @@
     (>= "3.10.0")
     :with-test))
   (ppxlib
-   (>= "0.32.0"))
-  (opam-check-npm-deps :with-test) ; todo: use with-dev-setup once opam 2.2 is out
-  (ocaml-lsp-server :with-test)
+   (>= "0.36.0"))
+  (opam-check-npm-deps :with-dev-setup)
+  (ocaml-lsp-server :with-dev-setup)
   (ocamlformat
    (and
     (>= "0.27.0")
-    :with-test))))
+    :with-dev-setup))))
 
 (package
  (name melange-json-native)
@@ -53,6 +53,6 @@
   (ocaml
    (>= "4.12"))
   (ppxlib
-   (>= "0.32.0"))
+   (>= "0.36.0"))
   (yojson
    (>= "1.6.0"))))
