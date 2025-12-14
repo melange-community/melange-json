@@ -8,7 +8,7 @@
       forAllSystems = f: nixpkgs.lib.genAttrs nixpkgs.lib.systems.flakeExposed (system:
         let
           pkgs = nixpkgs.legacyPackages.${system}.extend (self: super: {
-            ocamlPackages = super.ocaml-ng.ocamlPackages_5_2;
+            ocamlPackages = super.ocaml-ng.ocamlPackages_5_4;
           });
         in
         f pkgs);
@@ -56,6 +56,7 @@
               merlin
               melange-jest
               reason
+              ocaml-lsp
             ]);
             inherit buildInputs;
           };
