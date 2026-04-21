@@ -208,6 +208,16 @@ module To_json = struct
                   match [%e x] with
                   | Stdlib.Option.None -> [%e ebnds]
                   | Stdlib.Option.Some _ -> ([%e k], [%e v]) :: [%e ebnds]]
+            | `Drop_default (cmp, def) ->
+                [%expr
+                  if [%e cmp] [%e x] [%e def] then [%e ebnds]
+                  else ([%e k], [%e v]) :: [%e ebnds]]
+            | `Drop_default_if_json_equal def ->
+                [%expr
+                  let json = [%e v] in
+                  if Melange_json.equal json [%e derive ld.pld_type def]
+                  then [%e ebnds]
+                  else ([%e k], json) :: [%e ebnds]]
           in
           [%expr
             let [%p pbnds] = [%e ebnds] in

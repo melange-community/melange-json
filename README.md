@@ -281,18 +281,77 @@ let t = of_json (Melange_json.of_string {|{"a": 42}|})
 
 #### `[@json.drop_default]`: drop default values from JSON
 
-When a field has `[@option]` attribute one can use `[@json.drop_default]`
-attribute to make the generated `to_json` function to drop the field if it's
-value is `None`:
+When a field has either `[@json.option]` or `[@json.default]` attributes, you can use the `[@json.drop_default]` 
+attribute to make the generated `to_json` function drop the field
+from the JSON output when its value matches the default.
+
+In its flag form (no argument), `[@json.drop_default]` checks for `None` when used with
+`[@json.option]`, and requires an `equal_<type>` function in scope when used with
+`[@json.default]`:
 
 ```ocaml
+let equal_string = String.equal
+
 type t = {
   a: int;
   b: string option [@json.option] [@json.drop_default];
+  c: string [@json.default "-"] [@json.drop_default];
 } [@@deriving to_json]
 
-let t = to_json { a = 1; b = None; }
+let t = to_json { a = 1; b = None; c = "-"; }
 (* {"a": 1} *)
+```
+
+For parameterized types, the equal function takes the inner type's `equal_<type>`
+function as an argument, so a field of type `int list` generates a call to `equal_list equal_int`,
+`int list list` generates `equal_list (equal_list equal_int)`, and so on.
+
+```ocaml
+let equal_int = Int.equal
+let rec equal_list equal_a a b =
+  match a, b with
+  | [], [] -> true
+  | x :: xs, y :: ys -> equal_a x y && equal_list equal_a xs ys
+  | _ -> false
+
+type t = {
+  items: int list [@json.default []] [@json.drop_default];
+} [@@deriving to_json]
+
+let json = to_json { items = [] }
+(* {} *)
+```
+
+You can also provide a custom comparison function of type `'a -> 'a -> bool` directly:
+
+```ocaml
+type t = {
+  f: float [@json.default 0.0] [@json.drop_default Float.equal];
+} [@@deriving to_json]
+
+let json = to_json { f = 0.0 }
+(* {} *)
+```
+
+#### `[@json.drop_default_if_json_equal]`: drop defaults by comparing JSON output
+
+A (mutually exclusive) alternative to `[@json.drop_default]` that compares values at the JSON level
+rather than requiring an `equal_<type>` function. This is useful for complex or
+nested types where you already have `to_json` but don't want to derive or write
+equality functions:
+
+```ocaml
+type color = { r: int; g: int; b: int } [@@deriving json]
+
+type style = {
+  font_size: int;
+  background: color
+    [@json.default { r = 255; g = 255; b = 255 }]
+    [@json.drop_default_if_json_equal];
+} [@@deriving json]
+
+let json = to_json { font_size = 12; background = { r = 255; g = 255; b = 255 } }
+(* {"font_size": 12} *)
 ```
 
 #### `[@json.key "S"]`: customizing keys for record fields

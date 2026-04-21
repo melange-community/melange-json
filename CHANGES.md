@@ -2,6 +2,15 @@
 
 - Support `Ptype_open`, e.g. `type u = X.(x) [@@deriving json]`
   ([#60](https://github.com/melange-community/melange-json/pull/60))
+- Add support for `[@drop_default]` with `[@default]` to omit fields
+  from JSON output when their value matches the default. Equality is
+  resolved via `equal_<type>` functions in scope by default, but a custom comparison
+  function can be provided directly, e.g. `[@json.drop_default Int.equal]`
+  ([#77](https://github.com/melange-community/melange-json/pull/77))
+- Add `Melange_json.equal` for comparing two JSON values, and
+  `[@drop_default_if_json_equal]` as an alternative to `[@.drop_default]`
+  that compares values at the JSON level
+  ([#77](https://github.com/melange-community/melange-json/pull/77))
 
 ## 2.0.0 (2025-03-11)
 

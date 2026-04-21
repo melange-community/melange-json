@@ -13,4 +13,3 @@
  (applies_to ptype_open)
  (enabled_if
   (>= %{ocaml_version} 5.2.0)))
-

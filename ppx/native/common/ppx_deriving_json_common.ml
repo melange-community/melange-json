@@ -71,8 +71,16 @@ let ld_attr_json_drop_default =
   Attribute.get
     (Attribute.declare "json.drop_default"
        Attribute.Context.label_declaration
-       Ast_pattern.(pstr nil)
-       ())
+       Ast_pattern.(
+         pstr (map0 ~f:None nil) (* flag form *)
+         ||| single_expr_payload (map1 ~f:Option.some __)
+         (* comparison function *))
+       (fun x -> x))
+
+let ld_attr_json_drop_default_if_json_equal =
+  Attribute.get
+    (Attribute.declare_flag "json.drop_default_if_json_equal"
+       Attribute.Context.label_declaration)
 
 let ld_attr_default ld =
   match ld_attr_json_default ld with
@@ -84,14 +92,74 @@ let ld_attr_default ld =
           Some [%expr Stdlib.Option.None]
       | None -> None)
 
+let equal_affix = Expansion_helpers.Prefix "equal"
+
+let rec equal_of_core_type ~loc ct =
+  match ct.ptyp_desc with
+  | Ptyp_constr (lid, args) ->
+      let fn =
+        pexp_ident ~loc
+          { loc; txt = Expansion_helpers.mangle_lid equal_affix lid.txt }
+      in
+      List.fold_left (List.rev args) ~init:fn ~f:(fun acc arg ->
+          pexp_apply ~loc acc [ Nolabel, equal_of_core_type ~loc arg ])
+  | Ptyp_var name -> evar ~loc (Expansion_helpers.mangle equal_affix name)
+  | _ ->
+      Location.raise_errorf ~loc
+        "[@drop_default]: cannot derive equal for this type, provide a \
+         comparison function via [@drop_default f]"
+
 let ld_drop_default ld =
   let loc = ld.pld_loc in
-  match ld_attr_json_drop_default ld, ld_attr_json_option ld with
-  | Some (), None ->
+  let drop_default = ld_attr_json_drop_default ld in
+  let drop_json_equal = ld_attr_json_drop_default_if_json_equal ld in
+  match drop_default, drop_json_equal with
+  | Some _, Some () ->
       Location.raise_errorf ~loc
-        "found [@drop_default] attribute without [@option]"
-  | Some (), Some () -> `Drop_option
-  | None, _ -> `No
+        "[@drop_default] and [@drop_default_if_json_equal] are mutually \
+         exclusive"
+  | None, None -> `No
+  | None, Some () -> begin
+      match ld_attr_json_option ld, ld_attr_json_default ld with
+      | None, Some def -> `Drop_default_if_json_equal def
+      | Some (), None ->
+          Location.raise_errorf ~loc
+            "[@drop_default_if_json_equal] cannot be used with \
+             [@option]. Use [@drop_default] instead."
+      | Some (), Some _ ->
+          Location.raise_errorf ~loc
+            "[@drop_default_if_json_equal] cannot be used with both \
+             [@option] and [@default]. Use [@json.default] only."
+      | None, None ->
+          Location.raise_errorf ~loc
+            "[@drop_default_if_json_equal] requires [@json.default]"
+    end
+  | Some None, None -> begin
+      (* flag form: [@json.drop_default] *)
+      match ld_attr_json_option ld, ld_attr_json_default ld with
+      | Some (), None -> `Drop_option
+      | None, Some def ->
+          let cmp = equal_of_core_type ~loc ld.pld_type in
+          `Drop_default (cmp, def)
+      | Some (), Some _ ->
+          Location.raise_errorf ~loc
+            "[@drop_default] cannot be used with both [@option] and \
+             [@default]"
+      | None, None ->
+          Location.raise_errorf ~loc
+            "[@drop_default] requires either [@option] or [@default]"
+    end
+  | Some (Some cmp), None -> begin
+      (* expression form: [@json.drop_default expr] *)
+      match ld_attr_json_option ld, ld_attr_json_default ld with
+      | None, Some def -> `Drop_default (cmp, def)
+      | Some (), _ ->
+          Location.raise_errorf ~loc
+            "[@drop_default expr] cannot be used with [@option]"
+      | None, None ->
+          Location.raise_errorf ~loc
+            "[@drop_default expr] requires [@default]"
+    end
 
 let expand_via ~what ~through make ~ctxt (rec_flag, tds) =
   let loc = Expansion_context.Deriver.derived_item_loc ctxt in

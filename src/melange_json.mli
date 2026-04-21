@@ -437,3 +437,5 @@ val declassify :
   | `String of string ] ->
   json
 (** Declassify a variant type into a JSON value. *)
+
+val equal : json -> json -> bool

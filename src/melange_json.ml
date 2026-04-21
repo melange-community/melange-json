@@ -413,3 +413,52 @@ let parseOrRaise s =
     raise @@ ParseError message
 
 external stringify : Js.Json.t -> string = "JSON.stringify"
+
+let rec equal (a : Js.Json.t) (b : Js.Json.t) : bool =
+  if (Obj.magic a : 'a Js.null) == Js.null then
+    (Obj.magic b : 'a Js.null) == Js.null
+  else if (Obj.magic b : 'a Js.null) == Js.null then false
+  else
+    let ta = Js.typeof a in
+    if ta <> Js.typeof b then false
+    else if ta = "string" then
+      (Obj.magic a : string) = (Obj.magic b : string)
+    else if ta = "number" then
+      (Obj.magic a : float) = (Obj.magic b : float)
+    else if ta = "boolean" then
+      (Obj.magic a : bool) = (Obj.magic b : bool)
+    else
+      (* could be array or object *)
+      let a_is_array = Js.Array.isArray a in
+      if a_is_array <> Js.Array.isArray b then false
+      else if a_is_array then
+        let a = (Obj.magic a : Js.Json.t array) in
+        let b = (Obj.magic b : Js.Json.t array) in
+        let len = Js.Array.length a in
+        len = Js.Array.length b
+        && begin
+          let rec loop i =
+            i >= len
+            || equal (Array.unsafe_get a i) (Array.unsafe_get b i)
+               && loop (i + 1)
+          in
+          loop 0
+        end
+      else
+        let a = (Obj.magic a : Js.Json.t Js.Dict.t) in
+        let b = (Obj.magic b : Js.Json.t Js.Dict.t) in
+        let ka = Js.Dict.keys a in
+        let kb = Js.Dict.keys b in
+        Js.Array.length ka = Js.Array.length kb
+        && begin
+          let rec loop i =
+            if i >= Js.Array.length ka then true
+            else
+              let key = Array.unsafe_get ka i in
+              match Js.Dict.get b key with
+              | None -> false
+              | Some vb ->
+                  equal (Js.Dict.unsafeGet a key) vb && loop (i + 1)
+          in
+          loop 0
+        end

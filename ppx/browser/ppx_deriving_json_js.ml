@@ -214,6 +214,16 @@ module To_json = struct
                   match [%e x] with
                   | Stdlib.Option.None -> Js.Undefined.empty
                   | Stdlib.Option.Some _ -> Js.Undefined.return [%e v]]
+            | `Drop_default (cmp, def) ->
+                [%expr
+                  if [%e cmp] [%e x] [%e def] then Js.Undefined.empty
+                  else Js.Undefined.return [%e v]]
+            | `Drop_default_if_json_equal def ->
+                [%expr
+                  let json = [%e v] in
+                  if Melange_json.equal json [%e derive ld.pld_type def]
+                  then Js.Undefined.empty
+                  else Js.Undefined.return json]
           in
           map_loc lident k, v)
     in

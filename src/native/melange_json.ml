@@ -134,3 +134,5 @@ module Primitives = struct
   let list_to_json = To_json.list
   let array_to_json = To_json.array
 end
+
+let equal = Yojson.Basic.equal

@@ -927,3 +927,214 @@
   
     let _ = drop_default_option_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
+  $ cat <<"EOF" | run
+  > type drop_default = { a: int; b: int; [@default 1] [@json.drop_default (fun a b -> if compare a b = 0 then true else false)] } [@@deriving json]
+  > EOF
+  type drop_default = {
+    a : int;
+    b : int;
+        [@default 1]
+        [@json.drop_default
+          fun a b -> if compare a b = 0 then true else false]
+  }
+  [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : drop_default) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec drop_default_of_json =
+      (fun x ->
+         match x with
+         | `Assoc fs ->
+             let x_a = ref Stdlib.Option.None in
+             let x_b = ref (Stdlib.Option.Some 1) in
+             let rec iter = function
+               | [] -> ()
+               | (n', v) :: fs ->
+                   (match n' with
+                   | "a" -> x_a := Stdlib.Option.Some (int_of_json v)
+                   | "b" -> x_b := Stdlib.Option.Some (int_of_json v)
+                   | name ->
+                       Melange_json.of_json_error ~json:x
+                         (Stdlib.Printf.sprintf
+                            {|did not expect field "%s"|} name));
+                   iter fs
+             in
+             iter fs;
+             {
+               a =
+                 (match Stdlib.( ! ) x_a with
+                 | Stdlib.Option.Some v -> v
+                 | Stdlib.Option.None ->
+                     Melange_json.of_json_error ~json:x
+                       "expected field \"a\"");
+               b =
+                 (match Stdlib.( ! ) x_b with
+                 | Stdlib.Option.Some v -> v
+                 | Stdlib.Option.None -> 1);
+             }
+         | _ -> Melange_json.of_json_error ~json:x "expected a JSON object"
+        : Yojson.Basic.t -> drop_default)
+  
+    let _ = drop_default_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec drop_default_to_json =
+      (fun x ->
+         match x with
+         | { a = x_a; b = x_b } ->
+             `Assoc
+               (let bnds__001_ = [] in
+                let bnds__001_ =
+                  if
+                    (fun a b -> if compare a b = 0 then true else false)
+                      x_b 1
+                  then bnds__001_
+                  else ("b", int_to_json x_b) :: bnds__001_
+                in
+                let bnds__001_ = ("a", int_to_json x_a) :: bnds__001_ in
+                bnds__001_)
+        : drop_default -> Yojson.Basic.t)
+  
+    let _ = drop_default_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+  $ cat <<"EOF" | run
+  > type drop_default_default_eq = { a: int; b: int; [@default 1] [@json.drop_default] } [@@deriving json]
+  > EOF
+  type drop_default_default_eq = {
+    a : int;
+    b : int; [@default 1] [@json.drop_default]
+  }
+  [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : drop_default_default_eq) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec drop_default_default_eq_of_json =
+      (fun x ->
+         match x with
+         | `Assoc fs ->
+             let x_a = ref Stdlib.Option.None in
+             let x_b = ref (Stdlib.Option.Some 1) in
+             let rec iter = function
+               | [] -> ()
+               | (n', v) :: fs ->
+                   (match n' with
+                   | "a" -> x_a := Stdlib.Option.Some (int_of_json v)
+                   | "b" -> x_b := Stdlib.Option.Some (int_of_json v)
+                   | name ->
+                       Melange_json.of_json_error ~json:x
+                         (Stdlib.Printf.sprintf
+                            {|did not expect field "%s"|} name));
+                   iter fs
+             in
+             iter fs;
+             {
+               a =
+                 (match Stdlib.( ! ) x_a with
+                 | Stdlib.Option.Some v -> v
+                 | Stdlib.Option.None ->
+                     Melange_json.of_json_error ~json:x
+                       "expected field \"a\"");
+               b =
+                 (match Stdlib.( ! ) x_b with
+                 | Stdlib.Option.Some v -> v
+                 | Stdlib.Option.None -> 1);
+             }
+         | _ -> Melange_json.of_json_error ~json:x "expected a JSON object"
+        : Yojson.Basic.t -> drop_default_default_eq)
+  
+    let _ = drop_default_default_eq_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec drop_default_default_eq_to_json =
+      (fun x ->
+         match x with
+         | { a = x_a; b = x_b } ->
+             `Assoc
+               (let bnds__001_ = [] in
+                let bnds__001_ =
+                  if equal_int x_b 1 then bnds__001_
+                  else ("b", int_to_json x_b) :: bnds__001_
+                in
+                let bnds__001_ = ("a", int_to_json x_a) :: bnds__001_ in
+                bnds__001_)
+        : drop_default_default_eq -> Yojson.Basic.t)
+  
+    let _ = drop_default_default_eq_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+  $ cat <<"EOF" | run
+  > type drop_default_if_json_equal = { a: int; b: int; [@default 1] [@json.drop_default_if_json_equal] } [@@deriving json]
+  > EOF
+  type drop_default_if_json_equal = {
+    a : int;
+    b : int; [@default 1] [@json.drop_default_if_json_equal]
+  }
+  [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : drop_default_if_json_equal) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec drop_default_if_json_equal_of_json =
+      (fun x ->
+         match x with
+         | `Assoc fs ->
+             let x_a = ref Stdlib.Option.None in
+             let x_b = ref (Stdlib.Option.Some 1) in
+             let rec iter = function
+               | [] -> ()
+               | (n', v) :: fs ->
+                   (match n' with
+                   | "a" -> x_a := Stdlib.Option.Some (int_of_json v)
+                   | "b" -> x_b := Stdlib.Option.Some (int_of_json v)
+                   | name ->
+                       Melange_json.of_json_error ~json:x
+                         (Stdlib.Printf.sprintf
+                            {|did not expect field "%s"|} name));
+                   iter fs
+             in
+             iter fs;
+             {
+               a =
+                 (match Stdlib.( ! ) x_a with
+                 | Stdlib.Option.Some v -> v
+                 | Stdlib.Option.None ->
+                     Melange_json.of_json_error ~json:x
+                       "expected field \"a\"");
+               b =
+                 (match Stdlib.( ! ) x_b with
+                 | Stdlib.Option.Some v -> v
+                 | Stdlib.Option.None -> 1);
+             }
+         | _ -> Melange_json.of_json_error ~json:x "expected a JSON object"
+        : Yojson.Basic.t -> drop_default_if_json_equal)
+  
+    let _ = drop_default_if_json_equal_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec drop_default_if_json_equal_to_json =
+      (fun x ->
+         match x with
+         | { a = x_a; b = x_b } ->
+             `Assoc
+               (let bnds__001_ = [] in
+                let bnds__001_ =
+                  let json = int_to_json x_b in
+                  if Melange_json.equal json (int_to_json 1) then bnds__001_
+                  else ("b", json) :: bnds__001_
+                in
+                let bnds__001_ = ("a", int_to_json x_a) :: bnds__001_ in
+                bnds__001_)
+        : drop_default_if_json_equal -> Yojson.Basic.t)
+  
+    let _ = drop_default_if_json_equal_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]

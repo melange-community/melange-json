@@ -1222,6 +1222,252 @@
     let _ = drop_default_option_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
   $ cat <<"EOF" | run
+  > type drop_default_default_eq = { a: int; b: int; [@default 1] [@json.drop_default] } [@@deriving json]
+  > EOF
+  type drop_default_default_eq = {
+    a : int;
+    b : int; [@default 1] [@json.drop_default]
+  }
+  [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : drop_default_default_eq) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec drop_default_default_eq_of_json =
+      (fun x ->
+         if
+           Stdlib.not
+             (Stdlib.( && )
+                (Stdlib.( = ) (Js.typeof x) "object")
+                (Stdlib.( && )
+                   (Stdlib.not (Js.Array.isArray x))
+                   (Stdlib.not
+                      (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
+         then Melange_json.of_json_error ~json:x "expected a JSON object";
+         let fs =
+           (Obj.magic x
+             : < a : Js.Json.t Js.undefined ; b : Js.Json.t Js.undefined >
+               Js.t)
+         in
+         {
+           a =
+             (match Js.Undefined.toOption fs##a with
+             | Stdlib.Option.Some v -> int_of_json v
+             | Stdlib.Option.None ->
+                 Melange_json.of_json_error ~json:x
+                   "expected field \"a\" to be present");
+           b =
+             (match Js.Undefined.toOption fs##b with
+             | Stdlib.Option.Some v -> int_of_json v
+             | Stdlib.Option.None -> 1);
+         }
+        : Js.Json.t -> drop_default_default_eq)
+  
+    let _ = drop_default_default_eq_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec drop_default_default_eq_to_json =
+      (fun x ->
+         match x with
+         | { a = x_a; b = x_b } ->
+             (Obj.magic
+                [%mel.obj
+                  {
+                    a = int_to_json x_a;
+                    b =
+                      (if equal_int x_b 1 then Js.Undefined.empty
+                       else Js.Undefined.return (int_to_json x_b));
+                  }]
+               : Js.Json.t)
+        : drop_default_default_eq -> Js.Json.t)
+  
+    let _ = drop_default_default_eq_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+  $ cat <<"EOF" | run
+  > type variant_any = Other of Yojson.Basic.t [@allow_any] | Foo [@@deriving json]
+  > EOF
+  type variant_any = Other of Yojson.Basic.t [@allow_any] | Foo
+  [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : variant_any) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec variant_any_of_json =
+      (fun x ->
+         if Js.Array.isArray x then
+           let array = (Obj.magic x : Js.Json.t array) in
+           let len = Js.Array.length array in
+           if Stdlib.( > ) len 0 then
+             let tag = Js.Array.unsafe_get array 0 in
+             if Stdlib.( = ) (Js.typeof tag) "string" then
+               let tag = (Obj.magic tag : string) in
+               if Stdlib.( = ) tag "Foo" then
+                 if Stdlib.( <> ) len 1 then Other x else Foo
+               else Other x
+             else Other x
+           else Other x
+         else Other x
+        : Js.Json.t -> variant_any)
+  
+    let _ = variant_any_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec variant_any_to_json =
+      (fun x ->
+         match x with
+         | Other x_0 -> x_0
+         | Foo ->
+             (Obj.magic [| (Obj.magic "Foo" : Js.Json.t) |] : Js.Json.t)
+        : variant_any -> Js.Json.t)
+  
+    let _ = variant_any_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+  $ cat <<"EOF" | run
+  > type drop_default = { a: int; b: int; [@default 1] [@json.drop_default (fun a b -> if compare a b = 0 then true else false)] } [@@deriving json]
+  > EOF
+  type drop_default = {
+    a : int;
+    b : int;
+        [@default 1]
+        [@json.drop_default
+          fun a b -> if compare a b = 0 then true else false]
+  }
+  [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : drop_default) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec drop_default_of_json =
+      (fun x ->
+         if
+           Stdlib.not
+             (Stdlib.( && )
+                (Stdlib.( = ) (Js.typeof x) "object")
+                (Stdlib.( && )
+                   (Stdlib.not (Js.Array.isArray x))
+                   (Stdlib.not
+                      (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
+         then Melange_json.of_json_error ~json:x "expected a JSON object";
+         let fs =
+           (Obj.magic x
+             : < a : Js.Json.t Js.undefined ; b : Js.Json.t Js.undefined >
+               Js.t)
+         in
+         {
+           a =
+             (match Js.Undefined.toOption fs##a with
+             | Stdlib.Option.Some v -> int_of_json v
+             | Stdlib.Option.None ->
+                 Melange_json.of_json_error ~json:x
+                   "expected field \"a\" to be present");
+           b =
+             (match Js.Undefined.toOption fs##b with
+             | Stdlib.Option.Some v -> int_of_json v
+             | Stdlib.Option.None -> 1);
+         }
+        : Js.Json.t -> drop_default)
+  
+    let _ = drop_default_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec drop_default_to_json =
+      (fun x ->
+         match x with
+         | { a = x_a; b = x_b } ->
+             (Obj.magic
+                [%mel.obj
+                  {
+                    a = int_to_json x_a;
+                    b =
+                      (if
+                         (fun a b ->
+                           if compare a b = 0 then true else false)
+                           x_b 1
+                       then Js.Undefined.empty
+                       else Js.Undefined.return (int_to_json x_b));
+                  }]
+               : Js.Json.t)
+        : drop_default -> Js.Json.t)
+  
+    let _ = drop_default_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+  $ cat <<"EOF" | run
+  > type drop_default_if_json_equal = { a: int; b: int; [@default 1] [@json.drop_default_if_json_equal] } [@@deriving json]
+  > EOF
+  type drop_default_if_json_equal = {
+    a : int;
+    b : int; [@default 1] [@json.drop_default_if_json_equal]
+  }
+  [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : drop_default_if_json_equal) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec drop_default_if_json_equal_of_json =
+      (fun x ->
+         if
+           Stdlib.not
+             (Stdlib.( && )
+                (Stdlib.( = ) (Js.typeof x) "object")
+                (Stdlib.( && )
+                   (Stdlib.not (Js.Array.isArray x))
+                   (Stdlib.not
+                      (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
+         then Melange_json.of_json_error ~json:x "expected a JSON object";
+         let fs =
+           (Obj.magic x
+             : < a : Js.Json.t Js.undefined ; b : Js.Json.t Js.undefined >
+               Js.t)
+         in
+         {
+           a =
+             (match Js.Undefined.toOption fs##a with
+             | Stdlib.Option.Some v -> int_of_json v
+             | Stdlib.Option.None ->
+                 Melange_json.of_json_error ~json:x
+                   "expected field \"a\" to be present");
+           b =
+             (match Js.Undefined.toOption fs##b with
+             | Stdlib.Option.Some v -> int_of_json v
+             | Stdlib.Option.None -> 1);
+         }
+        : Js.Json.t -> drop_default_if_json_equal)
+  
+    let _ = drop_default_if_json_equal_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec drop_default_if_json_equal_to_json =
+      (fun x ->
+         match x with
+         | { a = x_a; b = x_b } ->
+             (Obj.magic
+                [%mel.obj
+                  {
+                    a = int_to_json x_a;
+                    b =
+                      (let json = int_to_json x_b in
+                       if Melange_json.equal json (int_to_json 1) then
+                         Js.Undefined.empty
+                       else Js.Undefined.return json);
+                  }]
+               : Js.Json.t)
+        : drop_default_if_json_equal -> Js.Json.t)
+  
+    let _ = drop_default_if_json_equal_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+  $ cat <<"EOF" | run
   > type variant_any = Other of Yojson.Basic.t [@allow_any] | Foo [@@deriving json]
   > EOF
   type variant_any = Other of Yojson.Basic.t [@allow_any] | Foo
