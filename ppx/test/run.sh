@@ -13,6 +13,7 @@ echo '
  (name lib)
  (modes melange)
  (modules main_js)
+ (libraries melange-json)
  (flags :standard -w -20-37-69 -open Melange_json.Primitives)
  (preprocess (pps melange.ppx melange-json.ppx)))
 (melange.emit

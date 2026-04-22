@@ -322,6 +322,34 @@ let json = to_json B
 (* "bbb" *)
 ```
 
+#### `[@@json.compact_variants]`: compact encoding for variants and polyvariants
+
+The `[@@json.compact_variants]` attribute changes the JSON encoding of variant
+and polyvariant types to a compact form:
+
+- Constructors **without arguments** are encoded as plain JSON strings.
+- Constructors **with arguments** are encoded as JSON arrays
+  `["ConstructorName", arg1, ...]`.
+
+```ocaml
+type t = A | B of int | C of int * string [@@deriving json] [@@json.compact_variants]
+
+let json_a = to_json A
+(* "A" *)
+
+let json_b = to_json (B 42)
+(* ["B", 42] *)
+
+let json_c = to_json (C (1, "x"))
+(* ["C", 1, "x"] *)
+```
+
+This also works for polyvariant types:
+
+```ocaml
+type t = [`A | `B of int] [@@deriving json] [@@json.compact_variants]
+```
+
 #### `[@@deriving json_string]`: a shortcut for JSON string conversion
 
 For convenience, one can use `[@@deriving json_string]` to generate converters

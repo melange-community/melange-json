@@ -17,6 +17,14 @@
   $ dune build ./main.exe
 
   $ dune exec ./main.exe
+  JSON    DATA: "Compact_variant"
+  JSON REPRINT: "Compact_variant"
+  JSON    DATA: ["Compact_variant_of_int",42]
+  JSON REPRINT: ["Compact_variant_of_int",42]
+  JSON    DATA: "Compact_polyvariant"
+  JSON REPRINT: "Compact_polyvariant"
+  JSON    DATA: ["Compact_polyvariant_of_int",42]
+  JSON REPRINT: ["Compact_polyvariant_of_int",42]
   JSON    DATA: 1
   JSON REPRINT: 1
   JSON    DATA: "9223372036854775807"

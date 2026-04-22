@@ -855,6 +855,48 @@
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
   $ cat <<"EOF" | run
+  > type compact_variant = A | B of int [@@deriving json] [@@json.compact_variants]
+  > EOF
+  type compact_variant = A | B of int
+  [@@deriving json] [@@json.compact_variants]
+  
+  include struct
+    let _ = fun (_ : compact_variant) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec compact_variant_of_json =
+      (fun x ->
+         match x with
+         | `String "A" -> A
+         | `List [ `String "B"; x_0 ] -> B (int_of_json x_0)
+         | _ ->
+             Melange_json.of_json_error ~json:x
+               "expected [\"A\"] or [\"B\", _]"
+        : Yojson.Basic.t -> compact_variant)
+  
+    let _ = compact_variant_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec compact_variant_to_json =
+      (fun x ->
+         match x with
+         | A -> `String "A"
+         | B x_0 -> `List [ `String "B"; int_to_json x_0 ]
+        : compact_variant -> Yojson.Basic.t)
+  
+    let _ = compact_variant_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+
+
+
+
+
+
+
+  $ cat <<"EOF" | run
   > type drop_default_option = { a: int; b_opt: int option; [@option] [@json.drop_default] } [@@deriving json]
   > EOF
   type drop_default_option = {

@@ -74,6 +74,16 @@ let ld_attr_json_drop_default =
        Ast_pattern.(pstr nil)
        ())
 
+let td_attr_json_compact_variants =
+  Attribute.get
+    (Attribute.declare "json.compact_variants"
+       Attribute.Context.type_declaration
+       Ast_pattern.(pstr nil)
+       ())
+
+let is_compact_variants td =
+  Option.is_some (td_attr_json_compact_variants td)
+
 let ld_attr_default ld =
   match ld_attr_json_default ld with
   | Some e -> Some e

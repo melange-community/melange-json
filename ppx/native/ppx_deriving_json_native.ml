@@ -131,7 +131,8 @@ module Of_json = struct
                 [%e estring ~loc (sprintf "expected a JSON object")]];
       ]
 
-  let derive_of_variant_case derive make vcs =
+  let derive_of_variant_case ?td derive make vcs =
+    let compact = Option.fold ~none:false ~some:is_compact_variants td in
     match vcs with
     | Vcs_tuple (n, t) when vcs_attr_json_allow_any t.tpl_ctx ->
         let loc = n.loc in
@@ -140,7 +141,9 @@ module Of_json = struct
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
         let arity = List.length t.tpl_types in
-        if arity = 0 then
+        if compact && arity = 0 then
+          [%pat? `String [%p pstring ~loc:n.loc n.txt]] --> make None
+        else if arity = 0 then
           [%pat? `List [ `String [%p pstring ~loc:n.loc n.txt] ]]
           --> make None
         else
@@ -218,7 +221,8 @@ module To_json = struct
         (let [%p pbnds] = [] in
          [%e e])]
 
-  let derive_of_variant_case derive vcs es =
+  let derive_of_variant_case ?td derive vcs es =
+    let compact = Option.fold ~none:false ~some:is_compact_variants td in
     match vcs with
     | Vcs_tuple (_n, t) when vcs_attr_json_allow_any t.tpl_ctx -> (
         match es with
@@ -230,10 +234,14 @@ module To_json = struct
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
-        [%expr
-          `List
-            (`String [%e estring ~loc:n.loc n.txt]
-            :: [%e elist ~loc (List.map2 t.tpl_types es ~f:derive)])]
+        let arity = List.length t.tpl_types in
+        if compact && arity = 0 then
+          [%expr `String [%e estring ~loc:n.loc n.txt]]
+        else
+          [%expr
+            `List
+              (`String [%e estring ~loc:n.loc n.txt]
+              :: [%e elist ~loc (List.map2 t.tpl_types es ~f:derive)])]
     | Vcs_record (n, t) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.rcd_ctx) in
