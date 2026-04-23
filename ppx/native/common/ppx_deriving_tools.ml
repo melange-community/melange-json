@@ -23,9 +23,10 @@ module Lid = struct
              ~init:(Lident hd) tl)
 end
 
-let not_supported ~loc what =
-  Location.raise_errorf ~loc "%s are not supported" what
+let not_supportedf ~loc fmt =
+  ksprintf (Location.raise_errorf ~loc "%s are not supported") fmt
 
+let not_supported ~loc s = not_supportedf ~loc "%s" s
 let map_loc f a_loc = { a_loc with txt = f a_loc.txt }
 
 let lident_with_optional_open ?opn label =
@@ -70,15 +71,26 @@ let gen_pat_list ~loc prefix n =
   in
   patt, exprs
 
-let gen_pat_record ~loc prefix ns =
+let gen_pat_record ~loc prefix lbls =
   let xs =
-    List.map ns ~f:(fun n ->
+    List.map lbls ~f:(fun (lbl : label_declaration) ->
+        let { txt; loc } = lbl.pld_name in
+        let id = sprintf "%s_%s" prefix txt in
+        let patt = ppat_var ~loc { loc; txt = id } in
+        let expr = pexp_ident ~loc { loc; txt = lident id } in
+        (map_loc lident lbl.pld_name, patt), expr)
+  in
+  ppat_record ~loc (List.map xs ~f:fst) Closed, List.map xs ~f:snd
+
+let gen_pat_labeled_tuple ~loc prefix fs =
+  let xs =
+    List.map fs ~f:(fun (n, _t) ->
         let id = sprintf "%s_%s" prefix n.txt in
         let patt = ppat_var ~loc { loc = n.loc; txt = id } in
         let expr = pexp_ident ~loc { loc = n.loc; txt = lident id } in
-        (map_loc lident n, patt), expr)
+        (Some n.txt, patt), expr)
   in
-  ppat_record ~loc (List.map xs ~f:fst) Closed, List.map xs ~f:snd
+  ppat_labeled_tuple ~loc (List.map xs ~f:fst) Closed, List.map xs ~f:snd
 
 let ( --> ) pc_lhs pc_rhs = { pc_lhs; pc_rhs; pc_guard = None }
 let derive_of_label name = mangle (Suffix name)
@@ -153,6 +165,12 @@ module Schema = struct
     | Rinherit _ ->
         not_supported ~loc:field.prf_loc "this polyvariant inherit"
 
+  let invalid_labeled_tuple ~loc fmt =
+    ksprintf
+      (Location.raise_errorf ~loc
+         "ppxlib.migration.ptyp_labeled_tuple_5_4: %s")
+      fmt
+
   let rec repr_core_type ty =
     let loc = ty.ptyp_loc in
     match ty.ptyp_desc with
@@ -161,6 +179,30 @@ module Schema = struct
     | Ptyp_var txt -> `Ptyp_var { txt; loc = ty.ptyp_loc }
     | Ptyp_variant (fs, Closed, None) -> `Ptyp_variant fs
     | Ptyp_open (id, ct) -> `Ptyp_open (id, repr_core_type ct)
+    | Ptyp_extension
+        ( { txt = "ppxlib.migration.ptyp_labeled_tuple_5_4"; _ },
+          PTyp { ptyp_desc = Ptyp_tuple xs; _ } ) ->
+        let xs =
+          List.mapi xs ~f:(fun i ct ->
+              match ct with
+              | [%type: _ * [%t? v]] ->
+                  { txt = string_of_int i; loc = v.ptyp_loc }, v
+              | [%type: [%t? k] * [%t? v]] -> begin
+                  match k with
+                  | { ptyp_desc = Ptyp_var txt; ptyp_loc = loc; _ } ->
+                      { txt; loc }, v
+                  | _ ->
+                      invalid_labeled_tuple ~loc
+                        "invalid key in labeled tuple"
+                end
+              | _ -> invalid_labeled_tuple ~loc "invalid representation")
+        in
+        `Ptyp_labeled_tuple xs
+    | Ptyp_extension
+        ({ txt = "ppxlib.migration.ptyp_labeled_tuple_5_4"; _ }, _) ->
+        invalid_labeled_tuple ~loc "invalid representation"
+    | Ptyp_extension (name, _) ->
+        not_supportedf ~loc "extension nodes (%s)" name.txt
     | Ptyp_variant _ -> not_supported ~loc "non closed polyvariants"
     | Ptyp_arrow _ -> not_supported ~loc "function types"
     | Ptyp_any -> not_supported ~loc "type placeholders"
@@ -168,7 +210,6 @@ module Schema = struct
     | Ptyp_class _ -> not_supported ~loc "class types"
     | Ptyp_poly _ -> not_supported ~loc "polymorphic type expressions"
     | Ptyp_package _ -> not_supported ~loc "packaged module types"
-    | Ptyp_extension _ -> not_supported ~loc "extension nodes"
     | Ptyp_alias _ -> not_supported ~loc "type aliases"
 
   let repr_type_declaration td =
@@ -229,6 +270,15 @@ module Schema = struct
           let loc = t.ptyp_loc in
           not_supported "tuple types" ~loc
 
+      method derive_of_labeled_tuple :
+          core_type ->
+          (label loc * core_type) list ->
+          expression ->
+          expression =
+        fun t _ _ ->
+          let loc = t.ptyp_loc in
+          not_supported "labeled tuple types" ~loc
+
       method derive_of_record :
           type_declaration ->
           label_declaration list ->
@@ -276,6 +326,8 @@ module Schema = struct
       method private derive_of_core_type_repr ?opn ~loc t repr =
         match repr with
         | `Ptyp_tuple ts -> As_fun (self#derive_of_tuple t ts)
+        | `Ptyp_labeled_tuple ts ->
+            As_fun (self#derive_of_labeled_tuple t ts)
         | `Ptyp_var label ->
             As_val
               (ederiver self#name
@@ -432,7 +484,8 @@ module Conv = struct
   let repr_variant_cases cs = List.rev cs
 
   let deriving_of ~name ~of_t ~is_allow_any_constr ~derive_of_tuple
-      ~derive_of_record ~derive_of_variant ~derive_of_variant_case () =
+      ~derive_of_labeled_tuple ~derive_of_record ~derive_of_variant
+      ~derive_of_variant_case () =
     (object (self)
        inherit Schema.deriving1
        method name = name
@@ -441,6 +494,17 @@ module Conv = struct
        method! derive_of_tuple t ts x =
          let t = { tpl_loc = t.ptyp_loc; tpl_types = ts; tpl_ctx = t } in
          derive_of_tuple self#derive_of_core_type t x
+
+       method! derive_of_labeled_tuple t ts x =
+         let fs =
+           List.map ts ~f:(fun (name, type_) ->
+               let loc = type_.ptyp_loc in
+               label_declaration ~loc ~name ~type_ ~mutable_:Immutable)
+         in
+         let t =
+           { rcd_loc = t.ptyp_loc; rcd_fields = fs; rcd_ctx = () }
+         in
+         derive_of_labeled_tuple self#derive_of_core_type t x
 
        method! derive_of_record td fs x =
          let t =
@@ -600,7 +664,8 @@ module Conv = struct
       :> deriving)
 
   let deriving_of_match ~name ~of_t ~cmp_sort_vcs ~derive_of_tuple
-      ~derive_of_record ~derive_of_variant_case () =
+      ~derive_of_labeled_tuple ~derive_of_record ~derive_of_variant_case
+      () =
     (object (self)
        inherit Schema.deriving1
        method name = name
@@ -609,6 +674,17 @@ module Conv = struct
        method! derive_of_tuple t ts x =
          let t = { tpl_loc = t.ptyp_loc; tpl_types = ts; tpl_ctx = t } in
          derive_of_tuple self#derive_of_core_type t x
+
+       method! derive_of_labeled_tuple t ts x =
+         let fs =
+           List.map ts ~f:(fun (name, type_) ->
+               let loc = type_.ptyp_loc in
+               label_declaration ~loc ~name ~type_ ~mutable_:Immutable)
+         in
+         let t =
+           { rcd_loc = t.ptyp_loc; rcd_fields = fs; rcd_ctx = () }
+         in
+         derive_of_labeled_tuple self#derive_of_core_type t x
 
        method! derive_of_record td fs x =
          let t =
@@ -729,8 +805,8 @@ module Conv = struct
      end
       :> deriving)
 
-  let deriving_to ~name ~t_to ~derive_of_tuple ~derive_of_record
-      ~derive_of_variant_case () =
+  let deriving_to ~name ~t_to ~derive_of_tuple ~derive_of_labeled_tuple
+      ~derive_of_record ~derive_of_variant_case () =
     (object (self)
        inherit Schema.deriving1
        method name = name
@@ -749,11 +825,23 @@ module Conv = struct
            { rcd_loc = td.ptype_loc; rcd_fields = fs; rcd_ctx = td }
          in
          let loc = td.ptype_loc in
-         let p, es =
-           gen_pat_record ~loc "x" (List.map fs ~f:(fun f -> f.pld_name))
-         in
+         let p, es = gen_pat_record ~loc "x" fs in
          pexp_match ~loc x
            [ p --> derive_of_record self#derive_of_core_type t es ]
+
+       method! derive_of_labeled_tuple t ts x =
+         let fs =
+           List.map ts ~f:(fun (name, type_) ->
+               let loc = type_.ptyp_loc in
+               label_declaration ~loc ~name ~type_ ~mutable_:Immutable)
+         in
+         let loc = t.ptyp_loc in
+         let t =
+           { rcd_loc = t.ptyp_loc; rcd_fields = fs; rcd_ctx = () }
+         in
+         let p, es = gen_pat_labeled_tuple ~loc "x" ts in
+         pexp_match ~loc x
+           [ p --> derive_of_labeled_tuple self#derive_of_core_type t es ]
 
        method! derive_of_variant td cs x =
          let loc = td.ptype_loc in
@@ -767,10 +855,7 @@ module Conv = struct
                 let ctx = Vcs_ctx_variant c in
                 match c.pcd_args with
                 | Pcstr_record fs ->
-                    let p, es =
-                      gen_pat_record ~loc "x"
-                        (List.map fs ~f:(fun f -> f.pld_name))
-                    in
+                    let p, es = gen_pat_record ~loc "x" fs in
                     let t =
                       let t =
                         { rcd_loc = loc; rcd_fields = fs; rcd_ctx = ctx }
