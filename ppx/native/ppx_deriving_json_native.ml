@@ -42,13 +42,13 @@ module Of_json = struct
     with_refs ~loc "x" fs @@ fun ename ->
     let handle_field k v =
       let fail_case =
-        [%pat? name]
+        [%pat? _name]
         -->
         if allow_extra_fields then [%expr ()]
         else
           [%expr
             Melange_json.of_json_error ~json:x
-              (Stdlib.Printf.sprintf {|did not expect field "%s"|} name)]
+              (Stdlib.Printf.sprintf {|did not expect field "%s"|} _name)]
       in
       let cases =
         List.fold_left (List.rev fs) ~init:[ fail_case ]

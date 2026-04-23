@@ -168,10 +168,10 @@
                    | "name" ->
                        x_name := Stdlib.Option.Some (string_of_json v)
                    | "age" -> x_age := Stdlib.Option.Some (int_of_json v)
-                   | name ->
+                   | _name ->
                        Melange_json.of_json_error ~json:x
                          (Stdlib.Printf.sprintf
-                            {|did not expect field "%s"|} name));
+                            {|did not expect field "%s"|} _name));
                    iter fs
              in
              iter fs;
@@ -239,10 +239,10 @@
                    | "my_name" ->
                        x_name := Stdlib.Option.Some (string_of_json v)
                    | "my_age" -> x_age := Stdlib.Option.Some (int_of_json v)
-                   | name ->
+                   | _name ->
                        Melange_json.of_json_error ~json:x
                          (Stdlib.Printf.sprintf
-                            {|did not expect field "%s"|} name));
+                            {|did not expect field "%s"|} _name));
                    iter fs
              in
              iter fs;
@@ -305,10 +305,10 @@
                    | "k" ->
                        x_k :=
                          Stdlib.Option.Some ((option_of_json int_of_json) v)
-                   | name ->
+                   | _name ->
                        Melange_json.of_json_error ~json:x
                          (Stdlib.Printf.sprintf
-                            {|did not expect field "%s"|} name));
+                            {|did not expect field "%s"|} _name));
                    iter fs
              in
              iter fs;
@@ -363,10 +363,10 @@
                    (match n' with
                    | "name" ->
                        x_name := Stdlib.Option.Some (string_of_json v)
-                   | name ->
+                   | _name ->
                        Melange_json.of_json_error ~json:x
                          (Stdlib.Printf.sprintf
-                            {|did not expect field "%s"|} name));
+                            {|did not expect field "%s"|} _name));
                    iter fs
              in
              iter fs;
@@ -764,7 +764,7 @@
                | (n', v) :: fs ->
                    (match n' with
                    | "a" -> x_a := Stdlib.Option.Some (int_of_json v)
-                   | name -> ());
+                   | _name -> ());
                    iter fs
              in
              iter fs;
@@ -817,7 +817,7 @@
                | (n', v) :: fs ->
                    (match n' with
                    | "a" -> x_a := Stdlib.Option.Some (int_of_json v)
-                   | name -> ());
+                   | _name -> ());
                    iter fs
              in
              iter fs;
@@ -882,10 +882,10 @@
                    | "b_opt" ->
                        x_b_opt :=
                          Stdlib.Option.Some ((option_of_json int_of_json) v)
-                   | name ->
+                   | _name ->
                        Melange_json.of_json_error ~json:x
                          (Stdlib.Printf.sprintf
-                            {|did not expect field "%s"|} name));
+                            {|did not expect field "%s"|} _name));
                    iter fs
              in
              iter fs;
@@ -956,10 +956,10 @@
                    (match n' with
                    | "a" -> x_a := Stdlib.Option.Some (int_of_json v)
                    | "b" -> x_b := Stdlib.Option.Some (int_of_json v)
-                   | name ->
+                   | _name ->
                        Melange_json.of_json_error ~json:x
                          (Stdlib.Printf.sprintf
-                            {|did not expect field "%s"|} name));
+                            {|did not expect field "%s"|} _name));
                    iter fs
              in
              iter fs;
@@ -1027,10 +1027,10 @@
                    (match n' with
                    | "a" -> x_a := Stdlib.Option.Some (int_of_json v)
                    | "b" -> x_b := Stdlib.Option.Some (int_of_json v)
-                   | name ->
+                   | _name ->
                        Melange_json.of_json_error ~json:x
                          (Stdlib.Printf.sprintf
-                            {|did not expect field "%s"|} name));
+                            {|did not expect field "%s"|} _name));
                    iter fs
              in
              iter fs;
@@ -1095,10 +1095,10 @@
                    (match n' with
                    | "a" -> x_a := Stdlib.Option.Some (int_of_json v)
                    | "b" -> x_b := Stdlib.Option.Some (int_of_json v)
-                   | name ->
+                   | _name ->
                        Melange_json.of_json_error ~json:x
                          (Stdlib.Printf.sprintf
-                            {|did not expect field "%s"|} name));
+                            {|did not expect field "%s"|} _name));
                    iter fs
              in
              iter fs;
