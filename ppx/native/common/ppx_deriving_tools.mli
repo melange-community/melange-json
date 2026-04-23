@@ -82,6 +82,11 @@ module Conv : sig
       core_type tuple ->
       expression list ->
       expression) ->
+    derive_of_labeled_tuple:
+      (derive_of_core_type ->
+      unit record ->
+      expression list ->
+      expression) ->
     derive_of_record:
       (derive_of_core_type ->
       type_declaration record ->
@@ -102,6 +107,8 @@ module Conv : sig
     is_allow_any_constr:(variant_case_ctx -> bool) ->
     derive_of_tuple:
       (derive_of_core_type -> core_type tuple -> expression -> expression) ->
+    derive_of_labeled_tuple:
+      (derive_of_core_type -> unit record -> expression -> expression) ->
     derive_of_record:
       (derive_of_core_type ->
       type_declaration record ->
@@ -131,6 +138,8 @@ module Conv : sig
     cmp_sort_vcs:(variant_case_ctx -> variant_case_ctx -> int) ->
     derive_of_tuple:
       (derive_of_core_type -> core_type tuple -> expression -> expression) ->
+    derive_of_labeled_tuple:
+      (derive_of_core_type -> unit record -> expression -> expression) ->
     derive_of_record:
       (derive_of_core_type ->
       type_declaration record ->
@@ -175,7 +184,10 @@ val gen_pat_tuple :
     to refer to names bound in this pattern. *)
 
 val gen_pat_record :
-  loc:location -> string -> label loc list -> pattern * expression list
+  loc:location ->
+  string ->
+  label_declaration list ->
+  pattern * expression list
 (** [let patt, exprs = gen_pat_record ~loc prefix fs in ...] generates a
     pattern to match record with fields [fs] and a list of expressions
     [exprs] to refer to names bound in this pattern. *)
@@ -212,6 +224,9 @@ class virtual deriving1 : object
 
   method derive_of_tuple :
     core_type -> core_type list -> expression -> expression
+
+  method derive_of_labeled_tuple :
+    core_type -> (label loc * core_type) list -> expression -> expression
 
   method derive_of_variant :
     type_declaration ->

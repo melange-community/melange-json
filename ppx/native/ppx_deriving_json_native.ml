@@ -138,6 +138,13 @@ module Of_json = struct
     in
     derive_of_record' ~allow_extra_fields ~make derive t x
 
+  let derive_of_labeled_tuple derive t x =
+    let make ~loc fs =
+      let fs = List.map fs ~f:(fun (n, v) -> Some n.txt, v) in
+      pexp_labeled_tuple ~loc fs
+    in
+    derive_of_record' ~allow_extra_fields:true ~make derive t x
+
   let derive_of_variant_case derive make vcs =
     match vcs with
     | Vcs_tuple (n, t) when vcs_attr_json_allow_any t.tpl_ctx ->
@@ -186,8 +193,8 @@ module Of_json = struct
   let deriving : Ppx_deriving_tools.deriving =
     deriving_of_match () ~name:"of_json"
       ~of_t:(fun ~loc -> [%type: Yojson.Basic.t])
-      ~cmp_sort_vcs ~derive_of_tuple ~derive_of_record
-      ~derive_of_variant_case
+      ~cmp_sort_vcs ~derive_of_tuple ~derive_of_labeled_tuple
+      ~derive_of_record ~derive_of_variant_case
 end
 
 module To_json = struct
@@ -266,7 +273,8 @@ module To_json = struct
   let deriving : Ppx_deriving_tools.deriving =
     deriving_to () ~name:"to_json"
       ~t_to:(fun ~loc -> [%type: Yojson.Basic.t])
-      ~derive_of_tuple ~derive_of_record ~derive_of_variant_case
+      ~derive_of_tuple ~derive_of_labeled_tuple:derive_of_record
+      ~derive_of_record ~derive_of_variant_case
 end
 
 let () =

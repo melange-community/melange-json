@@ -29,9 +29,9 @@ echo '
 ' > dune
 
 echo '=== ppx output:native ==='
-../native/ppx_deriving_json_native_test.exe main.ml
+../native/ppx_deriving_json_native_test.exe main.ml --use-compiler-pp
 echo '=== ppx output:browser ==='
-../browser/ppx_deriving_json_js_test.exe main_js.ml
+../browser/ppx_deriving_json_js_test.exe main_js.ml --use-compiler-pp
 echo '=== stdout:native ==='
 dune exec ./main.exe || exit 1
 echo '=== stdout:js ==='

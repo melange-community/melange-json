@@ -8,9 +8,11 @@
   function can be provided directly, e.g. `[@json.drop_default Int.equal]`
   ([#77](https://github.com/melange-community/melange-json/pull/77))
 - Add `Melange_json.equal` for comparing two JSON values, and
-  `[@drop_default_if_json_equal]` as an alternative to `[@.drop_default]`
+  `[@drop_default_if_json_equal]` as an alternative to `[@json.drop_default]`
   that compares values at the JSON level
   ([#77](https://github.com/melange-community/melange-json/pull/77))
+- PPX: Add support for labeled tuples, e.g. `[%to_json: a:string * b:int]`,
+  encoded as JSON objects like records
 
 ## 2.0.0 (2025-03-11)
 

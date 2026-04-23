@@ -109,6 +109,16 @@ module Of_json = struct
       [%e ensure_json_object ~loc x];
       [%e build_record ~loc derive t.rcd_fields x make]]
 
+  let derive_of_labeled_tuple derive t x =
+    let loc = t.rcd_loc in
+    let make ~loc fs =
+      let fs = List.map fs ~f:(fun (n, v) -> Some n.txt, v) in
+      pexp_labeled_tuple ~loc fs
+    in
+    [%expr
+      [%e ensure_json_object ~loc x];
+      [%e build_record ~loc derive t.rcd_fields x make]]
+
   let derive_of_variant _derive t ~allow_any_constr body x =
     let loc = t.vrt_loc in
     [%expr
@@ -193,7 +203,7 @@ module Of_json = struct
     deriving_of () ~name:"of_json"
       ~of_t:(fun ~loc -> [%type: Js.Json.t])
       ~is_allow_any_constr ~derive_of_tuple ~derive_of_record
-      ~derive_of_variant ~derive_of_variant_case
+      ~derive_of_labeled_tuple ~derive_of_variant ~derive_of_variant_case
 end
 
 module To_json = struct
@@ -265,7 +275,8 @@ module To_json = struct
   let deriving : Ppx_deriving_tools.deriving =
     deriving_to () ~name:"to_json"
       ~t_to:(fun ~loc -> [%type: Js.Json.t])
-      ~derive_of_tuple ~derive_of_record ~derive_of_variant_case
+      ~derive_of_tuple ~derive_of_labeled_tuple:derive_of_record
+      ~derive_of_record ~derive_of_variant_case
 end
 
 let () =
