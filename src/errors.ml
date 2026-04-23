@@ -32,13 +32,12 @@ let show_json_type json =
 
 let show_json_error ?depth ?width json =
   with_buffer (fun emit ->
-      let rec loop ?depth json =
-        let json = Classify.classify json in
+      let rec loop ?depth classified =
         let depth = Option.map (fun i -> i - 1) depth in
         match depth with
         | Some 0 -> emit "_"
         | _ -> (
-            match json with
+            match classified with
             | `Assoc assoc ->
                 emit "{";
                 iteri_last
@@ -88,7 +87,7 @@ let show_json_error ?depth ?width json =
                     emit {|"|}))
       in
 
-      (loop ?depth:(Option.map (fun i -> i + 1) depth)) json)
+      (loop ?depth:(Option.map (fun i -> i + 1) depth)) (Classify.classify json))
 
 let of_json_msg_error msg = raise (Of_json_error (Json_error msg))
 

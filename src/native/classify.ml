@@ -1,23 +1,6 @@
-type t = Yojson.Basic.t
+(** Classify isn't needed for native, it's here to support the universal
+    approach of the library. In the end, it classify Yojson.Basic.t to
+    Yojson.Basic.t *)
 
-let classify :
-    t ->
-    [ `Null
-    | `String of string
-    | `Float of float
-    | `Int of int
-    | `Bool of bool
-    | `List of t list
-    | `Assoc of (string * t) list ] =
- fun x -> x
-
-let declassify :
-    [ `Null
-    | `String of string
-    | `Float of float
-    | `Int of int
-    | `Bool of bool
-    | `List of t list
-    | `Assoc of (string * t) list ] ->
-    t =
- fun x -> x
+let classify : Yojson.Basic.t -> Yojson.Basic.t = fun x -> x
+let declassify : Yojson.Basic.t -> Yojson.Basic.t = fun x -> x

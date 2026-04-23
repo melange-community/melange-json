@@ -1,16 +1,15 @@
 module J = Js.Json
 
-type t = J.t
+type t =
+  [ `Null
+  | `String of string
+  | `Float of float
+  | `Int of int
+  | `Bool of bool
+  | `List of t list
+  | `Assoc of (string * t) list ]
 
-let classify :
-    t ->
-    [ `Null
-    | `String of string
-    | `Float of float
-    | `Int of int
-    | `Bool of bool
-    | `List of t list
-    | `Assoc of (string * t) list ] =
+let rec classify : J.t -> t =
  fun json ->
   if (Obj.magic json : 'a Js.null) == Js.null then `Null
   else
@@ -24,26 +23,22 @@ let classify :
     | "boolean" -> `Bool (Obj.magic json : bool)
     | "object" ->
         if Js.Array.isArray json then
-          let xs = Array.to_list (Obj.magic json : t array) in
-          `List xs
+          let xs = Array.to_list (Obj.magic json : J.t array) in
+          `List (List.map classify xs)
         else
-          let xs = Js.Dict.entries (Obj.magic json : t Js.Dict.t) in
-          `Assoc (Array.to_list xs)
+          let xs = Js.Dict.entries (Obj.magic json : J.t Js.Dict.t) in
+          `Assoc
+            (Array.to_list (Array.map (fun (k, v) -> k, classify v) xs))
     | typ -> failwith ("unknown JSON value type: " ^ typ)
 
-let declassify :
-    [ `Null
-    | `String of string
-    | `Float of float
-    | `Int of int
-    | `Bool of bool
-    | `List of t list
-    | `Assoc of (string * t) list ] ->
-    t = function
+let rec declassify : t -> J.t = function
   | `Null -> J.null
   | `String str -> J.string str
   | `Float f -> J.number f
   | `Int i -> J.number (Js.Int.toFloat i)
   | `Bool b -> J.boolean b
-  | `List li -> J.array (Array.of_list li)
-  | `Assoc assoc -> J.object_ (Js.Dict.fromList assoc)
+  | `List li -> J.array (Array.of_list (List.map declassify li))
+  | `Assoc assoc ->
+      J.object_
+        (Js.Dict.fromList
+           (List.map (fun (k, v) -> k, declassify v) assoc))

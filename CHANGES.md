@@ -1,5 +1,10 @@
 ## Unreleased
 
+- **[breaking]** `classify` now fully traverses the JSON tree recursively,
+  returning a `Classify.t` where `\`List` and `\`Assoc` elements are
+  themselves `Classify.t` rather than raw `Js.Json.t`. `declassify` is
+  similarly recursive, accepting `Classify.t` and converting back to
+  `Js.Json.t`.
 - Support `Ptype_open`, e.g. `type u = X.(x) [@@deriving json]`
   ([#60](https://github.com/melange-community/melange-json/pull/60))
 

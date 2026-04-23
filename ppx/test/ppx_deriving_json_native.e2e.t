@@ -5,6 +5,7 @@
   $ echo '
   > (executable
   >   (name main)
+  >   (libraries melange-json)
   >   (flags :standard -w -37-69 -open Melange_json.Primitives)
   >   (preprocess (pps melange-json-native.ppx)))' > dune
 
