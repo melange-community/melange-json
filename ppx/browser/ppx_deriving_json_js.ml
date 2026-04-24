@@ -107,8 +107,28 @@ module Of_json = struct
       [%e ensure_json_object ~loc x];
       [%e build_record ~loc derive t.rcd_fields x Fun.id]]
 
-  let derive_of_variant _derive t ~allow_any_constr body x =
+  let derive_of_variant _derive t ~allow_any_constr ?td body x =
     let loc = t.vrt_loc in
+    let not_array_error =
+      match allow_any_constr with
+      | Some allow_any_constr -> allow_any_constr x
+      | None ->
+          [%expr
+            Melange_json.of_json_error ~json:[%e x]
+              "expected a non empty JSON array"]
+    in
+    let string_branch =
+      if Option.fold ~none:false ~some:is_compact_variants td then
+        [%expr
+          if Stdlib.( = ) (Js.typeof [%e x]) "string" then (
+            let array = (Obj.magic [||] : Js.Json.t array) in
+            let len = 0 in
+            let tag = (Obj.magic [%e x] : string) in
+            ignore (array, len);
+            [%e body])
+          else [%e not_array_error]]
+      else not_array_error
+    in
     [%expr
       if Js.Array.isArray [%e x] then
         let array = (Obj.magic [%e x] : Js.Json.t array) in
@@ -127,24 +147,11 @@ module Of_json = struct
                     Melange_json.of_json_error ~json:[%e x]
                       "expected a non empty JSON array with element \
                        being a string"]]
-        else
-          [%e
-            match allow_any_constr with
-            | Some allow_any_constr -> allow_any_constr x
-            | None ->
-                [%expr
-                  Melange_json.of_json_error ~json:[%e x]
-                    "expected a non empty JSON array"]]
-      else
-        [%e
-          match allow_any_constr with
-          | Some allow_any_constr -> allow_any_constr x
-          | None ->
-              [%expr
-                Melange_json.of_json_error ~json:[%e x]
-                  "expected a non empty JSON array"]]]
+        else [%e not_array_error]
+      else [%e string_branch]]
 
-  let derive_of_variant_case derive make c ~allow_any_constr next =
+  let derive_of_variant_case ?td derive make c ~allow_any_constr next =
+    let compact = Option.fold ~none:false ~some:is_compact_variants td in
     match c with
     | Vcs_record (n, r) ->
         let loc = n.loc in
@@ -166,19 +173,25 @@ module Of_json = struct
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
         let arity = List.length t.tpl_types in
-        [%expr
-          if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then
-            [%e
-              ensure_json_array_len ~loc ~allow_any_constr (arity + 1)
-                [%expr len] [%expr x]
-                ~else_:
-                  (if Stdlib.( = ) arity 0 then make None
-                   else
-                     make
-                       (Some
-                          (build_tuple ~loc derive 1 t.tpl_types
-                             [%expr array])))]
-          else [%e next]]
+        if compact && arity = 0 then
+          [%expr
+            if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then
+              [%e make None]
+            else [%e next]]
+        else
+          [%expr
+            if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then
+              [%e
+                ensure_json_array_len ~loc ~allow_any_constr (arity + 1)
+                  [%expr len] [%expr x]
+                  ~else_:
+                    (if Stdlib.( = ) arity 0 then make None
+                     else
+                       make
+                         (Some
+                            (build_tuple ~loc derive 1 t.tpl_types
+                               [%expr array])))]
+            else [%e next]]
 
   let is_allow_any_constr vcs =
     Ppx_deriving_json_common.vcs_attr_json_allow_any vcs
@@ -230,7 +243,8 @@ module To_json = struct
     let record = pexp_record ~loc fs None in
     as_json ~loc [%expr [%mel.obj [%e record]]]
 
-  let derive_of_variant_case derive c es =
+  let derive_of_variant_case ?td derive c es =
+    let compact = Option.fold ~none:false ~some:is_compact_variants td in
     match c with
     | Vcs_record (n, r) ->
         let loc = n.loc in
@@ -250,11 +264,15 @@ module To_json = struct
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
-        let tag =
-          [%expr (Obj.magic [%e estring ~loc:n.loc n.txt] : Js.Json.t)]
-        in
-        let es = List.map2 t.tpl_types es ~f:derive in
-        as_json ~loc (pexp_array ~loc (tag :: es))
+        let arity = List.length t.tpl_types in
+        if compact && arity = 0 then
+          as_json ~loc (estring ~loc:n.loc n.txt)
+        else
+          let tag =
+            [%expr (Obj.magic [%e estring ~loc:n.loc n.txt] : Js.Json.t)]
+          in
+          let es = List.map2 t.tpl_types es ~f:derive in
+          as_json ~loc (pexp_array ~loc (tag :: es))
 
   let deriving : Ppx_deriving_tools.deriving =
     deriving_to () ~name:"to_json"

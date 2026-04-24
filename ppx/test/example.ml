@@ -26,6 +26,8 @@ type array_list = { a: int array; b: int list} [@@deriving json]
 type json = Melange_json.t
 type of_json = C : string * (json -> 'a) * ('a -> json) * 'a -> of_json
 type color = Red | Green | Blue [@@deriving json]
+type compact_variant = Compact_variant | Compact_variant_of_int of int [@@deriving json] [@@json.compact_variants]
+type compact_polyvariant = [`Compact_polyvariant | `Compact_polyvariant_of_int of int] [@@deriving json] [@@json.compact_variants]
 
 type shape = 
   | Circle of float  (* radius *)
@@ -33,6 +35,10 @@ type shape =
   | Point of { x: float; y: float } [@@deriving json]
 
 let of_json_cases = [
+  C ({|"Compact_variant"|}, compact_variant_of_json, compact_variant_to_json, (Compact_variant : compact_variant));
+  C ({|["Compact_variant_of_int",42]|}, compact_variant_of_json, compact_variant_to_json, (Compact_variant_of_int 42 : compact_variant));
+  C ({|"Compact_polyvariant"|}, compact_polyvariant_of_json, compact_polyvariant_to_json, (`Compact_polyvariant : compact_polyvariant));
+  C ({|["Compact_polyvariant_of_int",42]|}, compact_polyvariant_of_json, compact_polyvariant_to_json, (`Compact_polyvariant_of_int 42 : compact_polyvariant));
   C ({|1|}, user_of_json, user_to_json, 1);
   C ({|"9223372036854775807"|}, userid_of_json, userid_to_json, 9223372036854775807L);
   C ({|1.1|}, floaty_of_json, floaty_to_json, 1.1);

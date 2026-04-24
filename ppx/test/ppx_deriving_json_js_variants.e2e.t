@@ -7,6 +7,7 @@
   >  (name lib)
   >  (modes melange)
   >  (modules main)
+  >  (libraries melange-json)
   >  (flags :standard -w -20-37-69)
   >  (preprocess (pps melange.ppx melange-json.ppx)))
   > (melange.emit

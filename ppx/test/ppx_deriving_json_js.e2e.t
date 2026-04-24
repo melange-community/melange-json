@@ -7,6 +7,7 @@
   >  (name lib)
   >  (modes melange)
   >  (modules example example_json_string main)
+  >  (libraries melange-json)
   >  (flags :standard -w -20-37-69 -open Melange_json.Primitives)
   >  (preprocess (pps melange.ppx melange-json.ppx)))
   > (melange.emit
@@ -27,6 +28,14 @@
 
   $ node ./_build/default/output/main.js
   *** json deriver tests ***
+  JSON    DATA: "Compact_variant"
+  JSON REPRINT: "Compact_variant"
+  JSON    DATA: ["Compact_variant_of_int",42]
+  JSON REPRINT: ["Compact_variant_of_int",42]
+  JSON    DATA: "Compact_polyvariant"
+  JSON REPRINT: "Compact_polyvariant"
+  JSON    DATA: ["Compact_polyvariant_of_int",42]
+  JSON REPRINT: ["Compact_polyvariant_of_int",42]
   JSON    DATA: 1
   JSON REPRINT: 1
   JSON    DATA: "9223372036854775807"

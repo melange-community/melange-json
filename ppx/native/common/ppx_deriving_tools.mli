@@ -88,7 +88,8 @@ module Conv : sig
       expression list ->
       expression) ->
     derive_of_variant_case:
-      (derive_of_core_type ->
+      (?td:type_declaration ->
+      derive_of_core_type ->
       variant_case ->
       expression list ->
       expression) ->
@@ -111,11 +112,13 @@ module Conv : sig
       (derive_of_core_type ->
       variant ->
       allow_any_constr:(expression -> expression) option ->
+      ?td:type_declaration ->
       expression ->
       expression ->
       expression) ->
     derive_of_variant_case:
-      (derive_of_core_type ->
+      (?td:type_declaration ->
+      derive_of_core_type ->
       (expression option -> expression) ->
       variant_case ->
       allow_any_constr:(expression -> expression) option ->
@@ -137,7 +140,8 @@ module Conv : sig
       expression ->
       expression) ->
     derive_of_variant_case:
-      (derive_of_core_type ->
+      (?td:type_declaration ->
+      derive_of_core_type ->
       (expression option -> expression) ->
       variant_case ->
       case) ->
@@ -205,7 +209,7 @@ class virtual deriving1 : object
   (** ESSENTIAL METHODS *)
 
   method derive_of_polyvariant :
-    core_type -> row_field list -> expression -> expression
+    ?td:type_declaration -> core_type -> row_field list -> expression -> expression
 
   method derive_of_record :
     type_declaration -> label_declaration list -> expression -> expression
