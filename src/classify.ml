@@ -2,6 +2,18 @@ module J = Js.Json
 
 type t = J.t
 
+let dict_to_list_without_undefined dict =
+  let keys = Js.Dict.keys dict in
+  let l = Array.length keys in
+  let xs = ref [] in
+  for i = l - 1 downto 0 do
+    let key = Array.unsafe_get keys i in
+    let value = Js.Dict.unsafeGet dict key in
+    if not ((Obj.magic value : _ Js.Undefined.t) == Js.undefined) then
+      xs := (key, value) :: !xs
+  done;
+  !xs
+
 let classify :
     t ->
     [ `Null
@@ -27,8 +39,9 @@ let classify :
           let xs = Array.to_list (Obj.magic json : t array) in
           `List xs
         else
-          let xs = Js.Dict.entries (Obj.magic json : t Js.Dict.t) in
-          `Assoc (Array.to_list xs)
+          `Assoc
+            (dict_to_list_without_undefined
+               (Obj.magic json : t Js.Dict.t))
     | typ -> failwith ("unknown JSON value type: " ^ typ)
 
 let declassify :
