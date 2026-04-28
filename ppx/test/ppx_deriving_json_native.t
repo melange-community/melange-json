@@ -29,15 +29,15 @@
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec param_of_json a_of_json : Yojson.Basic.t -> 'a param =
-     fun x -> a_of_json x
+    let rec param_of_json a_of_json =
+      (fun x -> a_of_json x : Yojson.Basic.t -> 'a param)
   
     let _ = param_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec param_to_json a_to_json : 'a param -> Yojson.Basic.t =
-     fun x -> a_to_json x
+    let rec param_to_json a_to_json =
+      (fun x -> a_to_json x : 'a param -> Yojson.Basic.t)
   
     let _ = param_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -296,6 +296,65 @@
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
   $ cat <<"EOF" | run
+  > type record_default_none = { d : int option; [@json.default None] } [@@deriving json]
+  > EOF
+  type record_default_none = { d : int option [@json.default None] }
+  [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : record_default_none) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec record_default_none_of_json =
+      (fun x ->
+         match x with
+         | `Assoc fs ->
+             let x_d = ref (Stdlib.Option.Some None) in
+             let rec iter = function
+               | [] -> ()
+               | (n', v) :: fs ->
+                   (match n' with
+                   | "d" ->
+                       x_d :=
+                         Stdlib.Option.Some ((option_of_json int_of_json) v)
+                   | name ->
+                       Ppx_deriving_json_runtime.of_json_error
+                         (Stdlib.Printf.sprintf "unknown field: %s" name));
+                   iter fs
+             in
+             iter fs;
+             {
+               d =
+                 (match Stdlib.( ! ) x_d with
+                 | Stdlib.Option.Some v -> v
+                 | Stdlib.Option.None -> None);
+             }
+         | _ ->
+             Ppx_deriving_json_runtime.of_json_error
+               "expected a JSON object"
+        : Yojson.Basic.t -> record_default_none)
+  
+    let _ = record_default_none_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec record_default_none_to_json =
+      (fun x ->
+         match x with
+         | { d = x_d } ->
+             `Assoc
+               (let bnds__001_ = [] in
+                let bnds__001_ =
+                  ("d", (option_to_json int_to_json) x_d) :: bnds__001_
+                in
+                bnds__001_)
+        : record_default_none -> Yojson.Basic.t)
+  
+    let _ = record_default_none_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
   > type sum = A | B of int | C of { name : string } [@@deriving json]
   > EOF
   type sum = A | B of int | C of { name : string } [@@deriving json]
@@ -444,25 +503,29 @@
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec c_of_json_poly a_of_json : Yojson.Basic.t -> 'a c option =
-     fun x ->
-      match x with
-      | `List [ `String "C"; x_0 ] -> Some (`C (a_of_json x_0))
-      | x -> None
+    let rec c_of_json_poly a_of_json =
+      (fun x ->
+         match x with
+         | `List [ `String "C"; x_0 ] -> Some (`C (a_of_json x_0))
+         | x -> None
+        : Yojson.Basic.t -> 'a c option)
   
-    and c_of_json a_of_json : Yojson.Basic.t -> 'a c =
-     fun x ->
-      match (c_of_json_poly a_of_json) x with
-      | Some x -> x
-      | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+    and c_of_json a_of_json =
+      (fun x ->
+         match (c_of_json_poly a_of_json) x with
+         | Some x -> x
+         | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+        : Yojson.Basic.t -> 'a c)
   
     let _ = c_of_json_poly
     and _ = c_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec c_to_json a_to_json : 'a c -> Yojson.Basic.t =
-     fun x -> match x with `C x_0 -> `List [ `String "C"; a_to_json x_0 ]
+    let rec c_to_json a_to_json =
+      (fun x ->
+         match x with `C x_0 -> `List [ `String "C"; a_to_json x_0 ]
+        : 'a c -> Yojson.Basic.t)
   
     let _ = c_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -616,22 +679,24 @@
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec p2_of_json a_of_json b_of_json : Yojson.Basic.t -> ('a, 'b) p2 =
-     fun x ->
-      match x with
-      | `List [ `String "A"; x_0 ] -> A (a_of_json x_0)
-      | `List [ `String "B"; x_0 ] -> B (b_of_json x_0)
-      | _ -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+    let rec p2_of_json a_of_json b_of_json =
+      (fun x ->
+         match x with
+         | `List [ `String "A"; x_0 ] -> A (a_of_json x_0)
+         | `List [ `String "B"; x_0 ] -> B (b_of_json x_0)
+         | _ -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+        : Yojson.Basic.t -> ('a, 'b) p2)
   
     let _ = p2_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec p2_to_json a_to_json b_to_json : ('a, 'b) p2 -> Yojson.Basic.t =
-     fun x ->
-      match x with
-      | A x_0 -> `List [ `String "A"; a_to_json x_0 ]
-      | B x_0 -> `List [ `String "B"; b_to_json x_0 ]
+    let rec p2_to_json a_to_json b_to_json =
+      (fun x ->
+         match x with
+         | A x_0 -> `List [ `String "A"; a_to_json x_0 ]
+         | B x_0 -> `List [ `String "B"; b_to_json x_0 ]
+        : ('a, 'b) p2 -> Yojson.Basic.t)
   
     let _ = p2_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]

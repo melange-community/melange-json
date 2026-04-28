@@ -29,15 +29,15 @@
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec param_of_json a_of_json : Js.Json.t -> 'a param =
-     fun x -> a_of_json x
+    let rec param_of_json a_of_json =
+      (fun x -> a_of_json x : Js.Json.t -> 'a param)
   
     let _ = param_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec param_to_json a_to_json : 'a param -> Js.Json.t =
-     fun x -> a_to_json x
+    let rec param_to_json a_to_json =
+      (fun x -> a_to_json x : 'a param -> Js.Json.t)
   
     let _ = param_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -280,6 +280,53 @@
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
   $ cat <<"EOF" | run
+  > type record_default_none = { d : int option; [@json.default None] } [@@deriving json]
+  > EOF
+  type record_default_none = { d : int option [@json.default None] }
+  [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : record_default_none) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec record_default_none_of_json =
+      (fun x ->
+         if
+           Stdlib.not
+             (Stdlib.( && )
+                (Stdlib.( = ) (Js.typeof x) "object")
+                (Stdlib.( && )
+                   (Stdlib.not (Js.Array.isArray x))
+                   (Stdlib.not
+                      (Stdlib.( == ) (Obj.magic x : 'a Js.null) Js.null))))
+         then
+           Ppx_deriving_json_runtime.of_json_error "expected a JSON object";
+         let fs = (Obj.magic x : < d : Js.Json.t Js.undefined > Js.t) in
+         {
+           d =
+             (match Js.Undefined.toOption fs##d with
+             | Stdlib.Option.Some v -> (option_of_json int_of_json) v
+             | Stdlib.Option.None -> None);
+         }
+        : Js.Json.t -> record_default_none)
+  
+    let _ = record_default_none_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec record_default_none_to_json =
+      (fun x ->
+         match x with
+         | { d = x_d } ->
+             (Obj.magic [%mel.obj { d = (option_to_json int_to_json) x_d }]
+               : Js.Json.t)
+        : record_default_none -> Js.Json.t)
+  
+    let _ = record_default_none_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
   > type sum = A | B of int | C of { name : string } [@@deriving json]
   > EOF
   type sum = A | B of int | C of { name : string } [@@deriving json]
@@ -488,47 +535,51 @@
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec c_of_json_poly a_of_json : Js.Json.t -> 'a c option =
-     fun x ->
-      if Js.Array.isArray x then
-        let array = (Obj.magic x : Js.Json.t array) in
-        let len = Js.Array.length array in
-        if Stdlib.( > ) len 0 then
-          let tag = Js.Array.unsafe_get array 0 in
-          if Stdlib.( = ) (Js.typeof tag) "string" then
-            let tag = (Obj.magic tag : string) in
-            if Stdlib.( = ) tag "C" then (
-              if Stdlib.( <> ) len 2 then
-                Ppx_deriving_json_runtime.of_json_error
-                  "expected a JSON array of length 2";
-              Some (`C (a_of_json (Js.Array.unsafe_get array 1))))
-            else None
-          else
-            Ppx_deriving_json_runtime.of_json_error
-              "expected a non empty JSON array with element being a string"
-        else
-          Ppx_deriving_json_runtime.of_json_error
-            "expected a non empty JSON array"
-      else
-        Ppx_deriving_json_runtime.of_json_error
-          "expected a non empty JSON array"
+    let rec c_of_json_poly a_of_json =
+      (fun x ->
+         if Js.Array.isArray x then
+           let array = (Obj.magic x : Js.Json.t array) in
+           let len = Js.Array.length array in
+           if Stdlib.( > ) len 0 then
+             let tag = Js.Array.unsafe_get array 0 in
+             if Stdlib.( = ) (Js.typeof tag) "string" then
+               let tag = (Obj.magic tag : string) in
+               if Stdlib.( = ) tag "C" then (
+                 if Stdlib.( <> ) len 2 then
+                   Ppx_deriving_json_runtime.of_json_error
+                     "expected a JSON array of length 2";
+                 Some (`C (a_of_json (Js.Array.unsafe_get array 1))))
+               else None
+             else
+               Ppx_deriving_json_runtime.of_json_error
+                 "expected a non empty JSON array with element being a \
+                  string"
+           else
+             Ppx_deriving_json_runtime.of_json_error
+               "expected a non empty JSON array"
+         else
+           Ppx_deriving_json_runtime.of_json_error
+             "expected a non empty JSON array"
+        : Js.Json.t -> 'a c option)
   
-    and c_of_json a_of_json : Js.Json.t -> 'a c =
-     fun x ->
-      match (c_of_json_poly a_of_json) x with
-      | Some x -> x
-      | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+    and c_of_json a_of_json =
+      (fun x ->
+         match (c_of_json_poly a_of_json) x with
+         | Some x -> x
+         | None -> Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+        : Js.Json.t -> 'a c)
   
     let _ = c_of_json_poly
     and _ = c_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec c_to_json a_to_json : 'a c -> Js.Json.t =
-     fun x ->
-      match x with
-      | `C x_0 ->
-          (Obj.magic [| string_to_json "C"; a_to_json x_0 |] : Js.Json.t)
+    let rec c_to_json a_to_json =
+      (fun x ->
+         match x with
+         | `C x_0 ->
+             (Obj.magic [| string_to_json "C"; a_to_json x_0 |] : Js.Json.t)
+        : 'a c -> Js.Json.t)
   
     let _ = c_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -740,47 +791,50 @@
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec p2_of_json a_of_json b_of_json : Js.Json.t -> ('a, 'b) p2 =
-     fun x ->
-      if Js.Array.isArray x then
-        let array = (Obj.magic x : Js.Json.t array) in
-        let len = Js.Array.length array in
-        if Stdlib.( > ) len 0 then
-          let tag = Js.Array.unsafe_get array 0 in
-          if Stdlib.( = ) (Js.typeof tag) "string" then
-            let tag = (Obj.magic tag : string) in
-            if Stdlib.( = ) tag "A" then (
-              if Stdlib.( <> ) len 2 then
-                Ppx_deriving_json_runtime.of_json_error
-                  "expected a JSON array of length 2";
-              A (a_of_json (Js.Array.unsafe_get array 1)))
-            else if Stdlib.( = ) tag "B" then (
-              if Stdlib.( <> ) len 2 then
-                Ppx_deriving_json_runtime.of_json_error
-                  "expected a JSON array of length 2";
-              B (b_of_json (Js.Array.unsafe_get array 1)))
-            else Ppx_deriving_json_runtime.of_json_error "invalid JSON"
-          else
-            Ppx_deriving_json_runtime.of_json_error
-              "expected a non empty JSON array with element being a string"
-        else
-          Ppx_deriving_json_runtime.of_json_error
-            "expected a non empty JSON array"
-      else
-        Ppx_deriving_json_runtime.of_json_error
-          "expected a non empty JSON array"
+    let rec p2_of_json a_of_json b_of_json =
+      (fun x ->
+         if Js.Array.isArray x then
+           let array = (Obj.magic x : Js.Json.t array) in
+           let len = Js.Array.length array in
+           if Stdlib.( > ) len 0 then
+             let tag = Js.Array.unsafe_get array 0 in
+             if Stdlib.( = ) (Js.typeof tag) "string" then
+               let tag = (Obj.magic tag : string) in
+               if Stdlib.( = ) tag "A" then (
+                 if Stdlib.( <> ) len 2 then
+                   Ppx_deriving_json_runtime.of_json_error
+                     "expected a JSON array of length 2";
+                 A (a_of_json (Js.Array.unsafe_get array 1)))
+               else if Stdlib.( = ) tag "B" then (
+                 if Stdlib.( <> ) len 2 then
+                   Ppx_deriving_json_runtime.of_json_error
+                     "expected a JSON array of length 2";
+                 B (b_of_json (Js.Array.unsafe_get array 1)))
+               else Ppx_deriving_json_runtime.of_json_error "invalid JSON"
+             else
+               Ppx_deriving_json_runtime.of_json_error
+                 "expected a non empty JSON array with element being a \
+                  string"
+           else
+             Ppx_deriving_json_runtime.of_json_error
+               "expected a non empty JSON array"
+         else
+           Ppx_deriving_json_runtime.of_json_error
+             "expected a non empty JSON array"
+        : Js.Json.t -> ('a, 'b) p2)
   
     let _ = p2_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec p2_to_json a_to_json b_to_json : ('a, 'b) p2 -> Js.Json.t =
-     fun x ->
-      match x with
-      | A x_0 ->
-          (Obj.magic [| string_to_json "A"; a_to_json x_0 |] : Js.Json.t)
-      | B x_0 ->
-          (Obj.magic [| string_to_json "B"; b_to_json x_0 |] : Js.Json.t)
+    let rec p2_to_json a_to_json b_to_json =
+      (fun x ->
+         match x with
+         | A x_0 ->
+             (Obj.magic [| string_to_json "A"; a_to_json x_0 |] : Js.Json.t)
+         | B x_0 ->
+             (Obj.magic [| string_to_json "B"; b_to_json x_0 |] : Js.Json.t)
+        : ('a, 'b) p2 -> Js.Json.t)
   
     let _ = p2_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]

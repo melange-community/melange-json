@@ -68,6 +68,10 @@
   JSON REPRINT: {"k":null}
   JSON    DATA: {"k":42}
   JSON REPRINT: {"k":42}
+  JSON    DATA: {}
+  JSON REPRINT: {"d":null}
+  JSON    DATA: {"d":42}
+  JSON REPRINT: {"d":42}
   JSON    DATA: ["A",1]
   JSON REPRINT: ["A",1]
   JSON    DATA: ["B","ok"]

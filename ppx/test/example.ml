@@ -7,6 +7,7 @@ type tuple = int * string [@@deriving json]
 type record = { name : string; age : int } [@@deriving json]
 type record_aliased = { name : string; [@json.key "my_name"] age : int; [@json.key "my_age"] [@json.default 100] } [@@deriving json]
 type record_opt = { k : int option; [@json.option] } [@@deriving json]
+type record_default_none = { d : int option; [@json.default None] } [@@deriving json]
 type sum = A | B of int | C of { name : string } [@@deriving json]
 type other = [ `C ] [@@deriving json] type poly = [ `A | `B of int | other ] [@@deriving json]
 type 'a c = [ `C of 'a ] [@@deriving json]
@@ -48,6 +49,8 @@ module Cases = struct
     C ({|{"my_name":"N"}|}, record_aliased_of_json, record_aliased_to_json, {name="N"; age=100});
     C ({|{}|}, record_opt_of_json, record_opt_to_json, {k=None});
     C ({|{"k":42}|}, record_opt_of_json, record_opt_to_json, {k=Some 42});
+    C ({|{}|}, record_default_none_of_json, record_default_none_to_json, {d=None});
+    C ({|{"d":42}|}, record_default_none_of_json, record_default_none_to_json, {d=Some 42});
     C ({|["A",1]|}, p2_of_json int_of_json string_of_json, p2_to_json int_to_json string_to_json, A 1);
     C ({|["B","ok"]|}, p2_of_json int_of_json string_of_json, p2_to_json int_to_json string_to_json, B "ok");
     C ({|{"a":1,"b":2}|}, allow_extra_fields_of_json, allow_extra_fields_to_json, {a=1});
