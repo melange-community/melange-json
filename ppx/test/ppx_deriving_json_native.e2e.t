@@ -95,6 +95,24 @@
   JSON REPRINT: {"a":1}
   JSON    DATA: {"a":1,"b_opt":2}
   JSON REPRINT: {"a":1,"b_opt":2}
+  JSON    DATA: {"dd_a":1}
+  JSON REPRINT: {"dd_a":1}
+  JSON    DATA: {"dd_a":1,"dd_b":5}
+  JSON REPRINT: {"dd_a":1,"dd_b":5}
+  JSON    DATA: {"dde_a":1}
+  JSON REPRINT: {"dde_a":1}
+  JSON    DATA: {"dde_a":1,"dde_b":5}
+  JSON REPRINT: {"dde_a":1,"dde_b":5}
+  JSON    DATA: {"ddj_a":1}
+  JSON REPRINT: {"ddj_a":1}
+  JSON    DATA: {"ddj_a":1,"ddj_b":5}
+  JSON REPRINT: {"ddj_a":1,"ddj_b":5}
+  JSON    DATA: {"inner":{}}
+  JSON REPRINT: {"inner":{}}
+  JSON    DATA: {"inner":{"foo":5}}
+  JSON REPRINT: {"inner":{"foo":5}}
+  JSON    DATA: {}
+  JSON REPRINT: {"inner":{}}
   JSON    DATA: {"a":[1],"b":[2]}
   JSON REPRINT: {"a":[1],"b":[2]}
   JSON    DATA: ["Circle", 5.0]
