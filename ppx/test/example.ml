@@ -22,6 +22,10 @@ type ('a, 'b) p2 = A of 'a | B of 'b [@@deriving json]
 type allow_extra_fields = {a: int} [@@deriving json] [@@json.allow_extra_fields]
 type allow_extra_fields2 = A of {a: int} [@json.allow_extra_fields] [@@deriving json]
 type drop_default_option = { a: int; b_opt: int option; [@option] [@json.drop_default] } [@@deriving json]
+let equal_int = Int.equal
+type drop_default_int = { dd_a: int; dd_b: int [@json.default 0] [@json.drop_default] } [@@deriving json]
+type drop_default_expr = { dde_a: int; dde_b: int [@json.default 0] [@json.drop_default Int.equal] } [@@deriving json]
+type drop_default_if_json_eq = { ddj_a: int; ddj_b: int [@json.default 0] [@json.drop_default_if_json_equal] } [@@deriving json]
 type array_list = { a: int array; b: int list} [@@deriving json]
 type json = Melange_json.t
 type of_json = C : string * (json -> 'a) * ('a -> json) * 'a -> of_json
@@ -74,6 +78,12 @@ let of_json_cases = [
   C ({|["A",{"a":1,"b":2}]|}, allow_extra_fields2_of_json, allow_extra_fields2_to_json, A {a=1});
   C ({|{"a":1}|}, drop_default_option_of_json, drop_default_option_to_json, {a=1; b_opt=None});
   C ({|{"a":1,"b_opt":2}|}, drop_default_option_of_json, drop_default_option_to_json, {a=1; b_opt=Some 2});
+  C ({|{"dd_a":1}|}, drop_default_int_of_json, drop_default_int_to_json, {dd_a=1; dd_b=0});
+  C ({|{"dd_a":1,"dd_b":5}|}, drop_default_int_of_json, drop_default_int_to_json, {dd_a=1; dd_b=5});
+  C ({|{"dde_a":1}|}, drop_default_expr_of_json, drop_default_expr_to_json, {dde_a=1; dde_b=0});
+  C ({|{"dde_a":1,"dde_b":5}|}, drop_default_expr_of_json, drop_default_expr_to_json, {dde_a=1; dde_b=5});
+  C ({|{"ddj_a":1}|}, drop_default_if_json_eq_of_json, drop_default_if_json_eq_to_json, {ddj_a=1; ddj_b=0});
+  C ({|{"ddj_a":1,"ddj_b":5}|}, drop_default_if_json_eq_of_json, drop_default_if_json_eq_to_json, {ddj_a=1; ddj_b=5});
   C ({|{"a":[1],"b":[2]}|}, array_list_of_json, array_list_to_json, {a=[|1|]; b=[2]});
   C ({|["Circle", 5.0]|}, shape_of_json, shape_to_json, Circle 5.0);
   C ({|["Rectangle", 10.0, 20.0]|}, shape_of_json, shape_to_json, Rectangle (10.0, 20.0));
