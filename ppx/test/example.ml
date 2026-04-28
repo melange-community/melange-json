@@ -26,6 +26,11 @@ let equal_int = Int.equal
 type drop_default_int = { dd_a: int; dd_b: int [@json.default 0] [@json.drop_default] } [@@deriving json]
 type drop_default_expr = { dde_a: int; dde_b: int [@json.default 0] [@json.drop_default Int.equal] } [@@deriving json]
 type drop_default_if_json_eq = { ddj_a: int; ddj_b: int [@json.default 0] [@json.drop_default_if_json_equal] } [@@deriving json]
+type inner_with_option_field = { foo: int option [@option] [@json.drop_default] } [@@deriving json]
+let empty_inner_with_option_field : inner_with_option_field = { foo = None }
+type outer_default_record_with_option = {
+  inner: inner_with_option_field; [@json.default empty_inner_with_option_field]
+} [@@deriving json]
 type array_list = { a: int array; b: int list} [@@deriving json]
 type json = Melange_json.t
 type of_json = C : string * (json -> 'a) * ('a -> json) * 'a -> of_json
@@ -84,6 +89,9 @@ let of_json_cases = [
   C ({|{"dde_a":1,"dde_b":5}|}, drop_default_expr_of_json, drop_default_expr_to_json, {dde_a=1; dde_b=5});
   C ({|{"ddj_a":1}|}, drop_default_if_json_eq_of_json, drop_default_if_json_eq_to_json, {ddj_a=1; ddj_b=0});
   C ({|{"ddj_a":1,"ddj_b":5}|}, drop_default_if_json_eq_of_json, drop_default_if_json_eq_to_json, {ddj_a=1; ddj_b=5});
+  C ({|{"inner":{}}|}, outer_default_record_with_option_of_json, outer_default_record_with_option_to_json, {inner = {foo = None}});
+  C ({|{"inner":{"foo":5}}|}, outer_default_record_with_option_of_json, outer_default_record_with_option_to_json, {inner = {foo = Some 5}});
+  C ({|{}|}, outer_default_record_with_option_of_json, outer_default_record_with_option_to_json, {inner = empty_inner_with_option_field});
   C ({|{"a":[1],"b":[2]}|}, array_list_of_json, array_list_to_json, {a=[|1|]; b=[2]});
   C ({|["Circle", 5.0]|}, shape_of_json, shape_to_json, Circle 5.0);
   C ({|["Rectangle", 10.0, 20.0]|}, shape_of_json, shape_to_json, Rectangle (10.0, 20.0));
