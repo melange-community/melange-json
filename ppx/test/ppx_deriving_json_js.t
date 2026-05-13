@@ -1509,3 +1509,74 @@
   
     let _ = variant_any_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+  $ cat <<"EOF" | run
+  > type compact_variant = A | B of int [@@deriving json] [@@json.compact_variants]
+  > EOF
+  type compact_variant = A | B of int
+  [@@deriving json] [@@json.compact_variants]
+  
+  include struct
+    let _ = fun (_ : compact_variant) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec compact_variant_of_json =
+      (fun x ->
+         if Js.Array.isArray x then
+           let array = (Obj.magic x : Js.Json.t array) in
+           let len = Js.Array.length array in
+           if Stdlib.( > ) len 0 then
+             let tag = Js.Array.unsafe_get array 0 in
+             if Stdlib.( = ) (Js.typeof tag) "string" then
+               let tag = (Obj.magic tag : string) in
+               if Stdlib.( = ) tag "A" then A
+               else if Stdlib.( = ) tag "B" then
+                 if Stdlib.( <> ) len 2 then
+                   Melange_json.of_json_error ~json:x
+                     "expected a JSON array of length 2"
+                 else B (int_of_json (Js.Array.unsafe_get array 1))
+               else
+                 Melange_json.of_json_error ~json:x
+                   "expected [\"B\", _] or \"A\""
+             else
+               Melange_json.of_json_error ~json:x
+                 "expected a non empty JSON array with element being a \
+                  string"
+           else
+             Melange_json.of_json_error ~json:x
+               "expected a non empty JSON array"
+         else if Stdlib.( = ) (Js.typeof x) "string" then (
+           let array = (Obj.magic [||] : Js.Json.t array) in
+           let len = 0 in
+           let tag = (Obj.magic x : string) in
+           ignore (array, len);
+           if Stdlib.( = ) tag "A" then A
+           else if Stdlib.( = ) tag "B" then
+             if Stdlib.( <> ) len 2 then
+               Melange_json.of_json_error ~json:x
+                 "expected a JSON array of length 2"
+             else B (int_of_json (Js.Array.unsafe_get array 1))
+           else
+             Melange_json.of_json_error ~json:x
+               "expected [\"B\", _] or \"A\"")
+         else
+           Melange_json.of_json_error ~json:x
+             "expected a non empty JSON array"
+        : Js.Json.t -> compact_variant)
+  
+    let _ = compact_variant_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec compact_variant_to_json =
+      (fun x ->
+         match x with
+         | A -> (Obj.magic "A" : Js.Json.t)
+         | B x_0 ->
+             (Obj.magic [| (Obj.magic "B" : Js.Json.t); int_to_json x_0 |]
+               : Js.Json.t)
+        : compact_variant -> Js.Json.t)
+  
+    let _ = compact_variant_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
