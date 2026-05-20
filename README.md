@@ -424,6 +424,47 @@ This also works for polyvariant types:
 type t = [`A | `B of int] [@@deriving json] [@@json.compact_variants]
 ```
 
+#### `[@json.catch_all]`: catch-all constructor for unknown string tags
+
+The `[@json.catch_all]` attribute marks a constructor as the catch-all for any
+unrecognised string tag. The constructor's argument is the library type
+`Melange_json.unknown_variant_case`, a record with fields `tag : string` and
+`payload : Melange_json.t list option`. The decoder routes bare unknown
+strings *and* unknown array variants — including their payload — into this
+constructor; the encoder re-emits the exact wire shape, so decoding/encoding
+round-trips.
+
+Pairs naturally with `[@@json.compact_variants]` so the known cases are also
+bare strings.
+
+```ocaml
+type evt =
+  | Login [@json.name "login"]
+  | Click of int [@json.name "click"]
+  | Unknown of Melange_json.unknown_variant_case [@json.catch_all]
+[@@deriving json] [@@json.compact_variants]
+```
+
+The same syntax works for polymorphic variants:
+
+```ocaml
+type evt = [
+  | `Login [@json.name "login"]
+  | `Click of int [@json.name "click"]
+  | `Unknown of Melange_json.unknown_variant_case [@json.catch_all]
+] [@@deriving json] [@@json.compact_variants]
+```
+
+##### Wire shape mapping
+
+`payload` distinguishes the wire shape so the value round-trips faithfully:
+
+| Wire JSON               | Decoded                                                   | Re-encodes as          |
+|-------------------------|-----------------------------------------------------------|------------------------|
+| `"future_tag"`          | `{ tag = "future_tag"; payload = None }`                  | `"future_tag"`         |
+| `["future_tag"]`        | `{ tag = "future_tag"; payload = Some [] }`               | `["future_tag"]`       |
+| `["future_tag", 42]`    | `{ tag = "future_tag"; payload = Some [`Int 42] }`        | `["future_tag", 42]`   |
+
 #### `[@@deriving json_string]`: a shortcut for JSON string conversion
 
 For convenience, one can use `[@@deriving json_string]` to generate converters

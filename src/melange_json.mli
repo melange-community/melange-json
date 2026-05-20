@@ -103,6 +103,36 @@ type t = Js.Json.t
 type json = t
 (** Defined for convenience. *)
 
+type unknown_variant_case = {
+  tag : string;
+  payload : t list option;
+}
+(** Standard payload-preserving record for [@json.catch_all] constructors
+    on polymorphic and classic variants. Wire shapes:
+
+    - [{ tag; payload = None }] ↔ bare JSON string ["tag"]
+    - [{ tag; payload = Some [] }] ↔ JSON array [\["tag"\]]
+    - [{ tag; payload = Some xs }] ↔ JSON array [\["tag", x1, x2, …\]]
+
+    Captures any unknown-variant wire shape, lossless. *)
+
+val unknown_variant_case_jsonschema :
+  [> `Assoc of
+       (string *
+        [> `List of
+             [> `Assoc of
+                  (string *
+                   [> `Int of int
+                   | `List of [> `Assoc of (string * [> `String of string ]) list ] list
+                   | `String of string ])
+                  list ]
+             list ])
+       list ]
+(** JSON-schema literal for [unknown_variant_case]. The polyvariant type
+    is compatible with [Ppx_deriving_jsonschema_runtime.t]: use as the
+    value of [type X = ... [@@deriving jsonschema]] when the type is
+    [Melange_json.unknown_variant_case]. *)
+
 val to_string : json -> string
 (** JSON can be encoded as a string. *)
 

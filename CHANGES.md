@@ -1,5 +1,19 @@
 ## Unreleased
 
+- Library: Add `Melange_json.unknown_variant_case`, a record type with
+  fields `tag : string` and `payload : Melange_json.t list option`,
+  meant to be referenced as the argument of a catch-all constructor (see
+  next entry). Companion JSON-schema literal
+  `Melange_json.unknown_variant_case_jsonschema` plugs into
+  `ppx_deriving_jsonschema`.
+- PPX: Add `[@json.catch_all]` attribute, marking a constructor as the
+  catch-all for any unrecognised string tag. The constructor's argument
+  is `Melange_json.unknown_variant_case`; `payload` distinguishes bare
+  strings (`None`) from array forms (`Some xs`), preserving the wire
+  shape for round-trip-faithful decoding/encoding even when a future
+  producer adds payload-bearing variants. Works on both classic variants
+  and polymorphic variants. Pairs naturally with
+  `[@@json.compact_variants]`.
 - PPX: Add `[@@json.compact_variants]` attribute for variant and polyvariant
   types. Encodes constructors without arguments as plain JSON strings and
   constructors with arguments as JSON arrays `["ConstructorName", arg1, ...]`.

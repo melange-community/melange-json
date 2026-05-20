@@ -6,6 +6,43 @@ type t = Yojson.Basic.t
 type json = t
 (** Defined for convenience. *)
 
+type unknown_variant_case = {
+  tag : string;
+  payload : t list option;
+}
+(** Standard payload-preserving record for [@json.catch_all] constructors
+    on polymorphic and classic variants. The PPX generates record literals
+    of this shape; users can reference this type directly instead of
+    defining their own. Wire shapes:
+
+    - [{ tag; payload = None }] ↔ bare JSON string ["tag"]
+    - [{ tag; payload = Some [] }] ↔ JSON array [\["tag"\]]
+    - [{ tag; payload = Some xs }] ↔ JSON array [\["tag", x1, x2, …\]]
+
+    Captures any unknown-variant wire shape, lossless. *)
+
+(* Companion schema for ppx_deriving_jsonschema callers. Structurally
+   compatible with Ppx_deriving_jsonschema_runtime.t — no library
+   dependency added; the polyvariant literal unifies with the runtime
+   type at the use site. The schema is "oneOf string / non-empty array
+   of any" — the two wire shapes a catch-all constructor can take. *)
+let unknown_variant_case_jsonschema =
+  `Assoc
+    [
+      ( "oneOf",
+        `List
+          [
+            `Assoc [ "type", `String "string" ];
+            `Assoc
+              [
+                "type", `String "array";
+                "minItems", `Int 1;
+                "items",
+                `List [ `Assoc [ "type", `String "string" ] ];
+              ];
+          ] );
+    ]
+
 let classify = Classify.classify
 let declassify = Classify.declassify
 let to_string t = Yojson.Basic.to_string t
