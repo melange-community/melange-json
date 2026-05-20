@@ -137,6 +137,56 @@ module Of_json = struct
     | Vcs_tuple (n, t) when vcs_attr_json_allow_any t.tpl_ctx ->
         let loc = n.loc in
         [%pat? _] --> make (Some [%expr x])
+    | Vcs_tuple (n, t) when vcs_attr_json_catch_all t.tpl_ctx ->
+        let loc = n.loc in
+        (match t.tpl_types with
+         | [ _ ] ->
+             [%pat? (`String _ | `List (`String _ :: _)) as v]
+             --> [%expr
+                   let tag =
+                     match v with
+                     | `String s -> s
+                     | `List (`String s :: _) -> s
+                     | _ -> assert false
+                   in
+                   let payload =
+                     match v with
+                     | `String _ -> Stdlib.Option.None
+                     | `List (_ :: rest) -> Stdlib.Option.Some rest
+                     | _ -> assert false
+                   in
+                   [%e make (Some [%expr ({ tag; payload } : Melange_json.unknown_variant_case)])]]
+         | _ ->
+             Location.raise_errorf ~loc
+               "[@json.catch_all] requires exactly one argument: a record \
+                type with fields `tag : string` and \
+                `payload : Yojson.Basic.t list option` (typically \
+                [Melange_json.unknown_variant_case])")
+    | Vcs_record (_n, t) when vcs_attr_json_catch_all t.rcd_ctx ->
+        let loc = t.rcd_loc in
+        (match t.rcd_fields with
+         | [ { pld_name = { txt = "tag"; _ }; _ };
+             { pld_name = { txt = "payload"; _ }; _ } ] ->
+             [%pat? (`String _ | `List (`String _ :: _)) as v]
+             --> [%expr
+                   let tag =
+                     match v with
+                     | `String s -> s
+                     | `List (`String s :: _) -> s
+                     | _ -> assert false
+                   in
+                   let payload =
+                     match v with
+                     | `String _ -> Stdlib.Option.None
+                     | `List (_ :: rest) -> Stdlib.Option.Some rest
+                     | _ -> assert false
+                   in
+                   [%e make (Some [%expr ({ tag; payload } : Melange_json.unknown_variant_case)])]]
+         | _ ->
+             Location.raise_errorf ~loc
+               "[@json.catch_all] inline record must have exactly two \
+                fields named `tag` and `payload` (in that order), with \
+                types `string` and `Yojson.Basic.t list option`")
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
@@ -164,16 +214,21 @@ module Of_json = struct
         --> build_record ~allow_extra_fields ~loc derive t.rcd_fields
               [%expr fs] (fun e -> make (Some e))
 
+  (* Sort key for variant cases. Smaller = visited earlier by the
+     fold-left in [deriving_of_match], which means it ends up *later* in
+     the generated [match …] cases (the fold prepends). So we want the
+     widest catch-alls to come first here:
+       - [@json.allow_any] (catches any JSON)
+       - [@json.catch_all] (catches any string)
+       - specific constructor cases
+   *)
   let cmp_sort_vcs vcs1 vcs2 =
-    let allow_any_1 =
-      Ppx_deriving_json_common.vcs_attr_json_allow_any vcs1
-    and allow_any_2 =
-      Ppx_deriving_json_common.vcs_attr_json_allow_any vcs2
+    let key vcs =
+      if Ppx_deriving_json_common.vcs_attr_json_allow_any vcs then 0
+      else if Ppx_deriving_json_common.vcs_attr_json_catch_all vcs then 1
+      else 2
     in
-    match allow_any_1, allow_any_2 with
-    | true, true | false, false -> 0
-    | true, false -> -1
-    | false, true -> 1
+    compare (key vcs1) (key vcs2)
 
   let deriving : Ppx_deriving_tools.deriving =
     deriving_of_match () ~name:"of_json"
@@ -241,6 +296,37 @@ module To_json = struct
             failwith
               (sprintf "expected a tuple of length 1, got %i"
                  (List.length es)))
+    | Vcs_tuple (n, t) when vcs_attr_json_catch_all t.tpl_ctx -> (
+        let loc = n.loc in
+        match t.tpl_types, es with
+        | [ _ ], [ arg_e ] ->
+            [%expr
+              match [%e arg_e].payload with
+              | Stdlib.Option.None -> `String [%e arg_e].tag
+              | Stdlib.Option.Some xs ->
+                  `List (`String [%e arg_e].tag :: xs)]
+        | _ ->
+            Location.raise_errorf ~loc
+              "[@json.catch_all] requires exactly one argument: a record \
+               type with fields `tag : string` and \
+               `payload : Yojson.Basic.t list option` (typically \
+               [Melange_json.unknown_variant_case])")
+    | Vcs_record (_n, t) when vcs_attr_json_catch_all t.rcd_ctx -> (
+        let loc = t.rcd_loc in
+        match t.rcd_fields, es with
+        | ( [ { pld_name = { txt = "tag"; _ }; _ };
+              { pld_name = { txt = "payload"; _ }; _ } ],
+            [ tag_e; payload_e ] ) ->
+            [%expr
+              match [%e payload_e] with
+              | Stdlib.Option.None -> `String [%e tag_e]
+              | Stdlib.Option.Some xs ->
+                  `List (`String [%e tag_e] :: xs)]
+        | _ ->
+            Location.raise_errorf ~loc
+              "[@json.catch_all] inline record must have exactly two \
+               fields named `tag` and `payload` (in that order), with \
+               types `string` and `Yojson.Basic.t list option`")
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in

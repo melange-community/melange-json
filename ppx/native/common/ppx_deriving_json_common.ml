@@ -35,6 +35,25 @@ let vcs_attr_json_allow_any =
     | None -> false
     | Some () -> true
 
+(* [@json.catch_all] marks a variant constructor as the catch-all for any
+   unrecognised string tag. The decoder routes both bare unknown strings and
+   unknown array variants ["future_tag", ...] to this constructor (in the
+   array case any payload is captured into the [payload] field for lossless
+   round-trip). The encoder writes the value back in the same wire shape.
+   Pairs naturally with [@@json.compact_variants] so the known cases are
+   also bare strings. *)
+let attr_json_catch_all ctx = Attribute.declare_flag "json.catch_all" ctx
+
+let vcs_attr_json_catch_all =
+  let variant =
+    attr_json_catch_all Attribute.Context.constructor_declaration
+  in
+  let polyvariant = attr_json_catch_all Attribute.Context.rtag in
+  fun ?mark_as_seen ctx ->
+    match get_of_variant_case ~variant ~polyvariant ?mark_as_seen ctx with
+    | None -> false
+    | Some () -> true
+
 let ld_attr_json_key =
   Attribute.get
     (Attribute.declare "json.key" Attribute.Context.label_declaration
