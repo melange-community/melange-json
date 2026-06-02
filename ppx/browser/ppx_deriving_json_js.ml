@@ -107,8 +107,7 @@ module Of_json = struct
       [%e ensure_json_object ~loc x];
       [%e build_record ~loc derive t.rcd_fields x Fun.id]]
 
-  let derive_of_variant ?(is_compact_variants = false) _derive t
-      ~allow_any_constr body x =
+  let derive_of_variant _derive t ~allow_any_constr ?td body x =
     let loc = t.vrt_loc in
     let not_array_error =
       match allow_any_constr with
@@ -119,7 +118,7 @@ module Of_json = struct
               "expected a non empty JSON array"]
     in
     let string_branch =
-      if is_compact_variants then
+      if Option.fold ~none:false ~some:is_compact_variants td then
         [%expr
           if Stdlib.( = ) (Js.typeof [%e x]) "string" then (
             let array = (Obj.magic [||] : Js.Json.t array) in
@@ -171,34 +170,32 @@ module Of_json = struct
       in
       ({ tag = tag_s; payload } : Melange_json.unknown_variant_case)]
 
-  let derive_of_variant_case ?(is_compact_variants = false) derive make c
-      ~allow_any_constr next =
+  let derive_of_variant_case ?td derive make c ~allow_any_constr next =
+    let compact = Option.fold ~none:false ~some:is_compact_variants td in
     let _ = derive in
     let _ = allow_any_constr in
     match c with
-    | Vcs_tuple (n, t) when vcs_attr_json_catch_all t.tpl_ctx -> (
+    | Vcs_tuple (n, t) when vcs_attr_json_catch_all t.tpl_ctx ->
         let loc = n.loc in
-        match t.tpl_types with
-        | [ _ ] -> make (Some (build_unknown_variant_case_record ~loc))
-        | _ ->
-            Location.raise_errorf ~loc
-              "[@json.catch_all] requires exactly one argument: a record \
-               type with fields `tag : string` and `payload : \
-               Melange_json.t list option` (typically \
-               [Melange_json.unknown_variant_case])")
-    | Vcs_record (_n, t) when vcs_attr_json_catch_all t.rcd_ctx -> (
+        (match t.tpl_types with
+         | [ _ ] -> make (Some (build_unknown_variant_case_record ~loc))
+         | _ ->
+             Location.raise_errorf ~loc
+               "[@json.catch_all] requires exactly one argument: a record \
+                type with fields `tag : string` and \
+                `payload : Melange_json.t list option` (typically \
+                [Melange_json.unknown_variant_case])")
+    | Vcs_record (_n, t) when vcs_attr_json_catch_all t.rcd_ctx ->
         let loc = t.rcd_loc in
-        match t.rcd_fields with
-        | [
-         { pld_name = { txt = "tag"; _ }; _ };
-         { pld_name = { txt = "payload"; _ }; _ };
-        ] ->
-            make (Some (build_unknown_variant_case_record ~loc))
-        | _ ->
-            Location.raise_errorf ~loc
-              "[@json.catch_all] inline record must have exactly two \
-               fields named `tag` and `payload` (in that order), with \
-               types `string` and `Melange_json.t list option`")
+        (match t.rcd_fields with
+         | [ { pld_name = { txt = "tag"; _ }; _ };
+             { pld_name = { txt = "payload"; _ }; _ } ] ->
+             make (Some (build_unknown_variant_case_record ~loc))
+         | _ ->
+             Location.raise_errorf ~loc
+               "[@json.catch_all] inline record must have exactly two \
+                fields named `tag` and `payload` (in that order), with \
+                types `string` and `Melange_json.t list option`")
     | Vcs_record (n, r) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name r.rcd_ctx) in
@@ -219,7 +216,7 @@ module Of_json = struct
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
         let arity = List.length t.tpl_types in
-        if is_compact_variants && arity = 0 then
+        if compact && arity = 0 then
           [%expr
             if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then
               [%e make None]
@@ -289,7 +286,8 @@ module To_json = struct
     let record = pexp_record ~loc fs None in
     as_json ~loc [%expr [%mel.obj [%e record]]]
 
-  let derive_of_variant_case ?(is_compact_variants = false) derive c es =
+  let derive_of_variant_case ?td derive c es =
+    let compact = Option.fold ~none:false ~some:is_compact_variants td in
     match c with
     | Vcs_tuple (n, t) when vcs_attr_json_catch_all t.tpl_ctx -> (
         let loc = n.loc in
@@ -305,45 +303,37 @@ module To_json = struct
                   in
                   let rest =
                     Stdlib.List.map
-                      (fun (j : Melange_json.t) ->
-                        (Obj.magic j : Js.Json.t))
+                      (fun (j : Melange_json.t) -> (Obj.magic j : Js.Json.t))
                       xs
                   in
                   (Obj.magic
-                     (Stdlib.Array.of_list (head :: rest)
-                       : Js.Json.t array)
+                     (Stdlib.Array.of_list (head :: rest) : Js.Json.t array)
                     : Js.Json.t)]
         | _ ->
             Location.raise_errorf ~loc
               "[@json.catch_all] requires exactly one argument: a record \
-               type with fields `tag : string` and `payload : \
-               Melange_json.t list option` (typically \
+               type with fields `tag : string` and \
+               `payload : Melange_json.t list option` (typically \
                [Melange_json.unknown_variant_case])")
     | Vcs_record (_n, t) when vcs_attr_json_catch_all t.rcd_ctx -> (
         let loc = t.rcd_loc in
         match t.rcd_fields, es with
-        | ( [
-              { pld_name = { txt = "tag"; _ }; _ };
-              { pld_name = { txt = "payload"; _ }; _ };
-            ],
+        | ( [ { pld_name = { txt = "tag"; _ }; _ };
+              { pld_name = { txt = "payload"; _ }; _ } ],
             [ tag_e; payload_e ] ) ->
             [%expr
               match [%e payload_e] with
               | Stdlib.Option.None ->
                   (Obj.magic ([%e tag_e] : string) : Js.Json.t)
               | Stdlib.Option.Some xs ->
-                  let head =
-                    (Obj.magic ([%e tag_e] : string) : Js.Json.t)
-                  in
+                  let head = (Obj.magic ([%e tag_e] : string) : Js.Json.t) in
                   let rest =
                     Stdlib.List.map
-                      (fun (j : Melange_json.t) ->
-                        (Obj.magic j : Js.Json.t))
+                      (fun (j : Melange_json.t) -> (Obj.magic j : Js.Json.t))
                       xs
                   in
                   (Obj.magic
-                     (Stdlib.Array.of_list (head :: rest)
-                       : Js.Json.t array)
+                     (Stdlib.Array.of_list (head :: rest) : Js.Json.t array)
                     : Js.Json.t)]
         | _ ->
             Location.raise_errorf ~loc
@@ -369,7 +359,7 @@ module To_json = struct
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
         let arity = List.length t.tpl_types in
-        if is_compact_variants && arity = 0 then
+        if compact && arity = 0 then
           as_json ~loc (estring ~loc:n.loc n.txt)
         else
           let tag =
