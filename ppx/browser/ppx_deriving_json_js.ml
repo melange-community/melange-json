@@ -23,11 +23,15 @@ module Of_json = struct
     let row = ptyp_object ~loc (List.map fs ~f) Closed in
     [%type: [%t row] Js.t]
 
-  let build_record ~loc derive (fs : label_declaration list) x make =
+  let build_record ~allow_extra_fields ~loc derive
+      (fs : label_declaration list) x make =
+    let field_key ld =
+      let n = ld.pld_name in
+      Option.value ~default:n (ld_attr_json_key ld)
+    in
     let handle_field fs ld =
       ( map_loc lident ld.pld_name,
-        let n = ld.pld_name in
-        let n = Option.value ~default:n (ld_attr_json_key ld) in
+        let n = field_key ld in
         [%expr
           match
             Js.Undefined.toOption
@@ -46,13 +50,41 @@ module Of_json = struct
                             (sprintf "expected field %S to be present"
                                n.txt)]]]] )
     in
-    [%expr
-      let fs = (Obj.magic [%e x] : [%t build_js_type ~loc fs]) in
-      [%e
-        make
-          (pexp_record ~loc
-             (List.map fs ~f:(handle_field [%expr fs]))
-             None)]]
+    let is_known_field name =
+      List.fold_left fs ~init:[%expr false] ~f:(fun acc ld ->
+          let n = field_key ld in
+          [%expr
+            Stdlib.( || )
+              (Stdlib.( = ) [%e name] [%e estring ~loc:n.loc n.txt])
+              [%e acc]])
+    in
+    let body =
+      [%expr
+        let fs = (Obj.magic [%e x] : [%t build_js_type ~loc fs]) in
+        [%e
+          make
+            (pexp_record ~loc
+               (List.map fs ~f:(handle_field [%expr fs]))
+               None)]]
+    in
+    if allow_extra_fields then body
+    else
+      [%expr
+        let keys =
+          Js.Dict.keys (Obj.magic [%e x] : Js.Json.t Js.Dict.t)
+        in
+        let len = Js.Array.length keys in
+        let rec iter i =
+          if Stdlib.( < ) i len then
+            let name = Js.Array.unsafe_get keys i in
+            if [%e is_known_field [%expr name]] then
+              iter (Stdlib.( + ) i 1)
+            else
+              Melange_json.of_json_error ~json:x
+                (Stdlib.Printf.sprintf {|did not expect field "%s"|} name)
+        in
+        iter 0;
+        [%e body]]
 
   let eis_json_object ~loc x =
     [%expr
@@ -103,9 +135,12 @@ module Of_json = struct
 
   let derive_of_record derive t x =
     let loc = t.rcd_loc in
+    let allow_extra_fields = td_allow_extra_fields t.rcd_ctx in
     [%expr
       [%e ensure_json_object ~loc x];
-      [%e build_record ~loc derive t.rcd_fields x Fun.id]]
+      [%e
+        build_record ~allow_extra_fields ~loc derive t.rcd_fields x
+          Fun.id]]
 
   let derive_of_variant _derive t ~allow_any_constr ?td body x =
     let loc = t.vrt_loc in
@@ -209,8 +244,13 @@ module Of_json = struct
                     let fs = Js.Array.unsafe_get array 1 in
                     [%e ensure_json_object ~loc [%expr fs]];
                     [%e
-                      build_record ~loc derive r.rcd_fields [%expr fs]
-                        (fun e -> make (Some e))]]]
+                      let allow_extra_fields =
+                        match r.rcd_ctx with
+                        | Vcs_ctx_variant cd -> cd_allow_extra_fields cd
+                        | Vcs_ctx_polyvariant _ -> true
+                      in
+                      build_record ~allow_extra_fields ~loc derive
+                        r.rcd_fields [%expr fs] (fun e -> make (Some e))]]]
           else [%e next]]
     | Vcs_tuple (n, t) ->
         let loc = n.loc in

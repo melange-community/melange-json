@@ -16,6 +16,7 @@ type j = {
   d : int * float list * string;
 }
 [@@deriving json]
+[@@json.disallow_extra_fields]
 
 let () =
   In_channel.with_open_bin Sys.argv.(1) (fun file ->

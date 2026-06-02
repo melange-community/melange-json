@@ -45,13 +45,13 @@
   JSON REPRINT: ["Error","oops"]
   JSON    DATA: [42, "works"]
   JSON REPRINT: [42,"works"]
-  JSON    DATA: {"name":"N","age":1}
+  JSON    DATA: {"name":"N","age":1,"extra":true}
   JSON REPRINT: {"name":"N","age":1}
   JSON    DATA: ["A"]
   JSON REPRINT: ["A"]
   JSON    DATA: ["B", 42]
   JSON REPRINT: ["B",42]
-  JSON    DATA: ["C", {"name": "cname"}]
+  JSON    DATA: ["C", {"name": "cname", "extra": true}]
   JSON REPRINT: ["C",{"name":"cname"}]
   JSON    DATA: ["A"]
   JSON REPRINT: ["A"]
@@ -91,6 +91,10 @@
   JSON REPRINT: {"a":1}
   JSON    DATA: ["A",{"a":1,"b":2}]
   JSON REPRINT: ["A",{"a":1}]
+  JSON    DATA: {"a":3}
+  JSON REPRINT: {"a":3}
+  JSON    DATA: ["A",{"a":4}]
+  JSON REPRINT: ["A",{"a":4}]
   JSON    DATA: {"a":1}
   JSON REPRINT: {"a":1}
   JSON    DATA: {"a":1,"b_opt":2}
@@ -119,6 +123,10 @@
   Got expected error: expected ["Red"] or ["Green"] or ["Blue"] but got 42
   ERROR CASE DATA: "Yellow"
   Got expected error: expected ["Red"] or ["Green"] or ["Blue"] but got "Yellow"
+  ERROR CASE DATA: {"a":1,"b":2}
+  Got expected error: did not expect field "b" but got {"a": _, "b": _}
+  ERROR CASE DATA: ["A",{"a":1,"b":2}]
+  Got expected error: did not expect field "b" but got ["A", {"a": 1, "b": 2}]
   ERROR CASE DATA: ["Circle"]
   Got expected error: expected ["Circle", _] or ["Rectangle", _, _] or ["Point", { _ }] but got ["Circle"]
   ERROR CASE DATA: ["Rectangle", 10.0]

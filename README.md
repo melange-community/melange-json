@@ -234,50 +234,46 @@ let t = of_json (Melange_json.of_string {|{"a": 42}|})
 (* t = { a = 42; b = "-"; } *)
 ```
 
-#### `[@json.allow_extra_fields]` on records
+#### Extra fields on records
 
-Sometimes, the JSON objects might contain keys that are not part of the OCaml
-type definition. The `[@json.allow_extra_fields]` attribute allows you to
-gracefully ignore such additional fields instead of raising an error during
-deserialization.
-
-This attribute can be used on records, even when they are embedded in other
-types.
-
-> **Note:** For the Melange PPX, ignoring extra fields is the default behavior -
-> you don't need to explicitly add the `[@json.allow_extra_fields]` attribute.
-> The attribute is primarily useful for the native PPX where strict field
-> checking is the default.
-
-**Example 1: Ignoring extra fields in records**
+By default, both the native and Melange PPXs ignore JSON object keys that are
+not part of the OCaml record type.
 
 ```ocaml
-type allow_extra_fields = {
+type t = {
   a: int;
-} [@@deriving json] [@@json.allow_extra_fields]
+} [@@deriving json]
 
-let t = allow_extra_fields_of_json (Json.parseOrRaise {|{"a": 42, "extra": "ignore me"}|})
+let t = t_of_json (Melange_json.of_string {|{"a": 42, "extra": "ignore me"}|})
 (* t = { a = 42 } *)
 ```
 
-The additional key `"extra"` in the JSON input is ignored, and the record is
-successfully deserialized.
+`[@json.allow_extra_fields]` is still accepted for backwards compatibility, but
+is no longer necessary.
 
-**Example 2: Ignoring extra fields in inline records**
+Use `[@json.disallow_extra_fields]` to reject unknown keys and keep strict field
+checking. This attribute can be used on regular records and on inline records in
+variant constructors.
 
 ```ocaml
-type allow_extra_fields2 = 
-  | A of { a: int } [@json.allow_extra_fields] 
-  [@@deriving json]
+type strict = {
+  a: int;
+} [@@deriving json] [@@json.disallow_extra_fields]
 
-let t = allow_extra_fields2_of_json (Json.parseOrRaise {|{"tag": "A", "a": 42, "extra": "ignore me"}|})
-(* t = A { a = 42 } *)
+let _ = strict_of_json (Melange_json.of_string {|{"a": 42, "extra": "fail"}|})
+(* raises: did not expect field "extra" *)
 ```
 
-In this case, the `[@json.allow_extra_fields]` attribute is applied directly to
-the inline record in the variant constructor. This allows the variant to ignore
-extra fields in the JSON payload while properly deserializing the fields that
-match the type definition.
+```ocaml
+type strict_inline =
+  | A of { a: int } [@json.disallow_extra_fields]
+  [@@deriving json]
+
+let _ =
+  strict_inline_of_json
+    (Melange_json.of_string {|["A", {"a": 42, "extra": "fail"}]|})
+(* raises: did not expect field "extra" *)
+```
 
 #### `[@json.option]`: a shortcut for `[@json.default None]`
 

@@ -80,6 +80,39 @@ let cd_attr_json_allow_extra_fields =
     (attr_json_allow_extra_fields
        Attribute.Context.constructor_declaration)
 
+let attr_json_disallow_extra_fields ctx =
+  Attribute.declare "json.disallow_extra_fields" ctx
+    Ast_pattern.(pstr nil)
+    ()
+
+let td_attr_json_disallow_extra_fields =
+  Attribute.get
+    (attr_json_disallow_extra_fields Attribute.Context.type_declaration)
+
+let cd_attr_json_disallow_extra_fields =
+  Attribute.get
+    (attr_json_disallow_extra_fields
+       Attribute.Context.constructor_declaration)
+
+let allow_extra_fields ~loc allow disallow =
+  match allow, disallow with
+  | Some (), Some () ->
+      Location.raise_errorf ~loc
+        "[@json.allow_extra_fields] and [@json.disallow_extra_fields] are \
+         mutually exclusive"
+  | _, Some () -> false
+  | _ -> true
+
+let td_allow_extra_fields td =
+  allow_extra_fields ~loc:td.ptype_loc
+    (td_attr_json_allow_extra_fields td)
+    (td_attr_json_disallow_extra_fields td)
+
+let cd_allow_extra_fields cd =
+  allow_extra_fields ~loc:cd.pcd_loc
+    (cd_attr_json_allow_extra_fields cd)
+    (cd_attr_json_disallow_extra_fields cd)
+
 let ld_attr_json_default =
   Attribute.get
     (Attribute.declare "json.default" Attribute.Context.label_declaration

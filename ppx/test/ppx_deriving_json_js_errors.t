@@ -48,3 +48,10 @@
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   Error: [@drop_default_if_json_equal] cannot be used with [@option]. Use [@drop_default] instead.
   [1]
+
+  $ echo 'type t = { a: int } [@@deriving json] [@@json.allow_extra_fields] [@@json.disallow_extra_fields]' | ../browser/ppx_deriving_json_js_test.exe -impl -
+  File "-", line 1, characters 0-96:
+  1 | type t = { a: int } [@@deriving json] [@@json.allow_extra_fields] [@@json.disallow_extra_fields]
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  Error: [@json.allow_extra_fields] and [@json.disallow_extra_fields] are mutually exclusive
+  [1]

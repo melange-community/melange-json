@@ -42,13 +42,12 @@ module Of_json = struct
     with_refs ~loc "x" fs @@ fun ename ->
     let handle_field k v =
       let fail_case =
-        [%pat? name]
-        -->
-        if allow_extra_fields then [%expr ()]
+        if allow_extra_fields then [%pat? _] --> [%expr ()]
         else
-          [%expr
-            Melange_json.of_json_error ~json:x
-              (Stdlib.Printf.sprintf {|did not expect field "%s"|} name)]
+          [%pat? name]
+          --> [%expr
+                Melange_json.of_json_error ~json:x
+                  (Stdlib.Printf.sprintf {|did not expect field "%s"|} name)]
       in
       let cases =
         List.fold_left (List.rev fs) ~init:[ fail_case ]
@@ -117,9 +116,7 @@ module Of_json = struct
 
   let derive_of_record derive t x =
     let loc = t.rcd_loc in
-    let allow_extra_fields =
-      Option.is_some (td_attr_json_allow_extra_fields t.rcd_ctx)
-    in
+    let allow_extra_fields = td_allow_extra_fields t.rcd_ctx in
     pexp_match ~loc x
       [
         [%pat? `Assoc fs]
@@ -206,9 +203,8 @@ module Of_json = struct
         let n = Option.value ~default:n (vcs_attr_json_name t.rcd_ctx) in
         let allow_extra_fields =
           match t.rcd_ctx with
-          | Vcs_ctx_variant cd ->
-              Option.is_some (cd_attr_json_allow_extra_fields cd)
-          | Vcs_ctx_polyvariant _ -> false
+          | Vcs_ctx_variant cd -> cd_allow_extra_fields cd
+          | Vcs_ctx_polyvariant _ -> true
         in
         [%pat? `List [ `String [%p pstring ~loc:n.loc n.txt]; `Assoc fs ]]
         --> build_record ~allow_extra_fields ~loc derive t.rcd_fields
