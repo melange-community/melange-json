@@ -872,7 +872,7 @@
          | `List [ `String "B"; x_0 ] -> B (int_of_json x_0)
          | _ ->
              Melange_json.of_json_error ~json:x
-               "expected \"A\" or [\"B\", _]"
+               "expected [\"A\"] or [\"B\", _]"
         : Yojson.Basic.t -> compact_variant)
   
     let _ = compact_variant_of_json
