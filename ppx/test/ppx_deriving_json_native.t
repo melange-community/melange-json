@@ -856,7 +856,7 @@
     let rec compact_variant_of_json =
       (fun x ->
          match x with
-         | `String "A" -> A
+         | `String "A" | `List (`String "A" :: []) -> A
          | `List [ `String "B"; x_0 ] -> B (int_of_json x_0)
          | _ ->
              Melange_json.of_json_error ~json:x

@@ -38,8 +38,10 @@ type shape =
 
 let of_json_cases = [
   C ({|"Compact_variant"|}, compact_variant_of_json, compact_variant_to_json, (Compact_variant : compact_variant));
+  C ({|["Compact_variant"]|}, compact_variant_of_json, compact_variant_to_json, (Compact_variant : compact_variant));
   C ({|["Compact_variant_of_int",42]|}, compact_variant_of_json, compact_variant_to_json, (Compact_variant_of_int 42 : compact_variant));
   C ({|"Compact_polyvariant"|}, compact_polyvariant_of_json, compact_polyvariant_to_json, (`Compact_polyvariant : compact_polyvariant));
+  C ({|["Compact_polyvariant"]|}, compact_polyvariant_of_json, compact_polyvariant_to_json, (`Compact_polyvariant : compact_polyvariant));
   C ({|["Compact_polyvariant_of_int",42]|}, compact_polyvariant_of_json, compact_polyvariant_to_json, (`Compact_polyvariant_of_int 42 : compact_polyvariant));
   C ({|1|}, user_of_json, user_to_json, 1);
   C ({|"9223372036854775807"|}, userid_of_json, userid_to_json, 9223372036854775807L);
