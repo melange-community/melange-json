@@ -55,3 +55,10 @@
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   Error: [@json.allow_extra_fields] and [@json.disallow_extra_fields] are mutually exclusive
   [1]
+
+  $ echo 'type t = A of { a: int } [@json.allow_extra_fields] [@json.disallow_extra_fields] [@@deriving json]' | ../native/ppx_deriving_json_native_test.exe -impl -
+  File "-", line 1, characters 9-81:
+  1 | type t = A of { a: int } [@json.allow_extra_fields] [@json.disallow_extra_fields] [@@deriving json]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  Error: [@json.allow_extra_fields] and [@json.disallow_extra_fields] are mutually exclusive
+  [1]
