@@ -21,6 +21,8 @@ type epoly = [ `a [@json.name "A_aliased"] | `b ] [@@deriving json]
 type ('a, 'b) p2 = A of 'a | B of 'b [@@deriving json]
 type allow_extra_fields = {a: int} [@@deriving json] [@@json.allow_extra_fields]
 type allow_extra_fields2 = A of {a: int} [@json.allow_extra_fields] [@@deriving json]
+type disallow_extra_fields = {a: int} [@@deriving json] [@@json.disallow_extra_fields]
+type disallow_extra_fields2 = A of {a: int} [@json.disallow_extra_fields] [@@deriving json]
 type drop_default_option = { a: int; b_opt: int option; [@option] [@json.drop_default] } [@@deriving json]
 type array_list = { a: int array; b: int list} [@@deriving json]
 type json = Melange_json.t
@@ -49,10 +51,10 @@ let of_json_cases = [
   C ({|["Ok", 1]|}, res_of_json, res_to_json, Ok 1);
   C ({|["Error", "oops"]|}, res_of_json, res_to_json, Error "oops");
   C ({|[42, "works"]|}, tuple_of_json, tuple_to_json, (42, "works"));
-  C ({|{"name":"N","age":1}|}, record_of_json, record_to_json, {name="N"; age=1});
+  C ({|{"name":"N","age":1,"extra":true}|}, record_of_json, record_to_json, {name="N"; age=1});
   C ({|["A"]|}, sum_of_json, sum_to_json, (A : sum));
   C ({|["B", 42]|}, sum_of_json, sum_to_json, (B 42 : sum));
-  C ({|["C", {"name": "cname"}]|}, sum_of_json, sum_to_json, (C {name="cname"} : sum));
+  C ({|["C", {"name": "cname", "extra": true}]|}, sum_of_json, sum_to_json, (C {name="cname"} : sum));
   C ({|["A"]|}, sum_of_json, sum_to_json, (A : sum));
   C ({|["S2", 42, "hello"]|}, sum2_of_json, sum2_to_json, (S2 (42, "hello")));
   C ({|["B", 42]|}, poly_of_json, poly_to_json, (`B 42 : poly));
@@ -72,6 +74,8 @@ let of_json_cases = [
   C ({|["B","ok"]|}, p2_of_json int_of_json string_of_json, p2_to_json int_to_json string_to_json, B "ok");
   C ({|{"a":1,"b":2}|}, allow_extra_fields_of_json, allow_extra_fields_to_json, {a=1});
   C ({|["A",{"a":1,"b":2}]|}, allow_extra_fields2_of_json, allow_extra_fields2_to_json, A {a=1});
+  C ({|{"a":3}|}, disallow_extra_fields_of_json, disallow_extra_fields_to_json, {a=3});
+  C ({|["A",{"a":4}]|}, disallow_extra_fields2_of_json, disallow_extra_fields2_to_json, A {a=4});
   C ({|{"a":1}|}, drop_default_option_of_json, drop_default_option_to_json, {a=1; b_opt=None});
   C ({|{"a":1,"b_opt":2}|}, drop_default_option_of_json, drop_default_option_to_json, {a=1; b_opt=Some 2});
   C ({|{"a":[1],"b":[2]}|}, array_list_of_json, array_list_to_json, {a=[|1|]; b=[2]});
@@ -108,6 +112,10 @@ let error_cases = [
   (* Should fail with "expected a JSON string representing a variant" *)
   C ({|42|}, color_of_json, color_to_json, Red);
   C ({|"Yellow"|}, color_of_json, color_to_json, Red);
+
+  (* Should fail with disallowed extra fields *)
+  C ({|{"a":1,"b":2}|}, disallow_extra_fields_of_json, disallow_extra_fields_to_json, {a=1});
+  C ({|["A",{"a":1,"b":2}]|}, disallow_extra_fields2_of_json, disallow_extra_fields2_to_json, A {a=1});
 
   (* Should fail with shape validation *)
   C ({|["Circle"]|}, shape_of_json, shape_to_json, Circle 1.0);

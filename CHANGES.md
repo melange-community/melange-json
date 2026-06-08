@@ -1,5 +1,8 @@
 ## Unreleased
 
+- **[breaking]** PPX: Ignore extra JSON object fields by default in the native
+  PPX, matching the Melange PPX. Add `[@json.disallow_extra_fields]` for
+  records and inline records that should reject unknown keys.
 - Library: Add `Melange_json.unknown_variant_case`, a record type with
   fields `tag : string` and `payload : Melange_json.t list option`,
   meant to be referenced as the argument of a catch-all constructor (see
