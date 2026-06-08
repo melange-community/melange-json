@@ -20,6 +20,9 @@
 - PPX: Add `[@@json.compact_variants]` attribute for variant and polyvariant
   types. Encodes constructors without arguments as plain JSON strings and
   constructors with arguments as JSON arrays `["ConstructorName", arg1, ...]`.
+  The decoder now also accepts `["Tag"]` (singleton array) as equivalent to
+  `"Tag"` for nullary constructors, making the compact form a strict superset
+  of the standard array encoding.
 - Support `Ptype_open`, e.g. `type u = X.(x) [@@deriving json]`
   ([#60](https://github.com/melange-community/melange-json/pull/60))
 - Add support for `[@drop_default]` with `[@default]` to omit fields
