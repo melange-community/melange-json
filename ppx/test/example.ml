@@ -13,6 +13,10 @@ type sum2 = S2 of int * string [@@deriving json]
 type other = [ `C ] [@@deriving json]
 type poly = [ `A | `B of int | other ] [@@deriving json]
 type poly2 = [ `P2 of int * string ] [@@deriving json]
+type foo = A | B [@@deriving json]
+module X = struct
+  type nonrec foo = foo [@@deriving json]
+end
 type 'a c = [ `C of 'a ] [@@deriving json]
 type recur = A | Fix of recur [@@deriving json]
 type polyrecur = [ `A | `Fix of polyrecur ] [@@deriving json]
@@ -62,6 +66,8 @@ let of_json_cases = [
   C ({|["B", 42]|}, poly_of_json, poly_to_json, (`B 42 : poly));
   C ({|["C"]|}, poly_of_json, poly_to_json, (`C : poly));
   C ({|["P2", 42, "hello"]|}, poly2_of_json, poly2_to_json, (`P2 (42, "hello") : poly2));
+  C ({|["A"]|}, X.foo_of_json, X.foo_to_json, (A : X.foo));
+  C ({|["B"]|}, X.foo_of_json, X.foo_to_json, (B : X.foo));
   C ({|["Fix",["Fix",["Fix",["A"]]]]|}, recur_of_json, recur_to_json, (Fix (Fix (Fix A))));
   C ({|["Fix",["Fix",["Fix",["A"]]]]|}, polyrecur_of_json, polyrecur_to_json, (`Fix (`Fix (`Fix `A))));
   C ({|["A"]|}, evar_of_json, evar_to_json, (A : evar));
