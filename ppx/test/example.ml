@@ -17,6 +17,22 @@ type foo = A | B [@@deriving json]
 module X = struct
   type nonrec foo = foo [@@deriving json]
 end
+module Recursive_types = struct
+  type a = A of b
+  and b = int [@@deriving json]
+
+  type t = N | S of t [@@deriving json]
+
+  type 'a lst = Nil | Cons of 'a * 'a lst [@@deriving json]
+
+  type 'a tree =
+    | Leaf of 'a
+    | Node of 'a * 'a forest
+
+  and 'a forest =
+    | Empty
+    | Base of 'a tree * 'a forest [@@deriving json]
+end
 type 'a c = [ `C of 'a ] [@@deriving json]
 type recur = A | Fix of recur [@@deriving json]
 type polyrecur = [ `A | `Fix of polyrecur ] [@@deriving json]
@@ -68,6 +84,11 @@ let of_json_cases = [
   C ({|["P2", 42, "hello"]|}, poly2_of_json, poly2_to_json, (`P2 (42, "hello") : poly2));
   C ({|["A"]|}, X.foo_of_json, X.foo_to_json, (A : X.foo));
   C ({|["B"]|}, X.foo_of_json, X.foo_to_json, (B : X.foo));
+  C ({|["A", 42]|}, Recursive_types.a_of_json, Recursive_types.a_to_json, (Recursive_types.A 42 : Recursive_types.a));
+  C ({|["S", ["S", ["N"]]]|}, Recursive_types.of_json, Recursive_types.to_json, (Recursive_types.S (Recursive_types.S Recursive_types.N) : Recursive_types.t));
+  C ({|["Cons", 1, ["Cons", 2, ["Nil"]]]|}, Recursive_types.lst_of_json int_of_json, Recursive_types.lst_to_json int_to_json, (Recursive_types.Cons (1, Recursive_types.Cons (2, Recursive_types.Nil)) : int Recursive_types.lst));
+  C ({|["Node", 1, ["Base", ["Leaf", 2], ["Empty"]]]|}, Recursive_types.tree_of_json int_of_json, Recursive_types.tree_to_json int_to_json, (Recursive_types.Node (1, Recursive_types.Base (Recursive_types.Leaf 2, Recursive_types.Empty)) : int Recursive_types.tree));
+  C ({|["Base", ["Leaf", 1], ["Base", ["Leaf", 2], ["Empty"]]]|}, Recursive_types.forest_of_json int_of_json, Recursive_types.forest_to_json int_to_json, (Recursive_types.Base (Recursive_types.Leaf 1, Recursive_types.Base (Recursive_types.Leaf 2, Recursive_types.Empty)) : int Recursive_types.forest));
   C ({|["Fix",["Fix",["Fix",["A"]]]]|}, recur_of_json, recur_to_json, (Fix (Fix (Fix A))));
   C ({|["Fix",["Fix",["Fix",["A"]]]]|}, polyrecur_of_json, polyrecur_to_json, (`Fix (`Fix (`Fix `A))));
   C ({|["A"]|}, evar_of_json, evar_to_json, (A : evar));
