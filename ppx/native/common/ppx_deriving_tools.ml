@@ -371,7 +371,7 @@ module Schema = struct
           ctxt:Expansion_context.Deriver.t ->
           rec_flag * type_declaration list ->
           structure =
-        fun ~ctxt (_rec_flag, tds) ->
+        fun ~ctxt (rec_flag, tds) ->
           let loc = Expansion_context.Deriver.derived_item_loc ctxt in
           let bindings =
             List.concat_map tds ~f:self#derive_of_type_declaration
@@ -379,7 +379,7 @@ module Schema = struct
           [%str
             [@@@ocaml.warning "-39-11-27"]
 
-            [%%i pstr_value ~loc Recursive bindings]]
+            [%%i pstr_value ~loc rec_flag bindings]]
 
       method sig_type_decl :
           ctxt:Expansion_context.Deriver.t ->
