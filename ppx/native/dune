@@ -3,7 +3,10 @@
  (name ppx_deriving_json_native)
  (modules :standard \ ppx_deriving_json_native_test)
  (libraries ppxlib)
- (ppx_runtime_libraries melange-json-native yojson)
+ (ppx_runtime_libraries
+  melange-json-native
+  yojson
+  melange-json-native.jsonschema)
  (preprocess
   (pps ppxlib.metaquot))
  (kind ppx_deriver))
@@ -32,6 +35,13 @@
 
 (copy_files#
  (files ./common/ppx_deriving_tools.{ml,mli}))
+
+; The jsonschema deriver is shared between the native and browser ppx (it is
+; platform-agnostic: it only emits references to Ppx_deriving_jsonschema_runtime).
+; Like the common modules above, the sources are copied in rather than shared via
+; a library, so the deriver ships inside melange-json-native.ppx with no extra package.
+(copy_files#
+ (files ../jsonschema/{attrs,schema,ppx_deriving_jsonschema}.{ml,mli}))
 
 ; include_subdirs triggers a dependency cycle
 ; $ dune runtest
