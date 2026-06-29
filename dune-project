@@ -1,4 +1,4 @@
-(lang dune 3.9)
+(lang dune 3.16)
 
 (using melange 0.1)
 
@@ -28,16 +28,20 @@
  (depends
   ocaml
   (melange
-   (>= "3.0.0"))
+   (>= "4.0.0"))
   (melange-jest :with-test)
   (reason
    (and
     (>= "3.10.0")
     :with-test))
-  ppxlib
-  (opam-check-npm-deps :with-test) ; todo: use with-dev-setup once opam 2.2 is out
-  (ocaml-lsp-server :with-test)
-  (ocamlformat :with-test)))
+  (ppxlib
+   (>= "0.36.0"))
+  (opam-check-npm-deps :with-dev-setup)
+  (ocaml-lsp-server :with-dev-setup)
+  (ocamlformat
+   (and
+    (>= "0.27.0")
+    :with-dev-setup))))
 
 (package
  (name melange-json-native)
@@ -49,6 +53,6 @@
   (ocaml
    (>= "4.12"))
   (ppxlib
-   (>= "0.29.0"))
+   (>= "0.36.0"))
   (yojson
    (>= "1.6.0"))))

@@ -1,5 +1,5 @@
 
-  $ echo '(lang dune 3.11) 
+  $ echo '(lang dune 3.11)
   > (using melange 0.1)' > dune-project
 
   $ echo '
@@ -7,7 +7,8 @@
   >  (name lib)
   >  (modes melange)
   >  (modules main)
-  >  (flags :standard -w -37-69)
+  >  (libraries melange-json)
+  >  (flags :standard -w -20-37-69)
   >  (preprocess (pps melange.ppx melange-json.ppx)))
   > (melange.emit
   >  (alias js)
@@ -21,6 +22,6 @@
   > let json = sum_to_json A
   > ' >> main.ml
 
-Can build without having to open Ppx_deriving_json_runtime.Primitives
+Can build without having to open Melange_json.Primitives
 
   $ dune build @js

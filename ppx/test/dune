@@ -1,8 +1,15 @@
 (cram
  (deps
   (package melange-json)
+  (package melange-json-native)
   ./example.ml
   ./example_json_string.ml
+  ./run.sh
   ../../.ocamlformat
   ../native/ppx_deriving_json_native_test.exe
   ../browser/ppx_deriving_json_js_test.exe))
+
+(cram
+ (applies_to ptype_open)
+ (enabled_if
+  (>= %{ocaml_version} 5.2.0)))

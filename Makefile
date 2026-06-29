@@ -13,7 +13,7 @@ help: ## Print this help message
 
 .PHONY: create-switch
 create-switch: ## Create opam switch
-	opam switch create . 5.2.0 -y --deps-only
+	opam switch create . 5.4.0 -y --deps-only
 
 .PHONY: init
 init: create-switch install ## Configure everything to develop this repository in local
@@ -22,8 +22,8 @@ init: create-switch install ## Configure everything to develop this repository i
 install: ## Install development dependencies
 	yarn
 	opam update
-	opam install -y . --deps-only --with-test
-	opam-check-npm-deps
+	opam install -y . --deps-only --with-test --with-dev-setup
+	opam exec -- opam-check-npm-deps
 
 .PHONY: build
 build: ## Build the project

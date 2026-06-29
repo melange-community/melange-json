@@ -42,13 +42,12 @@ module Of_json = struct
     with_refs ~loc "x" fs @@ fun ename ->
     let handle_field k v =
       let fail_case =
-        [%pat? name]
-        -->
-        if allow_extra_fields then [%expr ()]
+        if allow_extra_fields then [%pat? _] --> [%expr ()]
         else
-          [%expr
-            Ppx_deriving_json_runtime.of_json_error
-              (Stdlib.Printf.sprintf "unknown field: %s" name)]
+          [%pat? name]
+          --> [%expr
+                Melange_json.of_json_error ~json:x
+                  (Stdlib.Printf.sprintf {|did not expect field "%s"|} name)]
       in
       let cases =
         List.fold_left (List.rev fs) ~init:[ fail_case ]
@@ -81,10 +80,10 @@ module Of_json = struct
                       | Some default -> default
                       | None ->
                           [%expr
-                            Ppx_deriving_json_runtime.of_json_error
+                            Melange_json.of_json_error ~json:x
                               [%e
                                 estring ~loc:key.loc
-                                  (sprintf "missing field %S" key.txt)]]]]
+                                  (sprintf "expected field %S" key.txt)]]]]
             ))
       in
       pexp_record ~loc fields None
@@ -109,7 +108,7 @@ module Of_json = struct
         xpatt --> build_tuple ~loc derive xexprs t.tpl_types;
         [%pat? _]
         --> [%expr
-              Ppx_deriving_json_runtime.of_json_error
+              Melange_json.of_json_error ~json:[%e x]
                 [%e
                   estring ~loc
                     (sprintf "expected a JSON array of length %i" n)]];
@@ -117,9 +116,7 @@ module Of_json = struct
 
   let derive_of_record derive t x =
     let loc = t.rcd_loc in
-    let allow_extra_fields =
-      Option.is_some (td_attr_json_allow_extra_fields t.rcd_ctx)
-    in
+    let allow_extra_fields = td_allow_extra_fields t.rcd_ctx in
     pexp_match ~loc x
       [
         [%pat? `Assoc fs]
@@ -127,17 +124,88 @@ module Of_json = struct
               [%expr fs] Fun.id;
         [%pat? _]
         --> [%expr
-              Ppx_deriving_json_runtime.of_json_error
+              Melange_json.of_json_error ~json:[%e x]
                 [%e estring ~loc (sprintf "expected a JSON object")]];
       ]
 
-  let derive_of_variant_case derive make vcs =
+  let derive_of_variant_case ?(is_compact_variants = false) derive make
+      vcs =
     match vcs with
+    | Vcs_tuple (n, t) when vcs_attr_json_allow_any t.tpl_ctx ->
+        let loc = n.loc in
+        [%pat? _] --> make (Some [%expr x])
+    | Vcs_tuple (n, t) when vcs_attr_json_catch_all t.tpl_ctx -> (
+        let loc = n.loc in
+        match t.tpl_types with
+        | [ _ ] ->
+            [%pat? (`String _ | `List (`String _ :: _)) as v]
+            --> [%expr
+                  let tag =
+                    match v with
+                    | `String s -> s
+                    | `List (`String s :: _) -> s
+                    | _ -> assert false
+                  in
+                  let payload =
+                    match v with
+                    | `String _ -> Stdlib.Option.None
+                    | `List (_ :: rest) -> Stdlib.Option.Some rest
+                    | _ -> assert false
+                  in
+                  [%e
+                    make
+                      (Some
+                         [%expr
+                           ({ tag; payload }
+                             : Melange_json.unknown_variant_case)])]]
+        | _ ->
+            Location.raise_errorf ~loc
+              "[@json.catch_all] requires exactly one argument: a record \
+               type with fields `tag : string` and `payload : \
+               Yojson.Basic.t list option` (typically \
+               [Melange_json.unknown_variant_case])")
+    | Vcs_record (_n, t) when vcs_attr_json_catch_all t.rcd_ctx -> (
+        let loc = t.rcd_loc in
+        match t.rcd_fields with
+        | [
+         { pld_name = { txt = "tag"; _ }; _ };
+         { pld_name = { txt = "payload"; _ }; _ };
+        ] ->
+            [%pat? (`String _ | `List (`String _ :: _)) as v]
+            --> [%expr
+                  let tag =
+                    match v with
+                    | `String s -> s
+                    | `List (`String s :: _) -> s
+                    | _ -> assert false
+                  in
+                  let payload =
+                    match v with
+                    | `String _ -> Stdlib.Option.None
+                    | `List (_ :: rest) -> Stdlib.Option.Some rest
+                    | _ -> assert false
+                  in
+                  [%e
+                    make
+                      (Some
+                         [%expr
+                           ({ tag; payload }
+                             : Melange_json.unknown_variant_case)])]]
+        | _ ->
+            Location.raise_errorf ~loc
+              "[@json.catch_all] inline record must have exactly two \
+               fields named `tag` and `payload` (in that order), with \
+               types `string` and `Yojson.Basic.t list option`")
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
         let arity = List.length t.tpl_types in
-        if arity = 0 then
+        if is_compact_variants && arity = 0 then
+          [%pat?
+            ( `String [%p pstring ~loc:n.loc n.txt]
+            | `List [ `String [%p pstring ~loc:n.loc n.txt] ] )]
+          --> make None
+        else if arity = 0 then
           [%pat? `List [ `String [%p pstring ~loc:n.loc n.txt] ]]
           --> make None
         else
@@ -150,20 +218,34 @@ module Of_json = struct
         let n = Option.value ~default:n (vcs_attr_json_name t.rcd_ctx) in
         let allow_extra_fields =
           match t.rcd_ctx with
-          | Vcs_ctx_variant cd ->
-              Option.is_some (cd_attr_json_allow_extra_fields cd)
-          | Vcs_ctx_polyvariant _ -> false
+          | Vcs_ctx_variant cd -> cd_allow_extra_fields cd
+          | Vcs_ctx_polyvariant _ -> true
         in
         [%pat? `List [ `String [%p pstring ~loc:n.loc n.txt]; `Assoc fs ]]
         --> build_record ~allow_extra_fields ~loc derive t.rcd_fields
               [%expr fs] (fun e -> make (Some e))
 
+  (* Sort key for variant cases. Smaller = visited earlier by the
+     fold-left in [deriving_of_match], which means it ends up *later* in
+     the generated [match …] cases (the fold prepends). So we want the
+     widest catch-alls to come first here:
+       - [@json.allow_any] (catches any JSON)
+       - [@json.catch_all] (catches any string)
+       - specific constructor cases
+   *)
+  let cmp_sort_vcs vcs1 vcs2 =
+    let key vcs =
+      if Ppx_deriving_json_common.vcs_attr_json_allow_any vcs then 0
+      else if Ppx_deriving_json_common.vcs_attr_json_catch_all vcs then 1
+      else 2
+    in
+    compare (key vcs1) (key vcs2)
+
   let deriving : Ppx_deriving_tools.deriving =
     deriving_of_match () ~name:"of_json"
       ~of_t:(fun ~loc -> [%type: Yojson.Basic.t])
-      ~error:(fun ~loc ->
-        [%expr Ppx_deriving_json_runtime.of_json_error "invalid JSON"])
-      ~derive_of_tuple ~derive_of_record ~derive_of_variant_case
+      ~cmp_sort_vcs ~derive_of_tuple ~derive_of_record
+      ~derive_of_variant_case
 end
 
 module To_json = struct
@@ -182,39 +264,92 @@ module To_json = struct
     let e =
       List.combine t.rcd_fields es
       |> List.fold_left ~init:ebnds ~f:(fun acc (ld, x) ->
-             let key =
-               Option.value ~default:ld.pld_name (ld_attr_json_key ld)
-             in
-             let k = estring ~loc:key.loc key.txt in
-             let v = derive ld.pld_type x in
-             let ebnds =
-               match ld_drop_default ld with
-               | `No -> [%expr ([%e k], [%e v]) :: [%e ebnds]]
-               | `Drop_option ->
-                   [%expr
-                     match [%e x] with
-                     | Stdlib.Option.None -> [%e ebnds]
-                     | Stdlib.Option.Some _ ->
-                         ([%e k], [%e v]) :: [%e ebnds]]
-             in
-             [%expr
-               let [%p pbnds] = [%e ebnds] in
-               [%e acc]])
+          let key =
+            Option.value ~default:ld.pld_name (ld_attr_json_key ld)
+          in
+          let k = estring ~loc:key.loc key.txt in
+          let v = derive ld.pld_type x in
+          let ebnds =
+            match ld_drop_default ld with
+            | `No -> [%expr ([%e k], [%e v]) :: [%e ebnds]]
+            | `Drop_option ->
+                [%expr
+                  match [%e x] with
+                  | Stdlib.Option.None -> [%e ebnds]
+                  | Stdlib.Option.Some _ -> ([%e k], [%e v]) :: [%e ebnds]]
+            | `Drop_default (cmp, def) ->
+                [%expr
+                  if [%e cmp] [%e x] [%e def] then [%e ebnds]
+                  else ([%e k], [%e v]) :: [%e ebnds]]
+            | `Drop_default_if_json_equal def ->
+                [%expr
+                  let json = [%e v] in
+                  if Melange_json.equal json [%e derive ld.pld_type def]
+                  then [%e ebnds]
+                  else ([%e k], json) :: [%e ebnds]]
+          in
+          [%expr
+            let [%p pbnds] = [%e ebnds] in
+            [%e acc]])
     in
     [%expr
       `Assoc
         (let [%p pbnds] = [] in
          [%e e])]
 
-  let derive_of_variant_case derive vcs es =
+  let derive_of_variant_case ?(is_compact_variants = false) derive vcs es
+      =
     match vcs with
+    | Vcs_tuple (_n, t) when vcs_attr_json_allow_any t.tpl_ctx -> (
+        match es with
+        | [ x ] -> x
+        | es ->
+            failwith
+              (sprintf "expected a tuple of length 1, got %i"
+                 (List.length es)))
+    | Vcs_tuple (n, t) when vcs_attr_json_catch_all t.tpl_ctx -> (
+        let loc = n.loc in
+        match t.tpl_types, es with
+        | [ _ ], [ arg_e ] ->
+            [%expr
+              match [%e arg_e].payload with
+              | Stdlib.Option.None -> `String [%e arg_e].tag
+              | Stdlib.Option.Some xs ->
+                  `List (`String [%e arg_e].tag :: xs)]
+        | _ ->
+            Location.raise_errorf ~loc
+              "[@json.catch_all] requires exactly one argument: a record \
+               type with fields `tag : string` and `payload : \
+               Yojson.Basic.t list option` (typically \
+               [Melange_json.unknown_variant_case])")
+    | Vcs_record (_n, t) when vcs_attr_json_catch_all t.rcd_ctx -> (
+        let loc = t.rcd_loc in
+        match t.rcd_fields, es with
+        | ( [
+              { pld_name = { txt = "tag"; _ }; _ };
+              { pld_name = { txt = "payload"; _ }; _ };
+            ],
+            [ tag_e; payload_e ] ) ->
+            [%expr
+              match [%e payload_e] with
+              | Stdlib.Option.None -> `String [%e tag_e]
+              | Stdlib.Option.Some xs -> `List (`String [%e tag_e] :: xs)]
+        | _ ->
+            Location.raise_errorf ~loc
+              "[@json.catch_all] inline record must have exactly two \
+               fields named `tag` and `payload` (in that order), with \
+               types `string` and `Yojson.Basic.t list option`")
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
-        [%expr
-          `List
-            (`String [%e estring ~loc:n.loc n.txt]
-            :: [%e elist ~loc (List.map2 t.tpl_types es ~f:derive)])]
+        let arity = List.length t.tpl_types in
+        if is_compact_variants && arity = 0 then
+          [%expr `String [%e estring ~loc:n.loc n.txt]]
+        else
+          [%expr
+            `List
+              (`String [%e estring ~loc:n.loc n.txt]
+              :: [%e elist ~loc (List.map2 t.tpl_types es ~f:derive)])]
     | Vcs_record (n, t) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.rcd_ctx) in

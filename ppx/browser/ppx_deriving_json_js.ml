@@ -23,15 +23,19 @@ module Of_json = struct
     let row = ptyp_object ~loc (List.map fs ~f) Closed in
     [%type: [%t row] Js.t]
 
-  let build_record ~loc derive (fs : label_declaration list) x make =
+  let build_record ~allow_extra_fields ~loc derive
+      (fs : label_declaration list) x make =
+    let field_key ld =
+      let n = ld.pld_name in
+      Option.value ~default:n (ld_attr_json_key ld)
+    in
     let handle_field fs ld =
       ( map_loc lident ld.pld_name,
-        let n = ld.pld_name in
-        let n = Option.value ~default:n (ld_attr_json_key ld) in
+        let n = field_key ld in
         [%expr
           match
             Js.Undefined.toOption
-              [%e fs] ## [%e pexp_ident ~loc:n.loc (map_loc lident n)]
+              [%e fs]##[%e pexp_ident ~loc:n.loc (map_loc lident n)]
           with
           | Stdlib.Option.Some v -> [%e derive ld.pld_type [%expr v]]
           | Stdlib.Option.None ->
@@ -40,18 +44,47 @@ module Of_json = struct
                 | Some default -> default
                 | None ->
                     [%expr
-                      Ppx_deriving_json_runtime.of_json_error
+                      Melange_json.of_json_error ~json:x
                         [%e
-                          estring ~loc (sprintf "missing field %S" n.txt)]]]]
-      )
+                          estring ~loc
+                            (sprintf "expected field %S to be present"
+                               n.txt)]]]] )
     in
-    [%expr
-      let fs = (Obj.magic [%e x] : [%t build_js_type ~loc fs]) in
-      [%e
-        make
-          (pexp_record ~loc
-             (List.map fs ~f:(handle_field [%expr fs]))
-             None)]]
+    let is_known_field name =
+      List.fold_left fs ~init:[%expr false] ~f:(fun acc ld ->
+          let n = field_key ld in
+          [%expr
+            Stdlib.( || )
+              (Stdlib.( = ) [%e name] [%e estring ~loc:n.loc n.txt])
+              [%e acc]])
+    in
+    let body =
+      [%expr
+        let fs = (Obj.magic [%e x] : [%t build_js_type ~loc fs]) in
+        [%e
+          make
+            (pexp_record ~loc
+               (List.map fs ~f:(handle_field [%expr fs]))
+               None)]]
+    in
+    if allow_extra_fields then body
+    else
+      [%expr
+        let keys =
+          Js.Dict.keys (Obj.magic [%e x] : Js.Json.t Js.Dict.t)
+        in
+        let len = Js.Array.length keys in
+        let rec iter i =
+          if Stdlib.( < ) i len then
+            let name = Js.Array.unsafe_get keys i in
+            if [%e is_known_field [%expr name]] then
+              iter (Stdlib.( + ) i 1)
+            else
+              Melange_json.of_json_error ~json:x
+                (Stdlib.Printf.sprintf {|did not expect field "%s"|} name)
+        in
+        iter 0;
+        [%e body]]
 
   let eis_json_object ~loc x =
     [%expr
@@ -65,15 +98,22 @@ module Of_json = struct
   let ensure_json_object ~loc x =
     [%expr
       if Stdlib.not [%e eis_json_object ~loc x] then
-        Ppx_deriving_json_runtime.of_json_error
+        Melange_json.of_json_error ~json:[%e x]
           [%e estring ~loc (sprintf "expected a JSON object")]]
 
-  let ensure_json_array_len ~loc n len =
+  let ensure_json_array_len ~loc ~allow_any_constr ~else_ n len x =
     [%expr
       if Stdlib.( <> ) [%e len] [%e eint ~loc n] then
-        Ppx_deriving_json_runtime.of_json_error
-          [%e
-            estring ~loc (sprintf "expected a JSON array of length %i" n)]]
+        [%e
+          match allow_any_constr with
+          | Some allow_any_constr -> allow_any_constr x
+          | None ->
+              [%expr
+                Melange_json.of_json_error ~json:[%e x]
+                  [%e
+                    estring ~loc
+                      (sprintf "expected a JSON array of length %i" n)]]]
+      else [%e else_]]
 
   let derive_of_tuple derive t x =
     let loc = t.tpl_loc in
@@ -89,18 +129,42 @@ module Of_json = struct
         let es = (Obj.magic [%e x] : Js.Json.t array) in
         [%e build_tuple ~loc derive 0 t.tpl_types [%expr es]]
       else
-        Ppx_deriving_json_runtime.of_json_error
+        Melange_json.of_json_error ~json:[%e x]
           [%e
             estring ~loc (sprintf "expected a JSON array of length %i" n)]]
 
   let derive_of_record derive t x =
     let loc = t.rcd_loc in
+    let allow_extra_fields = td_allow_extra_fields t.rcd_ctx in
     [%expr
       [%e ensure_json_object ~loc x];
-      [%e build_record ~loc derive t.rcd_fields x Fun.id]]
+      [%e
+        build_record ~allow_extra_fields ~loc derive t.rcd_fields x
+          Fun.id]]
 
-  let derive_of_variant _derive t body x =
+  let derive_of_variant ?(is_compact_variants = false) _derive t
+      ~allow_any_constr body x =
     let loc = t.vrt_loc in
+    let not_array_error =
+      match allow_any_constr with
+      | Some allow_any_constr -> allow_any_constr x
+      | None ->
+          [%expr
+            Melange_json.of_json_error ~json:[%e x]
+              "expected a non empty JSON array"]
+    in
+    let string_branch =
+      if is_compact_variants then
+        [%expr
+          if Stdlib.( = ) (Js.typeof [%e x]) "string" then (
+            let array = (Obj.magic [||] : Js.Json.t array) in
+            let len = 0 in
+            let tag = (Obj.magic [%e x] : string) in
+            ignore (array, len);
+            [%e body])
+          else [%e not_array_error]]
+      else not_array_error
+    in
     [%expr
       if Js.Array.isArray [%e x] then
         let array = (Obj.magic [%e x] : Js.Json.t array) in
@@ -110,54 +174,118 @@ module Of_json = struct
           if Stdlib.( = ) (Js.typeof tag) "string" then
             [%e body]
           else
-            Ppx_deriving_json_runtime.of_json_error
-              "expected a non empty JSON array with element being a \
-               string"
-        else
-          Ppx_deriving_json_runtime.of_json_error
-            "expected a non empty JSON array"
-      else
-        Ppx_deriving_json_runtime.of_json_error
-          "expected a non empty JSON array"]
+            [%e
+              match allow_any_constr with
+              | Some allow_any_constr -> allow_any_constr x
+              | None ->
+                  [%expr
+                    Melange_json.of_json_error ~json:[%e x]
+                      "expected a non empty JSON array with element \
+                       being a string"]]
+        else [%e not_array_error]
+      else [%e string_branch]]
 
-  let derive_of_variant_case derive make c next =
+  (* Build a payload-preserving unknown_variant_case value from the already-extracted
+     [tag] / [len] / [array] vars (see [derive_of_variant]). Wire shapes:
+     bare string ↔ payload=None; single-element array ↔ payload=Some[];
+     n-element array ↔ payload=Some(rest). *)
+  let build_unknown_variant_case_record ~loc =
+    [%expr
+      let tag_s = tag in
+      let payload =
+        if Stdlib.( = ) len 0 then Stdlib.Option.None
+        else if Stdlib.( = ) len 1 then Stdlib.Option.Some []
+        else
+          let rest =
+            Stdlib.Array.sub array 1 (Stdlib.( - ) len 1)
+            |> Stdlib.Array.to_list
+            |> Stdlib.List.map (fun j -> (Obj.magic j : Melange_json.t))
+          in
+          Stdlib.Option.Some rest
+      in
+      ({ tag = tag_s; payload } : Melange_json.unknown_variant_case)]
+
+  let derive_of_variant_case ?(is_compact_variants = false) derive make c
+      ~allow_any_constr next =
+    let _ = derive in
+    let _ = allow_any_constr in
     match c with
+    | Vcs_tuple (n, t) when vcs_attr_json_catch_all t.tpl_ctx -> (
+        let loc = n.loc in
+        match t.tpl_types with
+        | [ _ ] -> make (Some (build_unknown_variant_case_record ~loc))
+        | _ ->
+            Location.raise_errorf ~loc
+              "[@json.catch_all] requires exactly one argument: a record \
+               type with fields `tag : string` and `payload : \
+               Melange_json.t list option` (typically \
+               [Melange_json.unknown_variant_case])")
+    | Vcs_record (_n, t) when vcs_attr_json_catch_all t.rcd_ctx -> (
+        let loc = t.rcd_loc in
+        match t.rcd_fields with
+        | [
+         { pld_name = { txt = "tag"; _ }; _ };
+         { pld_name = { txt = "payload"; _ }; _ };
+        ] ->
+            make (Some (build_unknown_variant_case_record ~loc))
+        | _ ->
+            Location.raise_errorf ~loc
+              "[@json.catch_all] inline record must have exactly two \
+               fields named `tag` and `payload` (in that order), with \
+               types `string` and `Melange_json.t list option`")
     | Vcs_record (n, r) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name r.rcd_ctx) in
         [%expr
-          let tag = (Obj.magic tag : string) in
-          if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then (
-            [%e ensure_json_array_len ~loc 2 [%expr len]];
-            let fs = Js.Array.unsafe_get array 1 in
-            [%e ensure_json_object ~loc [%expr fs]];
+          if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then
             [%e
-              build_record ~loc derive r.rcd_fields [%expr fs] (fun e ->
-                  make (Some e))])
+              ensure_json_array_len ~loc ~allow_any_constr 2 [%expr len]
+                [%expr x]
+                ~else_:
+                  [%expr
+                    let fs = Js.Array.unsafe_get array 1 in
+                    [%e ensure_json_object ~loc [%expr fs]];
+                    [%e
+                      let allow_extra_fields =
+                        match r.rcd_ctx with
+                        | Vcs_ctx_variant cd -> cd_allow_extra_fields cd
+                        | Vcs_ctx_polyvariant _ -> true
+                      in
+                      build_record ~allow_extra_fields ~loc derive
+                        r.rcd_fields [%expr fs] (fun e -> make (Some e))]]]
           else [%e next]]
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
         let arity = List.length t.tpl_types in
-        [%expr
-          let tag = (Obj.magic tag : string) in
-          if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then (
-            [%e ensure_json_array_len ~loc (arity + 1) [%expr len]];
-            [%e
-              if Stdlib.( = ) arity 0 then make None
-              else
-                make
-                  (Some
-                     (build_tuple ~loc derive 1 t.tpl_types [%expr array]))])
-          else [%e next]]
+        if is_compact_variants && arity = 0 then
+          [%expr
+            if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then
+              [%e make None]
+            else [%e next]]
+        else
+          [%expr
+            if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then
+              [%e
+                ensure_json_array_len ~loc ~allow_any_constr (arity + 1)
+                  [%expr len] [%expr x]
+                  ~else_:
+                    (if Stdlib.( = ) arity 0 then make None
+                     else
+                       make
+                         (Some
+                            (build_tuple ~loc derive 1 t.tpl_types
+                               [%expr array])))]
+            else [%e next]]
+
+  let is_allow_any_constr vcs =
+    Ppx_deriving_json_common.vcs_attr_json_allow_any vcs
 
   let deriving : Ppx_deriving_tools.deriving =
     deriving_of () ~name:"of_json"
-      ~error:(fun ~loc ->
-        [%expr Ppx_deriving_json_runtime.of_json_error "invalid JSON"])
       ~of_t:(fun ~loc -> [%type: Js.Json.t])
-      ~derive_of_tuple ~derive_of_record ~derive_of_variant
-      ~derive_of_variant_case
+      ~is_allow_any_constr ~derive_of_tuple ~derive_of_record
+      ~derive_of_variant ~derive_of_variant_case
 end
 
 module To_json = struct
@@ -184,26 +312,110 @@ module To_json = struct
                   match [%e x] with
                   | Stdlib.Option.None -> Js.Undefined.empty
                   | Stdlib.Option.Some _ -> Js.Undefined.return [%e v]]
+            | `Drop_default (cmp, def) ->
+                [%expr
+                  if [%e cmp] [%e x] [%e def] then Js.Undefined.empty
+                  else Js.Undefined.return [%e v]]
+            | `Drop_default_if_json_equal def ->
+                [%expr
+                  let json = [%e v] in
+                  if Melange_json.equal json [%e derive ld.pld_type def]
+                  then Js.Undefined.empty
+                  else Js.Undefined.return json]
           in
           map_loc lident k, v)
     in
     let record = pexp_record ~loc fs None in
     as_json ~loc [%expr [%mel.obj [%e record]]]
 
-  let derive_of_variant_case derive c es =
+  let derive_of_variant_case ?(is_compact_variants = false) derive c es =
     match c with
+    | Vcs_tuple (n, t) when vcs_attr_json_catch_all t.tpl_ctx -> (
+        let loc = n.loc in
+        match t.tpl_types, es with
+        | [ _ ], [ arg_e ] ->
+            [%expr
+              match [%e arg_e].payload with
+              | Stdlib.Option.None ->
+                  (Obj.magic ([%e arg_e].tag : string) : Js.Json.t)
+              | Stdlib.Option.Some xs ->
+                  let head =
+                    (Obj.magic ([%e arg_e].tag : string) : Js.Json.t)
+                  in
+                  let rest =
+                    Stdlib.List.map
+                      (fun (j : Melange_json.t) ->
+                        (Obj.magic j : Js.Json.t))
+                      xs
+                  in
+                  (Obj.magic
+                     (Stdlib.Array.of_list (head :: rest)
+                       : Js.Json.t array)
+                    : Js.Json.t)]
+        | _ ->
+            Location.raise_errorf ~loc
+              "[@json.catch_all] requires exactly one argument: a record \
+               type with fields `tag : string` and `payload : \
+               Melange_json.t list option` (typically \
+               [Melange_json.unknown_variant_case])")
+    | Vcs_record (_n, t) when vcs_attr_json_catch_all t.rcd_ctx -> (
+        let loc = t.rcd_loc in
+        match t.rcd_fields, es with
+        | ( [
+              { pld_name = { txt = "tag"; _ }; _ };
+              { pld_name = { txt = "payload"; _ }; _ };
+            ],
+            [ tag_e; payload_e ] ) ->
+            [%expr
+              match [%e payload_e] with
+              | Stdlib.Option.None ->
+                  (Obj.magic ([%e tag_e] : string) : Js.Json.t)
+              | Stdlib.Option.Some xs ->
+                  let head =
+                    (Obj.magic ([%e tag_e] : string) : Js.Json.t)
+                  in
+                  let rest =
+                    Stdlib.List.map
+                      (fun (j : Melange_json.t) ->
+                        (Obj.magic j : Js.Json.t))
+                      xs
+                  in
+                  (Obj.magic
+                     (Stdlib.Array.of_list (head :: rest)
+                       : Js.Json.t array)
+                    : Js.Json.t)]
+        | _ ->
+            Location.raise_errorf ~loc
+              "[@json.catch_all] inline record must have exactly two \
+               fields named `tag` and `payload` (in that order), with \
+               types `string` and `Melange_json.t list option`")
     | Vcs_record (n, r) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name r.rcd_ctx) in
-        let tag = [%expr (Obj.magic [%e estring ~loc:n.loc n.txt]: Js.Json.t)] in
+        let tag =
+          [%expr (Obj.magic [%e estring ~loc:n.loc n.txt] : Js.Json.t)]
+        in
         let es = [ derive_of_record derive r es ] in
         as_json ~loc (pexp_array ~loc (tag :: es))
+    | Vcs_tuple (_n, t) when vcs_attr_json_allow_any t.tpl_ctx -> (
+        match es with
+        | [ x ] -> x
+        | es ->
+            failwith
+              (sprintf "expected a tuple of length 1, got %i"
+                 (List.length es)))
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
-        let tag = [%expr (Obj.magic [%e estring ~loc:n.loc n.txt]: Js.Json.t)] in
-        let es = List.map2 t.tpl_types es ~f:derive in
-        as_json ~loc (pexp_array ~loc (tag :: es))
+        let arity = List.length t.tpl_types in
+        if is_compact_variants && arity = 0 then
+          as_json ~loc (estring ~loc:n.loc n.txt)
+        else
+          let tag =
+            [%expr (Obj.magic [%e estring ~loc:n.loc n.txt] : Js.Json.t)]
+          in
+          let es = List.map2 t.tpl_types es ~f:derive in
+          as_json ~loc (pexp_array ~loc (tag :: es))
 
   let deriving : Ppx_deriving_tools.deriving =
     deriving_to () ~name:"to_json"

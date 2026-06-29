@@ -1,0 +1,4 @@
+{
+    "extended": [ "P" ],
+    "not_extended": [ "C", 123, "hello" ]
+}

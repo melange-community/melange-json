@@ -6,6 +6,10 @@ on:
   schedule:
     - cron: 0 1 * * MON
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions: read-all
 
 jobs:
@@ -24,16 +28,16 @@ jobs:
 
     steps:
       - name: checkout tree
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: set-up OCaml ${{ matrix.ocaml-compiler }}
-        uses: ocaml/setup-ocaml@v2
+        uses: ocaml/setup-ocaml@v3
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
           opam-repositories: |
             default: https://github.com/ocaml/opam-repository.git
 
-      - run: opam install . --deps-only --with-test
+      - run: opam install . --deps-only --with-test --with-dev-setup
 
       - run: opam exec -- dune build
 
