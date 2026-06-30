@@ -139,8 +139,7 @@ module Of_json = struct
     [%expr
       [%e ensure_json_object ~loc x];
       [%e
-        build_record ~allow_extra_fields ~loc derive t.rcd_fields x
-          Fun.id]]
+        build_record ~allow_extra_fields ~loc derive t.rcd_fields x Fun.id]]
 
   let derive_of_variant ?(is_compact_variants = false) _derive t
       ~allow_any_constr body x =
@@ -159,9 +158,8 @@ module Of_json = struct
           if Stdlib.( = ) (Js.typeof [%e x]) "string" then (
             let array = (Obj.magic [||] : Js.Json.t array) in
             let len = 0 in
-            let tag = (Obj.magic [%e x] : string) in
             ignore (array, len);
-            [%e body])
+            [%e body [%expr (Obj.magic [%e x] : string)]])
           else [%e not_array_error]]
       else not_array_error
     in
@@ -172,7 +170,7 @@ module Of_json = struct
         if Stdlib.( > ) len 0 then
           let tag = Js.Array.unsafe_get array 0 in
           if Stdlib.( = ) (Js.typeof tag) "string" then
-            [%e body]
+            [%e body [%expr (Obj.magic tag : string)]]
           else
             [%e
               match allow_any_constr with
@@ -189,9 +187,9 @@ module Of_json = struct
      [tag] / [len] / [array] vars (see [derive_of_variant]). Wire shapes:
      bare string ↔ payload=None; single-element array ↔ payload=Some[];
      n-element array ↔ payload=Some(rest). *)
-  let build_unknown_variant_case_record ~loc =
+  let build_unknown_variant_case_record ~loc ~tag =
     [%expr
-      let tag_s = tag in
+      let tag_s = [%e tag] in
       let payload =
         if Stdlib.( = ) len 0 then Stdlib.Option.None
         else if Stdlib.( = ) len 1 then Stdlib.Option.Some []
@@ -205,7 +203,7 @@ module Of_json = struct
       in
       ({ tag = tag_s; payload } : Melange_json.unknown_variant_case)]
 
-  let derive_of_variant_case ?(is_compact_variants = false) derive make c
+  let derive_of_variant_case ?(is_compact_variants = false) ~tag derive make c
       ~allow_any_constr next =
     let _ = derive in
     let _ = allow_any_constr in
@@ -213,7 +211,7 @@ module Of_json = struct
     | Vcs_tuple (n, t) when vcs_attr_json_catch_all t.tpl_ctx -> (
         let loc = n.loc in
         match t.tpl_types with
-        | [ _ ] -> make (Some (build_unknown_variant_case_record ~loc))
+        | [ _ ] -> make (Some (build_unknown_variant_case_record ~loc ~tag))
         | _ ->
             Location.raise_errorf ~loc
               "[@json.catch_all] requires exactly one argument: a record \
@@ -227,7 +225,7 @@ module Of_json = struct
          { pld_name = { txt = "tag"; _ }; _ };
          { pld_name = { txt = "payload"; _ }; _ };
         ] ->
-            make (Some (build_unknown_variant_case_record ~loc))
+            make (Some (build_unknown_variant_case_record ~loc ~tag))
         | _ ->
             Location.raise_errorf ~loc
               "[@json.catch_all] inline record must have exactly two \
@@ -237,7 +235,7 @@ module Of_json = struct
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name r.rcd_ctx) in
         [%expr
-          if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then
+          if Stdlib.( = ) [%e tag] [%e estring ~loc:n.loc n.txt] then
             [%e
               ensure_json_array_len ~loc ~allow_any_constr 2 [%expr len]
                 [%expr x]
@@ -260,12 +258,12 @@ module Of_json = struct
         let arity = List.length t.tpl_types in
         if is_compact_variants && arity = 0 then
           [%expr
-            if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then
+            if Stdlib.( = ) [%e tag] [%e estring ~loc:n.loc n.txt] then
               [%e make None]
             else [%e next]]
         else
           [%expr
-            if Stdlib.( = ) tag [%e estring ~loc:n.loc n.txt] then
+            if Stdlib.( = ) [%e tag] [%e estring ~loc:n.loc n.txt] then
               [%e
                 ensure_json_array_len ~loc ~allow_any_constr (arity + 1)
                   [%expr len] [%expr x]

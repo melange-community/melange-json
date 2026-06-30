@@ -113,11 +113,12 @@ module Conv : sig
       derive_of_core_type ->
       variant ->
       allow_any_constr:(expression -> expression) option ->
-      expression ->
+      (expression -> expression) ->
       expression ->
       expression) ->
     derive_of_variant_case:
       (?is_compact_variants:bool ->
+      tag:expression ->
       derive_of_core_type ->
       (expression option -> expression) ->
       variant_case ->

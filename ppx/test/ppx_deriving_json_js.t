@@ -342,17 +342,17 @@
            if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
              if Stdlib.( = ) (Js.typeof tag) "string" then
-               if Stdlib.( = ) tag "A" then
+               if Stdlib.( = ) (Obj.magic tag : string) "A" then
                  if Stdlib.( <> ) len 1 then
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 1"
                  else A
-               else if Stdlib.( = ) tag "B" then
+               else if Stdlib.( = ) (Obj.magic tag : string) "B" then
                  if Stdlib.( <> ) len 2 then
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 2"
                  else B (int_of_json (Js.Array.unsafe_get array 1))
-               else if Stdlib.( = ) tag "C" then (
+               else if Stdlib.( = ) (Obj.magic tag : string) "C" then (
                  if Stdlib.( <> ) len 2 then
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 2"
@@ -440,7 +440,7 @@
            if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
              if Stdlib.( = ) (Js.typeof tag) "string" then
-               if Stdlib.( = ) tag "S2" then
+               if Stdlib.( = ) (Obj.magic tag : string) "S2" then
                  if Stdlib.( <> ) len 3 then
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 3"
@@ -501,7 +501,7 @@
            if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
              if Stdlib.( = ) (Js.typeof tag) "string" then
-               if Stdlib.( = ) tag "C" then
+               if Stdlib.( = ) (Obj.magic tag : string) "C" then
                  if Stdlib.( <> ) len 1 then
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 1"
@@ -549,12 +549,12 @@
            if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
              if Stdlib.( = ) (Js.typeof tag) "string" then
-               if Stdlib.( = ) tag "A" then
+               if Stdlib.( = ) (Obj.magic tag : string) "A" then
                  if Stdlib.( <> ) len 1 then
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 1"
                  else `A
-               else if Stdlib.( = ) tag "B" then
+               else if Stdlib.( = ) (Obj.magic tag : string) "B" then
                  if Stdlib.( <> ) len 2 then
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 2"
@@ -614,7 +614,7 @@
            if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
              if Stdlib.( = ) (Js.typeof tag) "string" then
-               if Stdlib.( = ) tag "P2" then
+               if Stdlib.( = ) (Obj.magic tag : string) "P2" then
                  if Stdlib.( <> ) len 3 then
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 3"
@@ -675,7 +675,7 @@
            if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
              if Stdlib.( = ) (Js.typeof tag) "string" then
-               if Stdlib.( = ) tag "C" then
+               if Stdlib.( = ) (Obj.magic tag : string) "C" then
                  if Stdlib.( <> ) len 2 then
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 2"
@@ -728,12 +728,12 @@
            if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
              if Stdlib.( = ) (Js.typeof tag) "string" then
-               if Stdlib.( = ) tag "A" then
+               if Stdlib.( = ) (Obj.magic tag : string) "A" then
                  if Stdlib.( <> ) len 1 then
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 1"
                  else A
-               else if Stdlib.( = ) tag "Fix" then
+               else if Stdlib.( = ) (Obj.magic tag : string) "Fix" then
                  if Stdlib.( <> ) len 2 then
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 2"
@@ -788,12 +788,12 @@
            if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
              if Stdlib.( = ) (Js.typeof tag) "string" then
-               if Stdlib.( = ) tag "A" then
+               if Stdlib.( = ) (Obj.magic tag : string) "A" then
                  if Stdlib.( <> ) len 1 then
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 1"
                  else `A
-               else if Stdlib.( = ) tag "Fix" then
+               else if Stdlib.( = ) (Obj.magic tag : string) "Fix" then
                  if Stdlib.( <> ) len 2 then
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 2"
@@ -848,12 +848,13 @@
            if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
              if Stdlib.( = ) (Js.typeof tag) "string" then
-               if Stdlib.( = ) tag "A" then
+               if Stdlib.( = ) (Obj.magic tag : string) "A" then
                  if Stdlib.( <> ) len 1 then
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 1"
                  else A
-               else if Stdlib.( = ) tag "b_aliased" then
+               else if Stdlib.( = ) (Obj.magic tag : string) "b_aliased"
+               then
                  if Stdlib.( <> ) len 1 then
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 1"
@@ -907,12 +908,12 @@
            if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
              if Stdlib.( = ) (Js.typeof tag) "string" then
-               if Stdlib.( = ) tag "A_aliased" then
+               if Stdlib.( = ) (Obj.magic tag : string) "A_aliased" then
                  if Stdlib.( <> ) len 1 then
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 1"
                  else `a
-               else if Stdlib.( = ) tag "b" then
+               else if Stdlib.( = ) (Obj.magic tag : string) "b" then
                  if Stdlib.( <> ) len 1 then
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 1"
@@ -966,12 +967,12 @@
            if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
              if Stdlib.( = ) (Js.typeof tag) "string" then
-               if Stdlib.( = ) tag "A" then
+               if Stdlib.( = ) (Obj.magic tag : string) "A" then
                  if Stdlib.( <> ) len 2 then
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 2"
                  else A (a_of_json (Js.Array.unsafe_get array 1))
-               else if Stdlib.( = ) tag "B" then
+               else if Stdlib.( = ) (Obj.magic tag : string) "B" then
                  if Stdlib.( <> ) len 2 then
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 2"
@@ -1075,7 +1076,7 @@
            if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
              if Stdlib.( = ) (Js.typeof tag) "string" then
-               if Stdlib.( = ) tag "A" then (
+               if Stdlib.( = ) (Obj.magic tag : string) "A" then (
                  if Stdlib.( <> ) len 2 then
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 2"
@@ -1293,7 +1294,7 @@
            if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
              if Stdlib.( = ) (Js.typeof tag) "string" then
-               if Stdlib.( = ) tag "Foo" then
+               if Stdlib.( = ) (Obj.magic tag : string) "Foo" then
                  if Stdlib.( <> ) len 1 then Other x else Foo
                else Other x
              else Other x
@@ -1473,7 +1474,7 @@
            if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
              if Stdlib.( = ) (Js.typeof tag) "string" then
-               if Stdlib.( = ) tag "Foo" then
+               if Stdlib.( = ) (Obj.magic tag : string) "Foo" then
                  if Stdlib.( <> ) len 1 then Other x else Foo
                else Other x
              else Other x
@@ -1515,8 +1516,8 @@
            if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
              if Stdlib.( = ) (Js.typeof tag) "string" then
-               if Stdlib.( = ) tag "A" then A
-               else if Stdlib.( = ) tag "B" then
+               if Stdlib.( = ) (Obj.magic tag : string) "A" then A
+               else if Stdlib.( = ) (Obj.magic tag : string) "B" then
                  if Stdlib.( <> ) len 2 then
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 2"
@@ -1534,10 +1535,9 @@
          else if Stdlib.( = ) (Js.typeof x) "string" then (
            let array = (Obj.magic [||] : Js.Json.t array) in
            let len = 0 in
-           let tag = (Obj.magic x : string) in
            ignore (array, len);
-           if Stdlib.( = ) tag "A" then A
-           else if Stdlib.( = ) tag "B" then
+           if Stdlib.( = ) (Obj.magic x : string) "A" then A
+           else if Stdlib.( = ) (Obj.magic x : string) "B" then
              if Stdlib.( <> ) len 2 then
                Melange_json.of_json_error ~json:x
                  "expected a JSON array of length 2"
@@ -1588,7 +1588,7 @@ Test for polyvariant without own cases (only inherits) - should not produce unus
            if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
              if Stdlib.( = ) (Js.typeof tag) "string" then
-               if Stdlib.( = ) tag "C" then
+               if Stdlib.( = ) (Obj.magic tag : string) "C" then
                  if Stdlib.( <> ) len 1 then
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 1"
@@ -1636,7 +1636,7 @@ Test for polyvariant without own cases (only inherits) - should not produce unus
            if Stdlib.( > ) len 0 then
              let tag = Js.Array.unsafe_get array 0 in
              if Stdlib.( = ) (Js.typeof tag) "string" then
-               if Stdlib.( = ) tag "C" then
+               if Stdlib.( = ) (Obj.magic tag : string) "C" then
                  if Stdlib.( <> ) len 1 then
                    Melange_json.of_json_error ~json:x
                      "expected a JSON array of length 1"

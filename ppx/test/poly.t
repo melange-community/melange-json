@@ -57,8 +57,7 @@ We can alias poly variants:
                 let tag = Js.Array.unsafe_get array 0 in
                 (if Stdlib.(=) (Js.typeof tag) "string"
                  then
-                   let tag = (Obj.magic tag : string) in
-                   (if Stdlib.(=) tag "A"
+                   (if Stdlib.(=) (Obj.magic tag : string) "A"
                     then
                       (if Stdlib.(<>) len 1
                        then
@@ -66,7 +65,7 @@ We can alias poly variants:
                            "expected a JSON array of length 1"
                        else `A)
                     else
-                      if Stdlib.(=) tag "B"
+                      if Stdlib.(=) (Obj.magic tag : string) "B"
                       then
                         (if Stdlib.(<>) len 1
                          then
@@ -189,8 +188,7 @@ We can extend aliased polyvariants:
                 let tag = Js.Array.unsafe_get array 0 in
                 (if Stdlib.(=) (Js.typeof tag) "string"
                  then
-                   let tag = (Obj.magic tag : string) in
-                   (if Stdlib.(=) tag "A"
+                   (if Stdlib.(=) (Obj.magic tag : string) "A"
                     then
                       (if Stdlib.(<>) len 1
                        then
@@ -198,7 +196,7 @@ We can extend aliased polyvariants:
                            "expected a JSON array of length 1"
                        else `A)
                     else
-                      if Stdlib.(=) tag "B"
+                      if Stdlib.(=) (Obj.magic tag : string) "B"
                       then
                         (if Stdlib.(<>) len 1
                          then
@@ -243,12 +241,11 @@ We can extend aliased polyvariants:
                 let tag = Js.Array.unsafe_get array 0 in
                 (if Stdlib.(=) (Js.typeof tag) "string"
                  then
-                   let tag = (Obj.magic tag : string) in
                    match of_json x with
                    | e -> (e :> [ | t | `C ])
                    | exception Melange_json.Of_json_error
                        (Melange_json.Unexpected_variant _) ->
-                       (if Stdlib.(=) tag "C"
+                       (if Stdlib.(=) (Obj.magic tag : string) "C"
                         then
                           (if Stdlib.(<>) len 1
                            then
@@ -392,8 +389,7 @@ We can extend poly variants which are placed behind signatures:
                     let tag = Js.Array.unsafe_get array 0 in
                     (if Stdlib.(=) (Js.typeof tag) "string"
                      then
-                       let tag = (Obj.magic tag : string) in
-                       (if Stdlib.(=) tag "A"
+                       (if Stdlib.(=) (Obj.magic tag : string) "A"
                         then
                           (if Stdlib.(<>) len 1
                            then
@@ -401,7 +397,7 @@ We can extend poly variants which are placed behind signatures:
                                "expected a JSON array of length 1"
                            else `A)
                         else
-                          if Stdlib.(=) tag "B"
+                          if Stdlib.(=) (Obj.magic tag : string) "B"
                           then
                             (if Stdlib.(<>) len 1
                              then
@@ -447,12 +443,11 @@ We can extend poly variants which are placed behind signatures:
                 let tag = Js.Array.unsafe_get array 0 in
                 (if Stdlib.(=) (Js.typeof tag) "string"
                  then
-                   let tag = (Obj.magic tag : string) in
                    match P.of_json x with
                    | e -> (e :> [ | P.t | `C ])
                    | exception Melange_json.Of_json_error
                        (Melange_json.Unexpected_variant _) ->
-                       (if Stdlib.(=) tag "C"
+                       (if Stdlib.(=) (Obj.magic tag : string) "C"
                         then
                           (if Stdlib.(<>) len 1
                            then
