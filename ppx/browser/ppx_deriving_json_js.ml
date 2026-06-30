@@ -203,15 +203,16 @@ module Of_json = struct
       in
       ({ tag = tag_s; payload } : Melange_json.unknown_variant_case)]
 
-  let derive_of_variant_case ?(is_compact_variants = false) ~tag derive make c
-      ~allow_any_constr next =
+  let derive_of_variant_case ?(is_compact_variants = false) ~tag derive
+      make c ~allow_any_constr next =
     let _ = derive in
     let _ = allow_any_constr in
     match c with
     | Vcs_tuple (n, t) when vcs_attr_json_catch_all t.tpl_ctx -> (
         let loc = n.loc in
         match t.tpl_types with
-        | [ _ ] -> make (Some (build_unknown_variant_case_record ~loc ~tag))
+        | [ _ ] ->
+            make (Some (build_unknown_variant_case_record ~loc ~tag))
         | _ ->
             Location.raise_errorf ~loc
               "[@json.catch_all] requires exactly one argument: a record \

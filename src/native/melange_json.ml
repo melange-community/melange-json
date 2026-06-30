@@ -6,18 +6,15 @@ type t = Yojson.Basic.t
 type json = t
 (** Defined for convenience. *)
 
-type unknown_variant_case = {
-  tag : string;
-  payload : t list option;
-}
+type unknown_variant_case = { tag : string; payload : t list option }
 (** Standard payload-preserving record for [@json.catch_all] constructors
     on polymorphic and classic variants. The PPX generates record literals
     of this shape; users can reference this type directly instead of
     defining their own. Wire shapes:
 
     - [{ tag; payload = None }] ↔ bare JSON string ["tag"]
-    - [{ tag; payload = Some [] }] ↔ JSON array [\["tag"\]]
-    - [{ tag; payload = Some xs }] ↔ JSON array [\["tag", x1, x2, …\]]
+    - [{ tag; payload = Some [] }] ↔ JSON array [["tag"]]
+    - [{ tag; payload = Some xs }] ↔ JSON array [["tag", x1, x2, …]]
 
     Captures any unknown-variant wire shape, lossless. *)
 
@@ -37,8 +34,7 @@ let unknown_variant_case_jsonschema =
               [
                 "type", `String "array";
                 "minItems", `Int 1;
-                "items",
-                `List [ `Assoc [ "type", `String "string" ] ];
+                "items", `List [ `Assoc [ "type", `String "string" ] ];
               ];
           ] );
     ]

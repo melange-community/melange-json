@@ -506,7 +506,8 @@ module Conv = struct
            List.fold_left cs
              ~init:
                (match allow_any_constr with
-               | Some allow_any_constr -> (fun _tag -> allow_any_constr x), []
+               | Some allow_any_constr ->
+                   (fun _tag -> allow_any_constr x), []
                | None ->
                    let error_message =
                      Printf.sprintf "expected %s"
@@ -533,8 +534,8 @@ module Conv = struct
                      Vcs_record (n, t)
                    in
                    let next tag =
-                     derive_of_variant_case ~is_compact_variants:compact ~tag
-                       self#derive_of_core_type (make n) t
+                     derive_of_variant_case ~is_compact_variants:compact
+                       ~tag self#derive_of_core_type (make n) t
                        ~allow_any_constr (next tag)
                    in
                    next, t :: cases
@@ -546,8 +547,8 @@ module Conv = struct
                      Vcs_tuple (n, t)
                    in
                    let next tag =
-                     derive_of_variant_case ~is_compact_variants:compact ~tag
-                       self#derive_of_core_type (make n) case
+                     derive_of_variant_case ~is_compact_variants:compact
+                       ~tag self#derive_of_core_type (make n) case
                        ~allow_any_constr (next tag)
                    in
                    next, case :: cases)
@@ -564,7 +565,9 @@ module Conv = struct
 
        method! derive_of_polyvariant ?td t (cs : row_field list) x =
          let loc = t.ptyp_loc in
-         let compact = Option.fold ~none:false ~some:is_compact_variants td in
+         let compact =
+           Option.fold ~none:false ~some:is_compact_variants td
+         in
          let allow_any_constr =
            cs
            |> List.find_opt ~f:(fun cs ->
@@ -587,12 +590,14 @@ module Conv = struct
            List.fold_left cases
              ~init:
                (match allow_any_constr with
-               | Some allow_any_constr -> (fun _tag -> allow_any_constr x), []
+               | Some allow_any_constr ->
+                   (fun _tag -> allow_any_constr x), []
                | None ->
                    let error_message =
                      Printf.sprintf "expected %s"
                        (cs
-                       |> List.concat_map ~f:(get_variant_names ~compact ~loc)
+                       |> List.concat_map
+                            ~f:(get_variant_names ~compact ~loc)
                        |> String.concat ~sep:" or ")
                    in
                    ( (fun _tag ->
@@ -612,9 +617,9 @@ module Conv = struct
                      Vcs_tuple (n, t)
                    in
                    let next tag =
-                     derive_of_variant_case ~is_compact_variants:compact ~tag
-                       self#derive_of_core_type make case ~allow_any_constr
-                       (next tag)
+                     derive_of_variant_case ~is_compact_variants:compact
+                       ~tag self#derive_of_core_type make case
+                       ~allow_any_constr (next tag)
                    in
                    next, case :: cases
                | `Rinherit (n, ts) ->
@@ -722,7 +727,9 @@ module Conv = struct
 
        method! derive_of_polyvariant ?td t (cs : row_field list) x =
          let loc = t.ptyp_loc in
-         let compact = Option.fold ~none:false ~some:is_compact_variants td in
+         let compact =
+           Option.fold ~none:false ~some:is_compact_variants td
+         in
          let cases = repr_polyvariant_cases cs in
          let cases =
            List.stable_sort
@@ -750,7 +757,8 @@ module Conv = struct
                    (let error_message =
                       Printf.sprintf "expected %s"
                         (cs
-                        |> List.concat_map ~f:(get_variant_names ~compact ~loc)
+                        |> List.concat_map
+                             ~f:(get_variant_names ~compact ~loc)
                         |> String.concat ~sep:" or ")
                     in
                     [%expr
@@ -836,7 +844,8 @@ module Conv = struct
                       Vcs_record (n, t)
                     in
                     ctor_pat n (Some p)
-                    --> derive_of_variant_case ~is_compact_variants:compact
+                    --> derive_of_variant_case
+                          ~is_compact_variants:compact
                           self#derive_of_core_type t es
                 | Pcstr_tuple ts ->
                     let arity = List.length ts in
@@ -848,12 +857,15 @@ module Conv = struct
                     in
                     let p, es = gen_pat_tuple ~loc "x" arity in
                     ctor_pat n (if arity = 0 then None else Some p)
-                    --> derive_of_variant_case ~is_compact_variants:compact
+                    --> derive_of_variant_case
+                          ~is_compact_variants:compact
                           self#derive_of_core_type t es))
 
        method! derive_of_polyvariant ?td t (cs : row_field list) x =
          let loc = t.ptyp_loc in
-         let compact = Option.fold ~none:false ~some:is_compact_variants td in
+         let compact =
+           Option.fold ~none:false ~some:is_compact_variants td
+         in
          let cases = repr_polyvariant_cases cs in
          let cases =
            List.rev_map cases ~f:(fun (c, r) ->
@@ -876,7 +888,9 @@ module Conv = struct
                    let ps, es = gen_pat_tuple ~loc "x" (List.length ts) in
                    ppat_variant ~loc n.txt (Some ps)
                    --> derive_of_variant_case ~is_compact_variants:compact
-                         self#derive_of_core_type (Vcs_tuple (n, t)) es
+                         self#derive_of_core_type
+                         (Vcs_tuple (n, t))
+                         es
                | `Rinherit (n, ts) ->
                    [%pat? [%p ppat_type ~loc n] as x]
                    --> self#derive_of_core_type

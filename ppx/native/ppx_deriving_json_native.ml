@@ -47,7 +47,8 @@ module Of_json = struct
           [%pat? name]
           --> [%expr
                 Melange_json.of_json_error ~json:x
-                  (Stdlib.Printf.sprintf {|did not expect field "%s"|} name)]
+                  (Stdlib.Printf.sprintf {|did not expect field "%s"|}
+                     name)]
       in
       let cases =
         List.fold_left (List.rev fs) ~init:[ fail_case ]
