@@ -219,6 +219,25 @@ and `of_json` extension points:
 let json = [%to_json: int * string] (42, "foo")
 ```
 
+Labeled tuples (OCaml 5.4+) are supported as well, and serialize to JSON objects
+keyed by each label:
+
+```ocaml
+let json = [%to_json: x:int * y:int] (~x:1, ~y:2)
+(* {"x": 1, "y": 2} *)
+
+let (~x, ~y) =
+  [%of_json: x:int * y:int] (Melange_json.of_string {|{"x": 1, "y": 2}|})
+(* x = 1, y = 2 *)
+```
+
+Members without a label are keyed by their position:
+
+```ocaml
+let json = [%to_json: x:int * string] (~x:1, "foo")
+(* {"x": 1, "1": "foo"} *)
+```
+
 #### `[@json.default E]`: default values for records
 
 You can specify default values for record fields using the `[@json.default E]`

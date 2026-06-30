@@ -92,13 +92,16 @@ let gen_pat_record ~loc prefix lbls =
   in
   ppat_record ~loc (List.map xs ~f:fst) Closed, List.map xs ~f:snd
 
+let labeled_tuple_arg_label (n : label loc) =
+  match int_of_string_opt n.txt with Some _ -> None | None -> Some n.txt
+
 let gen_pat_labeled_tuple ~loc prefix fs =
   let xs =
     List.map fs ~f:(fun (n, _t) ->
         let id = sprintf "%s_%s" prefix n.txt in
         let patt = ppat_var ~loc { loc = n.loc; txt = id } in
         let expr = pexp_ident ~loc { loc = n.loc; txt = lident id } in
-        (Some n.txt, patt), expr)
+        (labeled_tuple_arg_label n, patt), expr)
   in
   ppat_labeled_tuple ~loc (List.map xs ~f:fst) Closed, List.map xs ~f:snd
 

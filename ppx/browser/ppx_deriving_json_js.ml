@@ -146,7 +146,9 @@ module Of_json = struct
   let derive_of_labeled_tuple derive t x =
     let loc = t.rcd_loc in
     let make ~loc fs =
-      let fs = List.map fs ~f:(fun (n, v) -> Some n.txt, v) in
+      let fs =
+        List.map fs ~f:(fun (n, v) -> labeled_tuple_arg_label n, v)
+      in
       pexp_labeled_tuple ~loc fs
     in
     [%expr

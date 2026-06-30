@@ -209,6 +209,8 @@ val gen_pat_list :
     pattern to match a list of size [n] and a list of expressions [exprs]
     to refer to names bound in this pattern. *)
 
+val labeled_tuple_arg_label : label loc -> label option
+
 val ( --> ) : pattern -> expression -> case
 (** A shortcut to define a pattern matching case. *)
 
