@@ -18,13 +18,13 @@ We can alias poly variants:
            | `List ((`String "B")::[]) -> `B
            | x ->
                Melange_json.of_json_unexpected_variant ~json:x
-                 "expected [\"A\"] or [\"B\"]" : Yojson.Basic.t -> t)
+                 "expected [\"A\"] or [\"B\"]" : Yojson.Safe.t -> t)
       let _ = of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec to_json =
         (fun x ->
            match x with | `A -> `List [`String "A"] | `B -> `List [`String "B"] : 
-        t -> Yojson.Basic.t)
+        t -> Yojson.Safe.t)
       let _ = to_json
     end[@@ocaml.doc "@inline"][@@merlin.hide ]
   type u = t[@@deriving json]
@@ -32,10 +32,10 @@ We can alias poly variants:
     struct
       let _ = fun (_ : u) -> ()
       [@@@ocaml.warning "-39-11-27"]
-      let rec u_of_json = (fun x -> of_json x : Yojson.Basic.t -> u)
+      let rec u_of_json = (fun x -> of_json x : Yojson.Safe.t -> u)
       let _ = u_of_json
       [@@@ocaml.warning "-39-11-27"]
-      let rec u_to_json = (fun x -> to_json x : u -> Yojson.Basic.t)
+      let rec u_to_json = (fun x -> to_json x : u -> Yojson.Safe.t)
       let _ = u_to_json
     end[@@ocaml.doc "@inline"][@@merlin.hide ]
   let () = print_endline (Melange_json.to_string (u_to_json `A))
@@ -135,13 +135,13 @@ We can extend aliased polyvariants:
            | `List ((`String "B")::[]) -> `B
            | x ->
                Melange_json.of_json_unexpected_variant ~json:x
-                 "expected [\"A\"] or [\"B\"]" : Yojson.Basic.t -> t)
+                 "expected [\"A\"] or [\"B\"]" : Yojson.Safe.t -> t)
       let _ = of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec to_json =
         (fun x ->
            match x with | `A -> `List [`String "A"] | `B -> `List [`String "B"] : 
-        t -> Yojson.Basic.t)
+        t -> Yojson.Safe.t)
       let _ = to_json
     end[@@ocaml.doc "@inline"][@@merlin.hide ]
   type u = [ | t | `C ][@@deriving json]
@@ -159,13 +159,13 @@ We can extend aliased polyvariants:
                 | exception Melange_json.Of_json_error
                     (Melange_json.Unexpected_variant _) ->
                     Melange_json.of_json_unexpected_variant ~json:x
-                      "expected [\"C\"]") : Yojson.Basic.t -> u)
+                      "expected [\"C\"]") : Yojson.Safe.t -> u)
       let _ = u_of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec u_to_json =
         (fun x ->
            match x with | #t as x -> to_json x | `C -> `List [`String "C"] : 
-        u -> Yojson.Basic.t)
+        u -> Yojson.Safe.t)
       let _ = u_to_json
     end[@@ocaml.doc "@inline"][@@merlin.hide ]
   let () = print_endline (Melange_json.to_string (u_to_json `A))
@@ -308,8 +308,8 @@ We can extend poly variants which are placed behind signatures:
       include
         sig
           [@@@ocaml.warning "-32"]
-          val of_json : Yojson.Basic.t -> t
-          val to_json : t -> Yojson.Basic.t
+          val of_json : Yojson.Safe.t -> t
+          val to_json : t -> Yojson.Safe.t
         end[@@ocaml.doc "@inline"][@@merlin.hide ]
     end =
     struct
@@ -325,14 +325,14 @@ We can extend poly variants which are placed behind signatures:
                | `List ((`String "B")::[]) -> `B
                | x ->
                    Melange_json.of_json_unexpected_variant ~json:x
-                     "expected [\"A\"] or [\"B\"]" : Yojson.Basic.t -> t)
+                     "expected [\"A\"] or [\"B\"]" : Yojson.Safe.t -> t)
           let _ = of_json
           [@@@ocaml.warning "-39-11-27"]
           let rec to_json =
             (fun x ->
                match x with
                | `A -> `List [`String "A"]
-               | `B -> `List [`String "B"] : t -> Yojson.Basic.t)
+               | `B -> `List [`String "B"] : t -> Yojson.Safe.t)
           let _ = to_json
         end[@@ocaml.doc "@inline"][@@merlin.hide ]
     end 
@@ -351,13 +351,13 @@ We can extend poly variants which are placed behind signatures:
                 | exception Melange_json.Of_json_error
                     (Melange_json.Unexpected_variant _) ->
                     Melange_json.of_json_unexpected_variant ~json:x
-                      "expected [\"C\"]") : Yojson.Basic.t -> u)
+                      "expected [\"C\"]") : Yojson.Safe.t -> u)
       let _ = u_of_json
       [@@@ocaml.warning "-39-11-27"]
       let rec u_to_json =
         (fun x ->
            match x with | #P.t as x -> P.to_json x | `C -> `List [`String "C"] : 
-        u -> Yojson.Basic.t)
+        u -> Yojson.Safe.t)
       let _ = u_to_json
     end[@@ocaml.doc "@inline"][@@merlin.hide ]
   let () = print_endline (Melange_json.to_string (u_to_json `A))

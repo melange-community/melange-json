@@ -8,11 +8,11 @@
         sig
           [@@@ocaml.warning "-32"]
           val either_of_json :
-            (Yojson.Basic.t -> 'a) ->
-              (Yojson.Basic.t -> 'b) -> Yojson.Basic.t -> ('a, 'b) either
+            (Yojson.Safe.t -> 'a) ->
+              (Yojson.Safe.t -> 'b) -> Yojson.Safe.t -> ('a, 'b) either
           val either_to_json :
-            ('a -> Yojson.Basic.t) ->
-              ('b -> Yojson.Basic.t) -> ('a, 'b) either -> Yojson.Basic.t
+            ('a -> Yojson.Safe.t) ->
+              ('b -> Yojson.Safe.t) -> ('a, 'b) either -> Yojson.Safe.t
         end[@@ocaml.doc "@inline"][@@merlin.hide ]
     end
   === ppx output:browser ===

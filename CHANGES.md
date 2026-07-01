@@ -1,5 +1,14 @@
 ## Unreleased
 
+- **[breaking]** Library: The native backend now uses `Yojson.Safe` instead of
+  `Yojson.Basic` (`Melange_json.t = Yojson.Safe.t`). Integer literals that
+  overflow the native `int` range now parse successfully (as `` `Intlit ``)
+  and round-trip losslessly through `to_string`, instead of raising at parse
+  time (#73). `classify` still exposes the same 7-constructor view, mapping an
+  out-of-range integer to `` `Float `` (as a JS runtime would) and decoding it
+  as an `int` fails with a precise error. Code that pattern-matches directly on
+  the native `Melange_json.t` must now handle the extra `Yojson.Safe`
+  constructors.
 - **[breaking]** PPX: Ignore extra JSON object fields by default in the native
   PPX, matching the Melange PPX. Add `[@json.disallow_extra_fields]` for
   records and inline records that should reject unknown keys.

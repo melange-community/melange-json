@@ -14,12 +14,12 @@
   
       [@@@ocaml.warning "-39-11-27"]
   
-      let foo_of_json = (fun x -> foo_of_json x : Yojson.Basic.t -> foo)
+      let foo_of_json = (fun x -> foo_of_json x : Yojson.Safe.t -> foo)
       let _ = foo_of_json
   
       [@@@ocaml.warning "-39-11-27"]
   
-      let foo_to_json = (fun x -> foo_to_json x : foo -> Yojson.Basic.t)
+      let foo_to_json = (fun x -> foo_to_json x : foo -> Yojson.Safe.t)
       let _ = foo_to_json
     end [@@ocaml.doc "@inline"] [@@merlin.hide]
   end

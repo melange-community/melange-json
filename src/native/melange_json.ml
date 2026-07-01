@@ -1,6 +1,6 @@
 open Printf
 
-type t = Yojson.Basic.t
+type t = Yojson.Safe.t
 (** The type of a JSON data structure *)
 
 type json = t
@@ -45,12 +45,12 @@ let unknown_variant_case_jsonschema =
 
 let classify = Classify.classify
 let declassify = Classify.declassify
-let to_string t = Yojson.Basic.to_string t
+let to_string t = Yojson.Safe.to_string t
 
 include Errors
 
 let of_string s =
-  try Yojson.Basic.from_string s
+  try Yojson.Safe.from_string s
   with Yojson.Json_error msg -> raise (Of_string_error msg)
 
 type 'a to_json = 'a -> json
@@ -78,10 +78,11 @@ module Of_json = struct
     | `Assoc _ -> "object"
     | `Bool _ -> "bool"
     | `Float _ -> "float"
-    | `Int _ -> "int"
-    | `List _ -> "array"
+    | `Int _ | `Intlit _ -> "int"
+    | `List _ | `Tuple _ -> "array"
     | `Null -> "null"
     | `String _ -> "string"
+    | `Variant _ -> "variant"
 
   let string = function
     | `String s -> s
@@ -93,6 +94,12 @@ module Of_json = struct
 
   let int = function
     | `Int i -> i
+    | `Intlit s ->
+        of_json_msg_error
+          (Printf.sprintf
+             "expected int but integer literal %s overflows the native \
+              int range"
+             s)
     | json -> of_json_error_type_mismatch json "int"
 
   let int64 = function
@@ -105,6 +112,7 @@ module Of_json = struct
   let float = function
     | `Float f -> f
     | `Int i -> float_of_int i
+    | `Intlit s -> float_of_string s
     | json -> of_json_error_type_mismatch json "float"
 
   let unit = function
@@ -172,4 +180,4 @@ module Primitives = struct
   let array_to_json = To_json.array
 end
 
-let equal = Yojson.Basic.equal
+let equal = Yojson.Safe.equal

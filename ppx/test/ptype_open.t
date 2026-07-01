@@ -21,14 +21,14 @@ We can use the `Ptyp_open` AST node:
                | `List (x_0::x_1::[]) -> ((int_of_json x_0), (int_of_json x_1))
                | _ ->
                    Melange_json.of_json_error ~json:x
-                     "expected a JSON array of length 2" : Yojson.Basic.t -> x)
+                     "expected a JSON array of length 2" : Yojson.Safe.t -> x)
           let _ = x_of_json
           [@@@ocaml.warning "-39-11-27"]
           let rec x_to_json =
             (fun x ->
                match x with
                | (x_0, x_1) -> `List [int_to_json x_0; int_to_json x_1] : 
-            x -> Yojson.Basic.t)
+            x -> Yojson.Safe.t)
           let _ = x_to_json
         end[@@ocaml.doc "@inline"][@@merlin.hide ]
     end
@@ -37,10 +37,10 @@ We can use the `Ptyp_open` AST node:
     struct
       let _ = fun (_ : u) -> ()
       [@@@ocaml.warning "-39-11-27"]
-      let rec u_of_json = (fun x -> X.x_of_json x : Yojson.Basic.t -> u)
+      let rec u_of_json = (fun x -> X.x_of_json x : Yojson.Safe.t -> u)
       let _ = u_of_json
       [@@@ocaml.warning "-39-11-27"]
-      let rec u_to_json = (fun x -> X.x_to_json x : u -> Yojson.Basic.t)
+      let rec u_to_json = (fun x -> X.x_to_json x : u -> Yojson.Safe.t)
       let _ = u_to_json
     end[@@ocaml.doc "@inline"][@@merlin.hide ]
   let () = print_endline (Melange_json.to_string (u_to_json (1, 2)))

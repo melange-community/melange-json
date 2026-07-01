@@ -162,7 +162,7 @@ module Of_json = struct
             Location.raise_errorf ~loc
               "[@json.catch_all] requires exactly one argument: a record \
                type with fields `tag : string` and `payload : \
-               Yojson.Basic.t list option` (typically \
+               Yojson.Safe.t list option` (typically \
                [Melange_json.unknown_variant_case])")
     | Vcs_record (_n, t) when vcs_attr_json_catch_all t.rcd_ctx -> (
         let loc = t.rcd_loc in
@@ -195,7 +195,7 @@ module Of_json = struct
             Location.raise_errorf ~loc
               "[@json.catch_all] inline record must have exactly two \
                fields named `tag` and `payload` (in that order), with \
-               types `string` and `Yojson.Basic.t list option`")
+               types `string` and `Yojson.Safe.t list option`")
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
@@ -243,7 +243,7 @@ module Of_json = struct
 
   let deriving : Ppx_deriving_tools.deriving =
     deriving_of_match () ~name:"of_json"
-      ~of_t:(fun ~loc -> [%type: Yojson.Basic.t])
+      ~of_t:(fun ~loc -> [%type: Yojson.Safe.t])
       ~cmp_sort_vcs ~derive_of_tuple ~derive_of_record
       ~derive_of_variant_case
 end
@@ -320,7 +320,7 @@ module To_json = struct
             Location.raise_errorf ~loc
               "[@json.catch_all] requires exactly one argument: a record \
                type with fields `tag : string` and `payload : \
-               Yojson.Basic.t list option` (typically \
+               Yojson.Safe.t list option` (typically \
                [Melange_json.unknown_variant_case])")
     | Vcs_record (_n, t) when vcs_attr_json_catch_all t.rcd_ctx -> (
         let loc = t.rcd_loc in
@@ -338,7 +338,7 @@ module To_json = struct
             Location.raise_errorf ~loc
               "[@json.catch_all] inline record must have exactly two \
                fields named `tag` and `payload` (in that order), with \
-               types `string` and `Yojson.Basic.t list option`")
+               types `string` and `Yojson.Safe.t list option`")
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name t.tpl_ctx) in
@@ -360,7 +360,7 @@ module To_json = struct
 
   let deriving : Ppx_deriving_tools.deriving =
     deriving_to () ~name:"to_json"
-      ~t_to:(fun ~loc -> [%type: Yojson.Basic.t])
+      ~t_to:(fun ~loc -> [%type: Yojson.Safe.t])
       ~derive_of_tuple ~derive_of_record ~derive_of_variant_case
 end
 

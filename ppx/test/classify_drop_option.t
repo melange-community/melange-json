@@ -30,7 +30,7 @@ We can classify the JSON produced by `to_json` for a record with a dropped optio
                     | Stdlib.Option.None -> bnds__001_
                     | Stdlib.Option.Some _ ->
                         ("a", ((option_to_json int_to_json) x_a)) :: bnds__001_ in
-                  bnds__001_) : t -> Yojson.Basic.t)
+                  bnds__001_) : t -> Yojson.Safe.t)
       let _ = to_json
     end[@@ocaml.doc "@inline"][@@merlin.hide ]
   let () =

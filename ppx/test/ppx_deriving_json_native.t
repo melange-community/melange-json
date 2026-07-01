@@ -10,12 +10,12 @@
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec user_of_json = (fun x -> int_of_json x : Yojson.Basic.t -> user)
+    let rec user_of_json = (fun x -> int_of_json x : Yojson.Safe.t -> user)
     let _ = user_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
-    let rec user_to_json = (fun x -> int_to_json x : user -> Yojson.Basic.t)
+    let rec user_to_json = (fun x -> int_to_json x : user -> Yojson.Safe.t)
     let _ = user_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
 
@@ -30,14 +30,14 @@
     [@@@ocaml.warning "-39-11-27"]
   
     let rec floaty_of_json =
-      (fun x -> float_of_json x : Yojson.Basic.t -> floaty)
+      (fun x -> float_of_json x : Yojson.Safe.t -> floaty)
   
     let _ = floaty_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
     let rec floaty_to_json =
-      (fun x -> float_to_json x : floaty -> Yojson.Basic.t)
+      (fun x -> float_to_json x : floaty -> Yojson.Safe.t)
   
     let _ = floaty_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -53,14 +53,14 @@
     [@@@ocaml.warning "-39-11-27"]
   
     let rec param_of_json a_of_json =
-      (fun x -> a_of_json x : Yojson.Basic.t -> 'a param)
+      (fun x -> a_of_json x : Yojson.Safe.t -> 'a param)
   
     let _ = param_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
     let rec param_to_json a_to_json =
-      (fun x -> a_to_json x : 'a param -> Yojson.Basic.t)
+      (fun x -> a_to_json x : 'a param -> Yojson.Safe.t)
   
     let _ = param_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -76,14 +76,14 @@
     [@@@ocaml.warning "-39-11-27"]
   
     let rec opt_of_json =
-      (fun x -> (option_of_json string_of_json) x : Yojson.Basic.t -> opt)
+      (fun x -> (option_of_json string_of_json) x : Yojson.Safe.t -> opt)
   
     let _ = opt_of_json
   
     [@@@ocaml.warning "-39-11-27"]
   
     let rec opt_to_json =
-      (fun x -> (option_to_json string_to_json) x : opt -> Yojson.Basic.t)
+      (fun x -> (option_to_json string_to_json) x : opt -> Yojson.Safe.t)
   
     let _ = opt_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -100,7 +100,7 @@
   
     let rec res_of_json =
       (fun x -> (result_of_json int_of_json string_of_json) x
-        : Yojson.Basic.t -> res)
+        : Yojson.Safe.t -> res)
   
     let _ = res_of_json
   
@@ -108,7 +108,7 @@
   
     let rec res_to_json =
       (fun x -> (result_to_json int_to_json string_to_json) x
-        : res -> Yojson.Basic.t)
+        : res -> Yojson.Safe.t)
   
     let _ = res_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -130,7 +130,7 @@
          | _ ->
              Melange_json.of_json_error ~json:x
                "expected a JSON array of length 2"
-        : Yojson.Basic.t -> tuple)
+        : Yojson.Safe.t -> tuple)
   
     let _ = tuple_of_json
   
@@ -140,7 +140,7 @@
       (fun x ->
          match x with
          | x_0, x_1 -> `List [ int_to_json x_0; string_to_json x_1 ]
-        : tuple -> Yojson.Basic.t)
+        : tuple -> Yojson.Safe.t)
   
     let _ = tuple_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -187,7 +187,7 @@
                        "expected field \"age\"");
              }
          | _ -> Melange_json.of_json_error ~json:x "expected a JSON object"
-        : Yojson.Basic.t -> record)
+        : Yojson.Safe.t -> record)
   
     let _ = record_of_json
   
@@ -204,7 +204,7 @@
                   ("name", string_to_json x_name) :: bnds__001_
                 in
                 bnds__001_)
-        : record -> Yojson.Basic.t)
+        : record -> Yojson.Safe.t)
   
     let _ = record_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -253,7 +253,7 @@
                  | Stdlib.Option.None -> 100);
              }
          | _ -> Melange_json.of_json_error ~json:x "expected a JSON object"
-        : Yojson.Basic.t -> record_aliased)
+        : Yojson.Safe.t -> record_aliased)
   
     let _ = record_aliased_of_json
   
@@ -272,7 +272,7 @@
                   ("my_name", string_to_json x_name) :: bnds__001_
                 in
                 bnds__001_)
-        : record_aliased -> Yojson.Basic.t)
+        : record_aliased -> Yojson.Safe.t)
   
     let _ = record_aliased_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -310,7 +310,7 @@
                  | Stdlib.Option.None -> Stdlib.Option.None);
              }
          | _ -> Melange_json.of_json_error ~json:x "expected a JSON object"
-        : Yojson.Basic.t -> record_opt)
+        : Yojson.Safe.t -> record_opt)
   
     let _ = record_opt_of_json
   
@@ -326,7 +326,7 @@
                   ("k", (option_to_json int_to_json) x_k) :: bnds__001_
                 in
                 bnds__001_)
-        : record_opt -> Yojson.Basic.t)
+        : record_opt -> Yojson.Safe.t)
   
     let _ = record_opt_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -370,7 +370,7 @@
          | _ ->
              Melange_json.of_json_error ~json:x
                "expected [\"A\"] or [\"B\", _] or [\"C\", { _ }]"
-        : Yojson.Basic.t -> sum)
+        : Yojson.Safe.t -> sum)
   
     let _ = sum_of_json
   
@@ -392,7 +392,7 @@
                     in
                     bnds__001_);
                ]
-        : sum -> Yojson.Basic.t)
+        : sum -> Yojson.Safe.t)
   
     let _ = sum_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -413,7 +413,7 @@
          | `List [ `String "S2"; x_0; x_1 ] ->
              S2 (int_of_json x_0, string_of_json x_1)
          | _ -> Melange_json.of_json_error ~json:x "expected [\"S2\", _, _]"
-        : Yojson.Basic.t -> sum2)
+        : Yojson.Safe.t -> sum2)
   
     let _ = sum2_of_json
   
@@ -424,7 +424,7 @@
          match x with
          | S2 (x_0, x_1) ->
              `List [ `String "S2"; int_to_json x_0; string_to_json x_1 ]
-        : sum2 -> Yojson.Basic.t)
+        : sum2 -> Yojson.Safe.t)
   
     let _ = sum2_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -446,7 +446,7 @@
          | x ->
              Melange_json.of_json_unexpected_variant ~json:x
                "expected [\"C\"]"
-        : Yojson.Basic.t -> other)
+        : Yojson.Safe.t -> other)
   
     let _ = other_of_json
   
@@ -454,7 +454,7 @@
   
     let rec other_to_json =
       (fun x -> match x with `C -> `List [ `String "C" ]
-        : other -> Yojson.Basic.t)
+        : other -> Yojson.Safe.t)
   
     let _ = other_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -479,7 +479,7 @@
                    (Melange_json.Unexpected_variant _) ->
                  Melange_json.of_json_unexpected_variant ~json:x
                    "expected [\"A\"] or [\"B\", _]")
-        : Yojson.Basic.t -> poly)
+        : Yojson.Safe.t -> poly)
   
     let _ = poly_of_json
   
@@ -491,7 +491,7 @@
          | `A -> `List [ `String "A" ]
          | `B x_0 -> `List [ `String "B"; int_to_json x_0 ]
          | #other as x -> other_to_json x
-        : poly -> Yojson.Basic.t)
+        : poly -> Yojson.Safe.t)
   
     let _ = poly_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -514,7 +514,7 @@
          | x ->
              Melange_json.of_json_unexpected_variant ~json:x
                "expected [\"P2\", _, _]"
-        : Yojson.Basic.t -> poly2)
+        : Yojson.Safe.t -> poly2)
   
     let _ = poly2_of_json
   
@@ -525,7 +525,7 @@
          match x with
          | `P2 (x_0, x_1) ->
              `List [ `String "P2"; int_to_json x_0; string_to_json x_1 ]
-        : poly2 -> Yojson.Basic.t)
+        : poly2 -> Yojson.Safe.t)
   
     let _ = poly2_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -547,7 +547,7 @@
          | x ->
              Melange_json.of_json_unexpected_variant ~json:x
                "expected [\"C\", _]"
-        : Yojson.Basic.t -> 'a c)
+        : Yojson.Safe.t -> 'a c)
   
     let _ = c_of_json
   
@@ -556,7 +556,7 @@
     let rec c_to_json a_to_json =
       (fun x ->
          match x with `C x_0 -> `List [ `String "C"; a_to_json x_0 ]
-        : 'a c -> Yojson.Basic.t)
+        : 'a c -> Yojson.Safe.t)
   
     let _ = c_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -579,7 +579,7 @@
          | _ ->
              Melange_json.of_json_error ~json:x
                "expected [\"A\"] or [\"Fix\", _]"
-        : Yojson.Basic.t -> recur)
+        : Yojson.Safe.t -> recur)
   
     let _ = recur_of_json
   
@@ -590,7 +590,7 @@
          match x with
          | A -> `List [ `String "A" ]
          | Fix x_0 -> `List [ `String "Fix"; recur_to_json x_0 ]
-        : recur -> Yojson.Basic.t)
+        : recur -> Yojson.Safe.t)
   
     let _ = recur_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -613,7 +613,7 @@
          | x ->
              Melange_json.of_json_unexpected_variant ~json:x
                "expected [\"A\"] or [\"Fix\", _]"
-        : Yojson.Basic.t -> polyrecur)
+        : Yojson.Safe.t -> polyrecur)
   
     let _ = polyrecur_of_json
   
@@ -624,7 +624,7 @@
          match x with
          | `A -> `List [ `String "A" ]
          | `Fix x_0 -> `List [ `String "Fix"; polyrecur_to_json x_0 ]
-        : polyrecur -> Yojson.Basic.t)
+        : polyrecur -> Yojson.Safe.t)
   
     let _ = polyrecur_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -647,7 +647,7 @@
          | _ ->
              Melange_json.of_json_error ~json:x
                "expected [\"A\"] or [\"B\"]"
-        : Yojson.Basic.t -> evar)
+        : Yojson.Safe.t -> evar)
   
     let _ = evar_of_json
   
@@ -658,7 +658,7 @@
          match x with
          | A -> `List [ `String "A" ]
          | B -> `List [ `String "b_aliased" ]
-        : evar -> Yojson.Basic.t)
+        : evar -> Yojson.Safe.t)
   
     let _ = evar_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -681,7 +681,7 @@
          | x ->
              Melange_json.of_json_unexpected_variant ~json:x
                "expected [\"a\"] or [\"b\"]"
-        : Yojson.Basic.t -> epoly)
+        : Yojson.Safe.t -> epoly)
   
     let _ = epoly_of_json
   
@@ -692,7 +692,7 @@
          match x with
          | `a -> `List [ `String "A_aliased" ]
          | `b -> `List [ `String "b" ]
-        : epoly -> Yojson.Basic.t)
+        : epoly -> Yojson.Safe.t)
   
     let _ = epoly_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -715,7 +715,7 @@
          | _ ->
              Melange_json.of_json_error ~json:x
                "expected [\"A\", _] or [\"B\", _]"
-        : Yojson.Basic.t -> ('a, 'b) p2)
+        : Yojson.Safe.t -> ('a, 'b) p2)
   
     let _ = p2_of_json
   
@@ -726,7 +726,7 @@
          match x with
          | A x_0 -> `List [ `String "A"; a_to_json x_0 ]
          | B x_0 -> `List [ `String "B"; b_to_json x_0 ]
-        : ('a, 'b) p2 -> Yojson.Basic.t)
+        : ('a, 'b) p2 -> Yojson.Safe.t)
   
     let _ = p2_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -765,7 +765,7 @@
                        "expected field \"a\"");
              }
          | _ -> Melange_json.of_json_error ~json:x "expected a JSON object"
-        : Yojson.Basic.t -> allow_extra_fields)
+        : Yojson.Safe.t -> allow_extra_fields)
   
     let _ = allow_extra_fields_of_json
   
@@ -779,7 +779,7 @@
                (let bnds__001_ = [] in
                 let bnds__001_ = ("a", int_to_json x_a) :: bnds__001_ in
                 bnds__001_)
-        : allow_extra_fields -> Yojson.Basic.t)
+        : allow_extra_fields -> Yojson.Safe.t)
   
     let _ = allow_extra_fields_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -819,7 +819,7 @@
                          "expected field \"a\"");
                }
          | _ -> Melange_json.of_json_error ~json:x "expected [\"A\", { _ }]"
-        : Yojson.Basic.t -> allow_extra_fields2)
+        : Yojson.Safe.t -> allow_extra_fields2)
   
     let _ = allow_extra_fields2_of_json
   
@@ -837,7 +837,7 @@
                     let bnds__001_ = ("a", int_to_json x_a) :: bnds__001_ in
                     bnds__001_);
                ]
-        : allow_extra_fields2 -> Yojson.Basic.t)
+        : allow_extra_fields2 -> Yojson.Safe.t)
   
     let _ = allow_extra_fields2_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -861,7 +861,7 @@
          | _ ->
              Melange_json.of_json_error ~json:x
                "expected \"A\" or [\"B\", _]"
-        : Yojson.Basic.t -> compact_variant)
+        : Yojson.Safe.t -> compact_variant)
   
     let _ = compact_variant_of_json
   
@@ -872,7 +872,7 @@
          match x with
          | A -> `String "A"
          | B x_0 -> `List [ `String "B"; int_to_json x_0 ]
-        : compact_variant -> Yojson.Basic.t)
+        : compact_variant -> Yojson.Safe.t)
   
     let _ = compact_variant_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -929,7 +929,7 @@
                  | Stdlib.Option.None -> Stdlib.Option.None);
              }
          | _ -> Melange_json.of_json_error ~json:x "expected a JSON object"
-        : Yojson.Basic.t -> drop_default_option)
+        : Yojson.Safe.t -> drop_default_option)
   
     let _ = drop_default_option_of_json
   
@@ -950,7 +950,7 @@
                 in
                 let bnds__001_ = ("a", int_to_json x_a) :: bnds__001_ in
                 bnds__001_)
-        : drop_default_option -> Yojson.Basic.t)
+        : drop_default_option -> Yojson.Safe.t)
   
     let _ = drop_default_option_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -1000,7 +1000,7 @@
                  | Stdlib.Option.None -> 1);
              }
          | _ -> Melange_json.of_json_error ~json:x "expected a JSON object"
-        : Yojson.Basic.t -> drop_default)
+        : Yojson.Safe.t -> drop_default)
   
     let _ = drop_default_of_json
   
@@ -1021,7 +1021,7 @@
                 in
                 let bnds__001_ = ("a", int_to_json x_a) :: bnds__001_ in
                 bnds__001_)
-        : drop_default -> Yojson.Basic.t)
+        : drop_default -> Yojson.Safe.t)
   
     let _ = drop_default_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -1068,7 +1068,7 @@
                  | Stdlib.Option.None -> 1);
              }
          | _ -> Melange_json.of_json_error ~json:x "expected a JSON object"
-        : Yojson.Basic.t -> drop_default_default_eq)
+        : Yojson.Safe.t -> drop_default_default_eq)
   
     let _ = drop_default_default_eq_of_json
   
@@ -1086,7 +1086,7 @@
                 in
                 let bnds__001_ = ("a", int_to_json x_a) :: bnds__001_ in
                 bnds__001_)
-        : drop_default_default_eq -> Yojson.Basic.t)
+        : drop_default_default_eq -> Yojson.Safe.t)
   
     let _ = drop_default_default_eq_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
@@ -1133,7 +1133,7 @@
                  | Stdlib.Option.None -> 1);
              }
          | _ -> Melange_json.of_json_error ~json:x "expected a JSON object"
-        : Yojson.Basic.t -> drop_default_if_json_equal)
+        : Yojson.Safe.t -> drop_default_if_json_equal)
   
     let _ = drop_default_if_json_equal_of_json
   
@@ -1152,7 +1152,7 @@
                 in
                 let bnds__001_ = ("a", int_to_json x_a) :: bnds__001_ in
                 bnds__001_)
-        : drop_default_if_json_equal -> Yojson.Basic.t)
+        : drop_default_if_json_equal -> Yojson.Safe.t)
   
     let _ = drop_default_if_json_equal_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]

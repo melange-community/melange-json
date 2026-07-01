@@ -512,8 +512,8 @@ type t = {
 This will generate the following pair of functions:
 
 ```ocaml
-val of_json : Yojson.Basic.json -> t
-val to_json : t -> Yojson.Basic.json
+val of_json : Yojson.Safe.t -> t
+val to_json : t -> Yojson.Safe.t
 ```
 
 Refer to the [PPX for Melange](#ppx-for-melange) section for more details on
