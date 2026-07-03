@@ -98,8 +98,8 @@ let allow_extra_fields ~loc allow disallow =
   match allow, disallow with
   | Some (), Some () ->
       Location.raise_errorf ~loc
-        "[@json.allow_extra_fields] and [@json.disallow_extra_fields] are \
-         mutually exclusive"
+        "[@json.allow_extra_fields] and [@json.disallow_extra_fields] \
+         are mutually exclusive"
   | _, Some () -> false
   | _ -> true
 

@@ -1,10 +1,6 @@
 type t = Js.Json.t
 type json = t
-
-type unknown_variant_case = {
-  tag : string;
-  payload : t list option;
-}
+type unknown_variant_case = { tag : string; payload : t list option }
 
 (* Schema literal for [unknown_variant_case]: polyvariant constructors
    are compatible with Ppx_deriving_jsonschema_runtime.t — no library
@@ -22,8 +18,7 @@ let unknown_variant_case_jsonschema =
               [
                 "type", `String "array";
                 "minItems", `Int 1;
-                "items",
-                `List [ `Assoc [ "type", `String "string" ] ];
+                "items", `List [ `Assoc [ "type", `String "string" ] ];
               ];
           ] );
     ]

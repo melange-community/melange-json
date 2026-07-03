@@ -34,6 +34,8 @@
   `[@drop_default_if_json_equal]` as an alternative to `[@.drop_default]`
   that compares values at the JSON level
   ([#77](https://github.com/melange-community/melange-json/pull/77))
+- PPX: Fix `unused-var` warning with polyvars without own cases
+  ([#38](https://github.com/melange-community/melange-json/pull/38))
 
 ## 2.0.0 (2025-03-11)
 

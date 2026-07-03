@@ -1156,3 +1156,103 @@
   
     let _ = drop_default_if_json_equal_to_json
   end [@@ocaml.doc "@inline"] [@@merlin.hide]
+
+Test for polyvariant without own cases (only inherits) - should not produce unused variable warning for `tag`:
+
+  $ cat <<"EOF" | run
+  > type one = [ `C ] [@@deriving json]
+  > type other = [ `C ] [@@deriving json]
+  > type poly = [ one | other ] [@@deriving json]
+  > EOF
+  type one = [ `C ] [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : one) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec one_of_json =
+      (fun x ->
+         match x with
+         | `List (`String "C" :: []) -> `C
+         | x ->
+             Melange_json.of_json_unexpected_variant ~json:x
+               "expected [\"C\"]"
+        : Yojson.Basic.t -> one)
+  
+    let _ = one_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec one_to_json =
+      (fun x -> match x with `C -> `List [ `String "C" ]
+        : one -> Yojson.Basic.t)
+  
+    let _ = one_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+  
+  type other = [ `C ] [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : other) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec other_of_json =
+      (fun x ->
+         match x with
+         | `List (`String "C" :: []) -> `C
+         | x ->
+             Melange_json.of_json_unexpected_variant ~json:x
+               "expected [\"C\"]"
+        : Yojson.Basic.t -> other)
+  
+    let _ = other_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec other_to_json =
+      (fun x -> match x with `C -> `List [ `String "C" ]
+        : other -> Yojson.Basic.t)
+  
+    let _ = other_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]
+  
+  type poly = [ one | other ] [@@deriving json]
+  
+  include struct
+    let _ = fun (_ : poly) -> ()
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec poly_of_json =
+      (fun x ->
+         match x with
+         | x -> (
+             match other_of_json x with
+             | x -> (x :> [ one | other ])
+             | exception
+                 Melange_json.Of_json_error
+                   (Melange_json.Unexpected_variant _) -> (
+                 match one_of_json x with
+                 | x -> (x :> [ one | other ])
+                 | exception
+                     Melange_json.Of_json_error
+                       (Melange_json.Unexpected_variant _) ->
+                     Melange_json.of_json_unexpected_variant ~json:x
+                       "expected "))
+        : Yojson.Basic.t -> poly)
+  
+    let _ = poly_of_json
+  
+    [@@@ocaml.warning "-39-11-27"]
+  
+    let rec poly_to_json =
+      (fun x ->
+         match x with
+         | #one as x -> one_to_json x
+         | #other as x -> other_to_json x
+        : poly -> Yojson.Basic.t)
+  
+    let _ = poly_to_json
+  end [@@ocaml.doc "@inline"] [@@merlin.hide]

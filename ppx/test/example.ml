@@ -13,6 +13,7 @@ type sum2 = S2 of int * string [@@deriving json]
 type other = [ `C ] [@@deriving json]
 type poly = [ `A | `B of int | other ] [@@deriving json]
 type poly2 = [ `P2 of int * string ] [@@deriving json]
+type poly3 = [ poly | poly2 ] [@@deriving json]
 type foo = A | B [@@deriving json]
 module X = struct
   type nonrec foo = foo [@@deriving json]
@@ -91,6 +92,8 @@ let of_json_cases = [
   C ({|["B", 42]|}, poly_of_json, poly_to_json, (`B 42 : poly));
   C ({|["C"]|}, poly_of_json, poly_to_json, (`C : poly));
   C ({|["P2", 42, "hello"]|}, poly2_of_json, poly2_to_json, (`P2 (42, "hello") : poly2));
+  C ({|["P2", 42, "hello"]|}, poly3_of_json, poly3_to_json, (`P2 (42, "hello") : poly3));
+  C ({|["A"]|}, poly3_of_json, poly3_to_json, (`A : poly3));
   C ({|["A"]|}, X.foo_of_json, X.foo_to_json, (A : X.foo));
   C ({|["B"]|}, X.foo_of_json, X.foo_to_json, (B : X.foo));
   C ({|["A", 42]|}, Recursive_types.a_of_json, Recursive_types.a_to_json, (Recursive_types.A 42 : Recursive_types.a));
