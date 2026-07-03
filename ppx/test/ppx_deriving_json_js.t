@@ -869,7 +869,7 @@
                  else B
                else
                  Melange_json.of_json_error ~json:x
-                   "expected [\"B\"] or [\"A\"]"
+                   "expected [\"b_aliased\"] or [\"A\"]"
              else
                Melange_json.of_json_error ~json:x
                  "expected a non empty JSON array with element being a \
@@ -929,7 +929,7 @@
                  else `b
                else
                  Melange_json.of_json_unexpected_variant ~json:x
-                   "expected [\"a\"] or [\"b\"]"
+                   "expected [\"A_aliased\"] or [\"b\"]"
              else
                Melange_json.of_json_error ~json:x
                  "expected a non empty JSON array with element being a \

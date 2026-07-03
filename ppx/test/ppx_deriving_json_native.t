@@ -646,7 +646,7 @@
          | `List (`String "b_aliased" :: []) -> B
          | _ ->
              Melange_json.of_json_error ~json:x
-               "expected [\"A\"] or [\"B\"]"
+               "expected [\"A\"] or [\"b_aliased\"]"
         : Yojson.Basic.t -> evar)
   
     let _ = evar_of_json
@@ -680,7 +680,7 @@
          | `List (`String "b" :: []) -> `b
          | x ->
              Melange_json.of_json_unexpected_variant ~json:x
-               "expected [\"a\"] or [\"b\"]"
+               "expected [\"A_aliased\"] or [\"b\"]"
         : Yojson.Basic.t -> epoly)
   
     let _ = epoly_of_json
