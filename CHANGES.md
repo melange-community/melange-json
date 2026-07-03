@@ -1,5 +1,7 @@
 ## Unreleased
 
+- PPX: Respect the `[@json.name "..."]` attribute in `of_json` error
+  messages.
 - **[breaking]** PPX: Ignore extra JSON object fields by default in the native
   PPX, matching the Melange PPX. Add `[@json.disallow_extra_fields]` for
   records and inline records that should reject unknown keys.

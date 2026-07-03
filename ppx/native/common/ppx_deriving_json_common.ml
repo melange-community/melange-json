@@ -11,17 +11,9 @@ let get_of_variant ?mark_as_seen ~variant ~polyvariant = function
   | Vrt_ctx_variant ctx -> Attribute.get ?mark_as_seen variant ctx
   | Vrt_ctx_polyvariant ctx -> Attribute.get ?mark_as_seen polyvariant ctx
 
-let attr_json_name ctx =
-  Attribute.declare "json.name" ctx
-    Ast_pattern.(single_expr_payload (estring __'))
-    (fun x -> x)
-
 let vcs_attr_json_name =
-  let variant =
-    attr_json_name Attribute.Context.constructor_declaration
-  in
-  let polyvariant = attr_json_name Attribute.Context.rtag in
-  get_of_variant_case ~variant ~polyvariant
+  get_of_variant_case ~variant:Ppx_deriving_tools.attr_json_name_cd
+    ~polyvariant:Ppx_deriving_tools.attr_json_name_rtag
 
 let attr_json_allow_any ctx = Attribute.declare_flag "json.allow_any" ctx
 

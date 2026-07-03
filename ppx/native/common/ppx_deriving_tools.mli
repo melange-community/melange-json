@@ -155,6 +155,13 @@ module Conv : sig
       matching. *)
 end
 
+val attr_json_name_cd :
+  (constructor_declaration, label loc) Attribute.t
+(** The [[@json.name "..."]] attribute on a variant constructor. *)
+
+val attr_json_name_rtag : (row_field, label loc) Attribute.t
+(** The [[@json.name "..."]] attribute on a polymorphic variant tag. *)
+
 val not_supported : loc:location -> string -> 'a
 (** [not_supported what] terminates ppx with an error message telling
     [what] unsupported. *)

@@ -390,9 +390,22 @@ module Schema = struct
     end
 end
 
+let attr_json_name ctx =
+  Attribute.declare "json.name" ctx
+    Ast_pattern.(single_expr_payload (estring __'))
+    (fun x -> x)
+
+let attr_json_name_cd =
+  attr_json_name Attribute.Context.constructor_declaration
+
+let attr_json_name_rtag = attr_json_name Attribute.Context.rtag
+
 let rec get_variant_names ?(compact = false) ~loc c =
   match Schema.repr_row_field c with
   | `Rtag (name, ts) ->
+      let name =
+        Option.value ~default:name (Attribute.get attr_json_name_rtag c)
+      in
       [
         (if compact && ts = [] then Printf.sprintf {|"%s"|} name.txt
          else
@@ -407,7 +420,9 @@ let rec get_variant_names ?(compact = false) ~loc c =
 
 let get_constructor_names ?(compact = false) cs =
   List.map cs ~f:(fun c ->
-      let name = c.pcd_name in
+      let name =
+        Option.value ~default:c.pcd_name (Attribute.get attr_json_name_cd c)
+      in
       match c.pcd_args with
       | Pcstr_record _fs -> Printf.sprintf {|["%s", { _ }]|} name.txt
       | Pcstr_tuple [] when compact -> Printf.sprintf {|"%s"|} name.txt
