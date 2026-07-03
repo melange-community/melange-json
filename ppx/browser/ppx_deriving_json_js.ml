@@ -432,4 +432,5 @@ let () =
   let (_ : Deriving.t) = Of_json_string.register ~of_json () in
   let (_ : Deriving.t) = To_json_string.register ~to_json () in
   let (_ : Deriving.t) = Json_string.register ~json () in
+  let (_ : Deriving.t) = Ppx_deriving_jsonschema.register () in
   ()

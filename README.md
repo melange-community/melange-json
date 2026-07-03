@@ -519,6 +519,26 @@ val to_json : t -> Yojson.Basic.json
 Refer to the [PPX for Melange](#ppx-for-melange) section for more details on
 usage patterns.
 
+## JSON Schema (`[@@deriving jsonschema]`)
+
+The PPX can generate a [JSON Schema](https://json-schema.org/) from a type with
+`[@@deriving jsonschema]`. The schema matches the output produced by the
+json derivers.
+
+```ocaml
+open Ppx_deriving_jsonschema_runtime.Primitives.Melange_json
+
+type t = {
+  name: string;
+  age: int;
+} [@@deriving jsonschema]
+
+let schema = Ppx_deriving_jsonschema_runtime.json_schema t_jsonschema
+```
+
+See **[JSONSCHEMA.md](./JSONSCHEMA.md)** for the full documentation: setup,
+conversion rules, and all supported annotations.
+
 ## License
 
 This work is dual-licensed under LGPL 3.0 and MPL 2.0. You can choose between

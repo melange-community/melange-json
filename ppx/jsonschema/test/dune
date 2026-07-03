@@ -1,0 +1,101 @@
+; The jsonschema deriver now ships inside melange-json-native.ppx / melange-json.ppx,
+; so the standalone ppx drivers below only link those (plus melange.ppx for the
+; Melange-flavoured driver) rather than a separate ppx_deriving_jsonschema deriver.
+
+(executable
+ (name pp)
+ (modules pp)
+ (libraries ppxlib melange-json-native.ppx))
+
+(executable
+ (name pp_melange)
+ (modules pp_melange)
+ (libraries ppxlib melange-json.ppx melange.ppx))
+
+(rule
+ (targets test.actual.ml)
+ (deps
+  (:pp pp.exe)
+  (:input shared/cases.ml))
+ (action
+  (run ./%{pp} -deriving-keep-w32 both --impl %{input} -o %{targets})))
+
+(rule
+ (targets test.melange.actual.ml)
+ (deps
+  (:pp pp_melange.exe)
+  (:input shared/cases.ml))
+ (action
+  (run ./%{pp} -deriving-keep-w32 both --impl %{input} -o %{targets})))
+
+(rule
+ (alias runtest)
+ (action
+  (diff test.expected.ml test.actual.ml)))
+
+(rule
+ (alias runtest)
+ (action
+  (diff test.melange.expected.ml test.melange.actual.ml)))
+
+(copy_files shared/cases.ml)
+
+(copy_files shared/schema_snapshot.ml)
+
+(copy_files shared/generate_schemas_cases.ml)
+
+(library
+ (name schema_snapshot_support)
+ (modules schema_snapshot)
+ (wrapped false))
+
+(library
+ (name cases_support)
+ (modules cases)
+ (wrapped false)
+ (libraries melange-json-native melange-json-native.jsonschema)
+ (preprocess
+  (pps melange-json-native.ppx)))
+
+(library
+ (name generate_schemas_support)
+ (modules generate_schemas_cases)
+ (wrapped false)
+ (libraries
+  melange-json-native.jsonschema
+  schema_snapshot_support
+  cases_support))
+
+(cram
+ (deps %{exe:pp.exe} %{exe:pp_melange.exe}))
+
+; Wire test: encode sample values with [to_json] and validate them against the
+; generated schema using the external [check-jsonschema] CLI.
+
+(executable
+ (name wire)
+ (modules wire)
+ (libraries unix yojson melange-json-native melange-json-native.jsonschema)
+ (preprocess
+  (pps melange-json-native.ppx)))
+
+(cram
+ (applies_to wire)
+ (deps %{exe:wire.exe}))
+
+(executable
+ (name generate_schemas)
+ (modules generate_schemas)
+ (libraries yojson generate_schemas_support))
+
+(rule
+ (targets test_schemas.actual.json)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./generate_schemas.exe))))
+
+(rule
+ (alias runtest)
+ (action
+  (diff test_schemas.expected.json test_schemas.actual.json)))
