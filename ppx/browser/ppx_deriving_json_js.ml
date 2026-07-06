@@ -30,7 +30,7 @@ module Of_json = struct
       Option.value ~default:n (ld_attr_json_key ld)
     in
     let handle_field fs ld =
-      ( map_loc lident ld.pld_name,
+      ( ld.pld_name,
         let n = field_key ld in
         [%expr
           match
@@ -62,10 +62,8 @@ module Of_json = struct
       [%expr
         let fs = (Obj.magic [%e x] : [%t build_js_type ~loc fs]) in
         [%e
-          make
-            (pexp_record ~loc
-               (List.map fs ~f:(handle_field [%expr fs]))
-               None)]]
+          let fs = List.map fs ~f:(handle_field [%expr fs]) in
+          make ~loc fs]]
     in
     if allow_extra_fields then body
     else
@@ -136,10 +134,28 @@ module Of_json = struct
   let derive_of_record derive t x =
     let loc = t.rcd_loc in
     let allow_extra_fields = td_allow_extra_fields t.rcd_ctx in
+    let make ~loc fs =
+      let fs = List.map fs ~f:(fun (n, v) -> map_loc lident n, v) in
+      pexp_record ~loc fs None
+    in
     [%expr
       [%e ensure_json_object ~loc x];
       [%e
-        build_record ~allow_extra_fields ~loc derive t.rcd_fields x Fun.id]]
+        build_record ~allow_extra_fields ~loc derive t.rcd_fields x make]]
+
+  let derive_of_labeled_tuple derive t x =
+    let loc = t.rcd_loc in
+    let make ~loc fs =
+      let fs =
+        List.map fs ~f:(fun (n, v) -> labeled_tuple_arg_label n, v)
+      in
+      pexp_labeled_tuple ~loc fs
+    in
+    [%expr
+      [%e ensure_json_object ~loc x];
+      [%e
+        build_record ~allow_extra_fields:true ~loc derive t.rcd_fields x
+          make]]
 
   let derive_of_variant ?(is_compact_variants = false) _derive t
       ~allow_any_constr body x =
@@ -235,6 +251,10 @@ module Of_json = struct
     | Vcs_record (n, r) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name r.rcd_ctx) in
+        let make ~loc fs =
+          let fs = List.map fs ~f:(fun (n, v) -> map_loc lident n, v) in
+          make (Some (pexp_record ~loc fs None))
+        in
         [%expr
           if Stdlib.( = ) [%e tag] [%e estring ~loc:n.loc n.txt] then
             [%e
@@ -251,7 +271,7 @@ module Of_json = struct
                         | Vcs_ctx_polyvariant _ -> true
                       in
                       build_record ~allow_extra_fields ~loc derive
-                        r.rcd_fields [%expr fs] (fun e -> make (Some e))]]]
+                        r.rcd_fields [%expr fs] make]]]
           else [%e next]]
     | Vcs_tuple (n, t) ->
         let loc = n.loc in
@@ -284,7 +304,7 @@ module Of_json = struct
     deriving_of () ~name:"of_json"
       ~of_t:(fun ~loc -> [%type: Js.Json.t])
       ~is_allow_any_constr ~derive_of_tuple ~derive_of_record
-      ~derive_of_variant ~derive_of_variant_case
+      ~derive_of_labeled_tuple ~derive_of_variant ~derive_of_variant_case
 end
 
 module To_json = struct
@@ -419,7 +439,8 @@ module To_json = struct
   let deriving : Ppx_deriving_tools.deriving =
     deriving_to () ~name:"to_json"
       ~t_to:(fun ~loc -> [%type: Js.Json.t])
-      ~derive_of_tuple ~derive_of_record ~derive_of_variant_case
+      ~derive_of_tuple ~derive_of_labeled_tuple:derive_of_record
+      ~derive_of_record ~derive_of_variant_case
 end
 
 let () =

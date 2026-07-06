@@ -13,3 +13,11 @@
  (applies_to ptype_open)
  (enabled_if
   (>= %{ocaml_version} 5.2.0)))
+
+; Labeled-tuple surface syntax (e.g. [x:int * string]) is only parseable by
+; the OCaml 5.4+ frontend, so this test can only run there.
+
+(cram
+ (applies_to labeled_tuples)
+ (enabled_if
+  (>= %{ocaml_version} 5.4.0)))

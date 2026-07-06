@@ -71,7 +71,7 @@ module Of_json = struct
               Option.value ~default:ld.pld_name (ld_attr_json_key ld)
             in
             let default = ld_attr_default ld in
-            ( map_loc lident ld.pld_name,
+            ( ld.pld_name,
               [%expr
                 match Stdlib.( ! ) [%e ename ld.pld_name] with
                 | Stdlib.Option.Some v -> v
@@ -87,7 +87,7 @@ module Of_json = struct
                                   (sprintf "expected field %S" key.txt)]]]]
             ))
       in
-      pexp_record ~loc fields None
+      make ~loc fields
     in
     [%expr
       let rec iter = function
@@ -97,7 +97,7 @@ module Of_json = struct
             iter fs
       in
       iter [%e x];
-      [%e make build]]
+      [%e build]]
 
   let derive_of_tuple derive t x =
     let loc = t.tpl_loc in
@@ -115,19 +115,35 @@ module Of_json = struct
                     (sprintf "expected a JSON array of length %i" n)]];
       ]
 
-  let derive_of_record derive t x =
+  let derive_of_record' ~allow_extra_fields ~make derive t x =
     let loc = t.rcd_loc in
-    let allow_extra_fields = td_allow_extra_fields t.rcd_ctx in
     pexp_match ~loc x
       [
         [%pat? `Assoc fs]
         --> build_record ~allow_extra_fields ~loc derive t.rcd_fields
-              [%expr fs] Fun.id;
+              [%expr fs] make;
         [%pat? _]
         --> [%expr
               Melange_json.of_json_error ~json:[%e x]
                 [%e estring ~loc (sprintf "expected a JSON object")]];
       ]
+
+  let derive_of_record derive t x =
+    let allow_extra_fields = td_allow_extra_fields t.rcd_ctx in
+    let make ~loc fs =
+      let fs = List.map fs ~f:(fun (n, v) -> map_loc lident n, v) in
+      pexp_record ~loc fs None
+    in
+    derive_of_record' ~allow_extra_fields ~make derive t x
+
+  let derive_of_labeled_tuple derive t x =
+    let make ~loc fs =
+      let fs =
+        List.map fs ~f:(fun (n, v) -> labeled_tuple_arg_label n, v)
+      in
+      pexp_labeled_tuple ~loc fs
+    in
+    derive_of_record' ~allow_extra_fields:true ~make derive t x
 
   let derive_of_variant_case ?(is_compact_variants = false) derive make
       vcs =
@@ -224,7 +240,11 @@ module Of_json = struct
         in
         [%pat? `List [ `String [%p pstring ~loc:n.loc n.txt]; `Assoc fs ]]
         --> build_record ~allow_extra_fields ~loc derive t.rcd_fields
-              [%expr fs] (fun e -> make (Some e))
+              [%expr fs] (fun ~loc fs ->
+                let fs =
+                  List.map fs ~f:(fun (n, v) -> map_loc lident n, v)
+                in
+                make (Some (pexp_record ~loc fs None)))
 
   (* Sort key for variant cases. Smaller = visited earlier by the
      fold-left in [deriving_of_match], which means it ends up *later* in
@@ -245,8 +265,8 @@ module Of_json = struct
   let deriving : Ppx_deriving_tools.deriving =
     deriving_of_match () ~name:"of_json"
       ~of_t:(fun ~loc -> [%type: Yojson.Basic.t])
-      ~cmp_sort_vcs ~derive_of_tuple ~derive_of_record
-      ~derive_of_variant_case
+      ~cmp_sort_vcs ~derive_of_tuple ~derive_of_labeled_tuple
+      ~derive_of_record ~derive_of_variant_case
 end
 
 module To_json = struct
@@ -362,7 +382,8 @@ module To_json = struct
   let deriving : Ppx_deriving_tools.deriving =
     deriving_to () ~name:"to_json"
       ~t_to:(fun ~loc -> [%type: Yojson.Basic.t])
-      ~derive_of_tuple ~derive_of_record ~derive_of_variant_case
+      ~derive_of_tuple ~derive_of_labeled_tuple:derive_of_record
+      ~derive_of_record ~derive_of_variant_case
 end
 
 let () =
