@@ -1,10 +1,6 @@
 open Ppxlib
 
 type config = {
-  variant_as_string : bool;
-      (** Encode variants as string instead of string array. This option
-          breaks compatibility with yojson derivers and doesn't support
-          constructors with a payload. *)
   polymorphic_variant_tuple : bool;
       (** Preserve the implicit tuple in a polymorphic variant. This
           option breaks compatibility with yojson derivers. *)
@@ -203,7 +199,4 @@ let attributes =
 
 let args () =
   Deriving.Args.(
-    empty
-    +> flag "variant_as_string"
-    +> flag "polymorphic_variant_tuple"
-    +> flag "ocaml_doc")
+    empty +> flag "polymorphic_variant_tuple" +> flag "ocaml_doc")

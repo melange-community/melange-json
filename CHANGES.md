@@ -1,5 +1,8 @@
 ## Unreleased
 
+- jsonschema: Remove the `~variant_as_string` flag; use
+  `[@@jsonschema.compact_variants]` to render payload-free constructors as
+  plain string constants.
 - PPX: Respect the `[@json.name "..."]` attribute in `of_json` error
   messages.
 - **[breaking]** PPX: Ignore extra JSON object fields by default in the native
