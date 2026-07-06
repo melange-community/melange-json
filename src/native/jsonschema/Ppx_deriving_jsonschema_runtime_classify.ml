@@ -5,8 +5,7 @@ type t =
   | `Int of int
   | `Bool of bool
   | `List of t list
-  | `Assoc of (string * t) list
-  ]
+  | `Assoc of (string * t) list ]
 
 (* On native the schema value type [t] is already the JSON representation, so
    classify/declassify are the identity. (On Melange they convert to/from

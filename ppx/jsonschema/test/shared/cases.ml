@@ -4,69 +4,45 @@ open Melange_json.Primitives
 let string_jsonschema = `Assoc [ "type", `String "string" ]
 let int_jsonschema = `Assoc [ "type", `String "integer" ]
 let bool_jsonschema = `Assoc [ "type", `String "boolean" ]
+
 module Mod1 = struct
-  type m_1 =
-    | A
-    | B
-  [@@deriving jsonschema]
+  type m_1 = A | B [@@deriving jsonschema]
+
   module Mod2 = struct
-    type m_2 =
-      | C
-      | D
-    [@@deriving jsonschema]
+    type m_2 = C | D [@@deriving jsonschema]
   end
 end
-type with_modules = {
-  m : Mod1.m_1;
-  m2 : Mod1.Mod2.m_2;
-}
+
+type with_modules = { m : Mod1.m_1; m2 : Mod1.Mod2.m_2 }
 [@@deriving jsonschema]
-type kind =
-  | Success
-  | Error
-  | Skipped [@name "skipped"]
+
+type kind = Success | Error | Skipped [@name "skipped"]
 [@@deriving jsonschema]
-type kind_as_string =
-  | Success
-  | Error
-  | Skipped [@name "skipped"]
+
+type kind_as_string = Success | Error | Skipped [@name "skipped"]
 [@@deriving jsonschema ~variant_as_string]
-type poly_kind =
-  [ `Aaa
-  | `Bbb
-  | `Ccc [@name "ccc"]
-  ]
+
+type poly_kind = [ `Aaa | `Bbb | `Ccc [@name "ccc"] ]
 [@@deriving jsonschema]
-type poly_kind_as_string =
-  [ `Aaa
-  | `Bbb
-  | `Ccc [@name "ccc"]
-  ]
+
+type poly_kind_as_string = [ `Aaa | `Bbb | `Ccc [@name "ccc"] ]
 [@@deriving jsonschema ~variant_as_string]
+
 type poly_kind_with_payload =
-  [ `Aaa of int
-  | `Bbb
-  | `Ccc of string * bool [@name "ccc"]
-  ]
+  [ `Aaa of int | `Bbb | `Ccc of string * bool [@name "ccc"] ]
 [@@deriving jsonschema]
+
 type poly_kind_with_payload_as_string =
-  [ `Aaa of int
-  | `Bbb
-  | `Ccc of string * bool [@name "ccc"]
-  ]
+  [ `Aaa of int | `Bbb | `Ccc of string * bool [@name "ccc"] ]
 [@@deriving jsonschema ~variant_as_string]
-type poly_inherit =
-  [ `New_one
-  | `Second_one of int
-  | poly_kind
-  ]
+
+type poly_inherit = [ `New_one | `Second_one of int | poly_kind ]
 [@@deriving jsonschema]
+
 type poly_inherit_as_string =
-  [ `New_one
-  | `Second_one of int
-  | poly_kind_as_string
-  ]
+  [ `New_one | `Second_one of int | poly_kind_as_string ]
 [@@deriving jsonschema ~variant_as_string]
+
 type event = {
   date : float;
   kind_f : kind;
@@ -82,61 +58,42 @@ type event = {
   native_int : nativeint;
 }
 [@@deriving jsonschema]
-type recursive_record = {
-  a : int;
-  b : recursive_record list;
-}
+
+type recursive_record = { a : int; b : recursive_record list }
 [@@deriving jsonschema]
-type recursive_variant =
-  | A of recursive_variant
-  | B
+
+type recursive_variant = A of recursive_variant | B
 [@@deriving jsonschema]
-type tree =
-  | Leaf
-  | Node of {
-      value : int;
-      left : tree;
-      right : tree;
-    }
+
+type tree = Leaf | Node of { value : int; left : tree; right : tree }
 [@@deriving jsonschema]
-type non_recursive = {
-  x : int;
-  y : string;
-}
-[@@deriving jsonschema]
+
+type non_recursive = { x : int; y : string } [@@deriving jsonschema]
+
 type foo = { bar : bar option }
 and bar = { foo : foo option } [@@deriving jsonschema]
-type expr =
-  | Literal of int
-  | Binary of expr * expr
-  | Block of stmt list
+
+type expr = Literal of int | Binary of expr * expr | Block of stmt list
+
 and stmt =
   | ExprStmt of expr
-  | IfStmt of {
-      cond : expr;
-      then_ : stmt;
-      else_ : stmt option;
-    }
+  | IfStmt of { cond : expr; then_ : stmt; else_ : stmt option }
 [@@deriving jsonschema]
+
 type alpha = { x : int }
 and beta = { y : string } [@@deriving jsonschema]
-type node_a = {
-  b : node_b option;
-  c : node_c option;
-}
-and node_b = {
-  a : node_a option;
-  c : node_c option;
-}
-and node_c = {
-  a : node_a option;
-  b : node_b option;
-}
+
+type node_a = { a : node_b option; b : node_c option }
+and node_b = { c : node_a option; d : node_c option }
+
+and node_c = { g : node_a option; f : node_b option }
 [@@deriving jsonschema]
+
 type recursive_tuple =
   | Leaf of int
   | Branch of (recursive_tuple * recursive_tuple)
 [@@deriving jsonschema]
+
 type int_tree = tree [@@deriving jsonschema]
 type events = event list [@@deriving jsonschema]
 type eventss = event list list [@@deriving jsonschema]
@@ -147,19 +104,22 @@ type events_array = events array [@@deriving jsonschema]
 type numbers = int list [@@deriving jsonschema]
 type opt = int option [@@deriving jsonschema]
 type using_m = { m : Mod1.m_1 } [@@deriving jsonschema]
-type 'param2 poly2 = C of 'param2 [@@deriving jsonschema ~variant_as_string]
-type tuple_with_variant = int * [ `A | `B [@name "second_cstr"] ] [@@deriving jsonschema]
+
+type 'param2 poly2 = C of 'param2
+[@@deriving jsonschema ~variant_as_string]
+
+type tuple_with_variant = int * [ `A | `B [@name "second_cstr"] ]
+[@@deriving jsonschema]
+
 type player_scores = {
   player : string;
   scores : numbers; [@ref "numbers"] [@key "scores_ref"]
 }
 [@@deriving jsonschema]
-type address = {
-  street : string;
-  city : string;
-  zip : string;
-}
+
+type address = { street : string; city : string; zip : string }
 [@@deriving jsonschema]
+
 type t = {
   name : string;
   age : int;
@@ -167,6 +127,7 @@ type t = {
   address : address;
 }
 [@@deriving jsonschema]
+
 type tt = {
   name : string;
   age : int;
@@ -176,36 +137,33 @@ type tt = {
   retreat_address : address; [@ref "shared_address"]
 }
 [@@deriving jsonschema]
+
 type c = char [@@deriving jsonschema]
-type variant_inline_record =
-  | A of { a : int }
-  | B of { b : string }
+
+type variant_inline_record = A of { a : int } | B of { b : string }
 [@@deriving jsonschema ~variant_as_string]
+
 type inline_record_with_extra_fields =
-  | User of {
-      name : string;
-      email : string;
-    } [@jsonschema.allow_extra_fields]
+  | User of { name : string; email : string }
+      [@jsonschema.allow_extra_fields]
   | Guest of { ip : string }
 [@@deriving jsonschema]
+
 type variant_with_payload =
   | A of int
   | B
   | C of int * string
   | D of (int * string * bool)
 [@@deriving jsonschema ~variant_as_string]
-type t1 =
-  | Typ
-  | Class of string
-[@@deriving jsonschema]
-type t2 =
-  | Typ
-  | Class of string
+
+type t1 = Typ | Class of string [@@deriving jsonschema]
+
+type t2 = Typ | Class of string
 [@@deriving jsonschema ~variant_as_string]
-type t3 =
-  | Typ [@name "type"]
-  | Class of string [@name "class"]
+
+type t3 = Typ [@name "type"] | Class of string [@name "class"]
 [@@deriving jsonschema]
+
 type t4 = int * string [@@deriving jsonschema]
 type t5 = [ `A of int * string * bool ] [@@deriving jsonschema]
 type t6 = [ `A of (int * string * bool) * float ] [@@deriving jsonschema]
@@ -213,68 +171,76 @@ type t7 = A of int * string * bool [@@deriving jsonschema]
 type t8 = A of (int * string * bool) [@@deriving jsonschema]
 type t9 = A of (int * string * bool) * float [@@deriving jsonschema]
 type t10 = [ `A of int * string * bool ] [@@deriving jsonschema]
-type t11 = [ `B of int * string * bool ] [@@deriving jsonschema ~polymorphic_variant_tuple]
-type obj2 = { x : int } [@@deriving jsonschema] [@@jsonschema.allow_extra_fields]
+
+type t11 = [ `B of int * string * bool ]
+[@@deriving jsonschema ~polymorphic_variant_tuple]
+
+type obj2 = { x : int }
+[@@deriving jsonschema] [@@jsonschema.allow_extra_fields]
+
 type obj1 = { obj2 : obj2 } [@@deriving jsonschema]
-type nested_obj = { obj1 : obj1 } [@@deriving jsonschema] [@@allow_extra_fields]
-type x_without_extra = { x : int } [@@deriving jsonschema] [@@allow_extra_fields]
-type x_with_extra = {
-  x : int;
-  y : int;
-}
+
+type nested_obj = { obj1 : obj1 }
 [@@deriving jsonschema] [@@allow_extra_fields]
-type 'url generic_link_traffic = {
-  title : string option;
-  url : 'url;
-}
+
+type x_without_extra = { x : int }
+[@@deriving jsonschema] [@@allow_extra_fields]
+
+type x_with_extra = { x : int; y : int }
+[@@deriving jsonschema] [@@allow_extra_fields]
+
+type 'url generic_link_traffic = { title : string option; url : 'url }
 [@@deriving jsonschema]
-type string_link_traffic = string generic_link_traffic [@@deriving jsonschema]
-type 'a poly_variant =
-  | A
-  | B of 'a
+
+type string_link_traffic = string generic_link_traffic
 [@@deriving jsonschema]
-type ('a, 'b) multi_param = {
-  first : 'a;
-  second : 'b;
-  label : string;
-}
+
+type 'a poly_variant = A | B of 'a [@@deriving jsonschema]
+
+type ('a, 'b) multi_param = { first : 'a; second : 'b; label : string }
 [@@deriving jsonschema]
+
 type 'a param_list = 'a list [@@deriving jsonschema]
-type ('a, 'b) either =
-  | Left of 'a
-  | Right of 'b
-[@@deriving jsonschema]
+type ('a, 'b) either = Left of 'a | Right of 'b [@@deriving jsonschema]
 type ('a, 'b) either_alias = ('a, 'b) either [@@deriving jsonschema]
-type ('a, 'b) direction =
-  | North
-  | South
+
+type ('a, 'b) direction = North | South
 [@@deriving jsonschema ~variant_as_string]
+
 type tool_params = {
   query : string; [@jsonschema.description "The search query to execute"]
-  max_results : int; [@jsonschema.description "Maximum number of results to return"]
+  max_results : int;
+      [@jsonschema.description "Maximum number of results to return"]
 }
 [@@deriving jsonschema]
+
 type described_record = {
   name : string; [@jsonschema.description "The user's full name"]
-  age : int option; [@jsonschema.option] [@jsonschema.description "The user's age"]
+  age : int option;
+      [@jsonschema.option] [@jsonschema.description "The user's age"]
 }
 [@@deriving jsonschema] [@@jsonschema.description "A user object"]
+
 type with_key_and_desc = {
-  opt : int option; [@key "opt_int"] [@jsonschema.option] [@jsonschema.description "An optional integer"]
+  opt : int option;
+      [@key "opt_int"]
+      [@jsonschema.option]
+      [@jsonschema.description "An optional integer"]
 }
 [@@deriving jsonschema]
+
 type described_variant =
   | Plain [@jsonschema.description "No payload"]
   | With_int of int [@jsonschema.description "Single integer tag"]
   | Pair of string * int [@jsonschema.description "String and int"]
-  | Description_value of (string[@jsonschema.description "A string value"])
+  | Description_value of
+      (string[@jsonschema.description "A string value"])
 [@@deriving jsonschema]
+
 type described_variant_inline_record =
-  | Point of {
-      x : int;
-      y : int;
-    } [@jsonschema.description "A 2D point"]
+  | Point of { x : int; y : int } [@jsonschema.description "A 2D point"]
 [@@deriving jsonschema]
+
 type described_variant_string =
   | A [@jsonschema.description "First choice"]
   | B [@jsonschema.description "Second choice"]
@@ -284,20 +250,24 @@ type described_variant_string =
    fallback for [@jsonschema.description]. Without the flag, doc comments are
    ignored (see [doc_comment_disabled] below). *)
 
-(** A user object *)
 type doc_comment_record = {
   name : string;  (** The user's full name *)
   age : int;  (** The user's age *)
 }
 [@@deriving jsonschema ~ocaml_doc]
+(** A user object *)
 
 (* Without the [~ocaml_doc] flag, doc comments are not turned into descriptions. *)
 
+type doc_comment_disabled = { name : string  (** The user's full name *) }
+[@@deriving jsonschema]
 (** A user object *)
-type doc_comment_disabled = { name : string  (** The user's full name *) } [@@deriving jsonschema]
 
 (* Explicit [@jsonschema.description] wins over an ocaml.doc comment on the same node. *)
-type doc_comment_override = { field : string [@jsonschema.description "explicit wins"]  (** ocaml.doc loses *) }
+type doc_comment_override = {
+  field : string; [@jsonschema.description "explicit wins"]
+      (** ocaml.doc loses *)
+}
 [@@deriving jsonschema ~ocaml_doc]
 
 type doc_comment_variant =
@@ -305,9 +275,11 @@ type doc_comment_variant =
   | With_int of int  (** Single integer tag *)
 [@@deriving jsonschema ~ocaml_doc]
 
-type doc_comment_core_type = (string[@ocaml.doc " A string alias "]) [@@deriving jsonschema ~ocaml_doc]
+type doc_comment_core_type = (string[@ocaml.doc " A string alias "])
+[@@deriving jsonschema ~ocaml_doc]
 
-type doc_attribute_alias = (string[@doc " Alias fallback "]) [@@deriving jsonschema ~ocaml_doc]
+type doc_attribute_alias = (string[@doc " Alias fallback "])
+[@@deriving jsonschema ~ocaml_doc]
 (* Multi-line doc comments are preserved as-is apart from a [String.trim] on the
    outermost whitespace. Internal newlines and indentation remain in the
    generated description. *)
@@ -322,29 +294,36 @@ type doc_comment_multiline = {
 
 type doc_comment_poly_variant =
   [ `Plain  (** No payload *)
-  | `With_int of int  (** Single integer tag *)
-  ]
+  | `With_int of int  (** Single integer tag *) ]
 [@@deriving jsonschema ~ocaml_doc]
 
 (* Multiple hand-written [@ocaml.doc] / [@doc] attributes on the same node are
    joined into a single description with a blank-line separator. *)
-type doc_comment_multiple = (string[@ocaml.doc " first block "] [@ocaml.doc " second block "] [@doc " third block "])
+type doc_comment_multiple =
+  (string
+  [@ocaml.doc " first block "]
+  [@ocaml.doc " second block "]
+  [@doc " third block "])
 [@@deriving jsonschema ~ocaml_doc]
 
 (* Explicit [@jsonschema.description] on a polymorphic variant tag takes precedence. *)
-type doc_comment_poly_variant_override = [ `Tagged [@jsonschema.description "explicit wins"]  (** ocaml.doc loses *) ]
+type doc_comment_poly_variant_override =
+  [ `Tagged
+    [@jsonschema.description "explicit wins"]
+    (** ocaml.doc loses *) ]
 [@@deriving jsonschema ~ocaml_doc]
 
-type computation_result =
-  | Ok
-  | Err of string
-[@@deriving jsonschema] [@@jsonschema.description "Either success or an error message string"]
+type computation_result = Ok | Err of string
+[@@deriving jsonschema]
+[@@jsonschema.description "Either success or an error message string"]
+
 type nullable_fields = {
   plain : string option;
   drop_simple : string option; [@jsonschema.option]
   drop_complex : int list option; [@jsonschema.option]
 }
 [@@deriving jsonschema]
+
 type melange_json_defaults = {
   required_value : int;
   option_value : string option; [@option]
@@ -356,83 +335,124 @@ type melange_json_defaults = {
   custom_drop_default : float; [@default 0.0] [@drop_default Float.equal]
 }
 [@@deriving jsonschema]
+
 type composing_type = string
-let composing_type_jsonschema = `Assoc [ "type", `String "string"; "description", `String "A string" ]
-type composing_record = { composing_type : composing_type option [@jsonschema.option] } [@@deriving jsonschema]
-type with_format = string [@@jsonschema.format "date-time"] [@@deriving jsonschema]
-type with_format_record = { with_format : string [@jsonschema.format "date-time"] } [@@deriving jsonschema]
-type with_format_variant =
-  | A of (string[@jsonschema.format "date-time"] [@jsonschema.description "A date-time string"])
-  | B
-[@@deriving jsonschema]
-type 'a grade' =
-  | A of 'a
-  | B of ('a grade' * 'a grade')
-  | C
-type 'a grade = 'a grade' =
-  | A of 'a
-  | B of ('a grade * 'a grade)
-  | C
-[@@deriving jsonschema]
-type self_ref = { children : self_ref list } [@@deriving jsonschema]
-type two_self_refs = {
-  a : self_ref;
-  b : self_ref;
+
+let composing_type_jsonschema =
+  `Assoc [ "type", `String "string"; "description", `String "A string" ]
+
+type composing_record = {
+  composing_type : composing_type option; [@jsonschema.option]
 }
 [@@deriving jsonschema]
+
+type with_format = string
+[@@jsonschema.format "date-time"] [@@deriving jsonschema]
+
+type with_format_record = {
+  with_format : string; [@jsonschema.format "date-time"]
+}
+[@@deriving jsonschema]
+
+type with_format_variant =
+  | A of
+      (string
+      [@jsonschema.format "date-time"]
+      [@jsonschema.description "A date-time string"])
+  | B
+[@@deriving jsonschema]
+
+type 'a grade' = A of 'a | B of ('a grade' * 'a grade') | C
+
+type 'a grade = 'a grade' = A of 'a | B of ('a grade * 'a grade) | C
+[@@deriving jsonschema]
+
+type self_ref = { children : self_ref list } [@@deriving jsonschema]
+
+type two_self_refs = { a : self_ref; b : self_ref }
+[@@deriving jsonschema]
+
 type ('atom, 'group_atom) filter =
   | Atom of 'atom
   | Group of ('atom, 'group_atom) filter list * 'group_atom
 [@@deriving jsonschema]
+
 type ('atom, 'group_atom) bool_filter =
   | BoolAtom of ('atom, 'group_atom) filter
   | BoolFilterGroup of ('atom, 'group_atom) bool_filter list
 [@@deriving jsonschema]
-type 'a rec_wrapper =
-  | RWrap of 'a
-  | RNested of 'a rec_wrapper
+
+type 'a rec_wrapper = RWrap of 'a | RNested of 'a rec_wrapper
 [@@deriving jsonschema]
-type outer_rec =
-  | ORLeaf of int
-  | ORNode of outer_rec rec_wrapper
+
+type outer_rec = ORLeaf of int | ORNode of outer_rec rec_wrapper
 [@@deriving jsonschema]
+
 type with_maximum = int [@@jsonschema.maximum 100] [@@deriving jsonschema]
-type with_maximum_record = { field : int [@jsonschema.maximum 100] } [@@deriving jsonschema]
-type attrs_core_type =
-  (int[@jsonschema.attrs { maximum = 100; minimum = 0; description = "Integer percentage value (0-100 inclusive)" }])
+
+type with_maximum_record = { field : int [@jsonschema.maximum 100] }
 [@@deriving jsonschema]
+
+type attrs_core_type =
+  (int
+  [@jsonschema.attrs
+    {
+      maximum = 100;
+      minimum = 0;
+      description = "Integer percentage value (0-100 inclusive)";
+    }])
+[@@deriving jsonschema]
+
 type attrs_record = {
-  score : int; [@jsonschema.attrs { maximum = 100; minimum = 0; description = "Score out of 100" }]
-  label : string; [@jsonschema.attrs { format = "date-time"; description = "An ISO date-time" }]
+  score : int;
+      [@jsonschema.attrs
+        { maximum = 100; minimum = 0; description = "Score out of 100" }]
+  label : string;
+      [@jsonschema.attrs
+        { format = "date-time"; description = "An ISO date-time" }]
 }
 [@@deriving jsonschema]
-type attrs_type_decl = int [@@jsonschema.attrs { description = "A plain integer" }] [@@deriving jsonschema]
-type minimum_core_type_int = (int[@jsonschema.minimum 0] [@jsonschema.maximum 100]) [@@deriving jsonschema]
-type minimum_core_type_float = (float[@jsonschema.minimum 0.0] [@jsonschema.maximum 1.0]) [@@deriving jsonschema]
+
+type attrs_type_decl = int
+[@@jsonschema.attrs { description = "A plain integer" }]
+[@@deriving jsonschema]
+
+type minimum_core_type_int =
+  (int[@jsonschema.minimum 0] [@jsonschema.maximum 100])
+[@@deriving jsonschema]
+
+type minimum_core_type_float =
+  (float[@jsonschema.minimum 0.0] [@jsonschema.maximum 1.0])
+[@@deriving jsonschema]
+
 type minimum_maximum_record = {
   score : int; [@jsonschema.minimum 0] [@jsonschema.maximum 100]
   ratio : float; [@jsonschema.minimum 0.0] [@jsonschema.maximum 1.0]
 }
 [@@deriving jsonschema]
-type minimum_maximum_type_decl_int = int [@@jsonschema.minimum 0] [@@jsonschema.maximum 255] [@@deriving jsonschema]
+
+type minimum_maximum_type_decl_int = int
+[@@jsonschema.minimum 0]
+[@@jsonschema.maximum 255]
+[@@deriving jsonschema]
+
 type minimum_maximum_type_decl_float = float
-[@@jsonschema.minimum 0.0] [@@jsonschema.maximum 1.0] [@@deriving jsonschema]
+[@@jsonschema.minimum 0.0]
+[@@jsonschema.maximum 1.0]
+[@@deriving jsonschema]
+
 type minimum_maximum_variant =
   | Percentage of (int[@jsonschema.minimum 0] [@jsonschema.maximum 100])
   | Factor of (float[@jsonschema.minimum 0.0] [@jsonschema.maximum 1.0])
 [@@deriving jsonschema]
-type variant_for_default =
-  | A
-  | B
+
+type variant_for_default = A | B [@@deriving to_json, jsonschema]
+
+type 'a range = { from : 'a; to_ : 'a [@key "to"] }
 [@@deriving to_json, jsonschema]
 
-type 'a range = {
-  from : 'a;
-  to_ : 'a; [@key "to"]
-}
+type record_for_default = { score : int option }
 [@@deriving to_json, jsonschema]
-
-type record_for_default = { score : int option } [@@deriving to_json, jsonschema]
 
 type default_value = {
   score : int option; [@default 0]
@@ -440,7 +460,8 @@ type default_value = {
   speed : float; [@jsonschema.default 100.0]
   is_active : bool; [@jsonschema.default false]
   pair : int * string; [@jsonschema.default 1, "hello"]
-  pairs : (string * string option) list; [@default [ "a", None; "b", Some "b" ]]
+  pairs : (string * string option) list;
+      [@default [ "a", None; "b", Some "b" ]]
   variant : variant_for_default; [@jsonschema.default A]
   record : record_for_default; [@jsonschema.default { score = None }]
   int_list : int list; [@jsonschema.default [ 1; 2; 3 ]]
@@ -450,32 +471,36 @@ type default_value = {
 [@@deriving jsonschema]
 
 module Status = struct
-  type t =
-    | Active
-    | Inactive
-  [@@deriving to_json, jsonschema]
+  type t = Active | Inactive [@@deriving to_json, jsonschema]
 end
-type default_with_module_type = { status : Status.t [@jsonschema.default Status.Active] } [@@deriving jsonschema]
+
+type default_with_module_type = {
+  status : Status.t; [@jsonschema.default Status.Active]
+}
+[@@deriving jsonschema]
 
 (* Regression: a record value used as [@default] for a non-primitive field, where the record has
    an [@option] [@drop_default] field set to None. In Melange, the generated [_to_json] emits the
    field as [Js.Undefined.empty], so the JS object is [{ foo: undefined }]. Then
    [Ppx_deriving_jsonschema_runtime.classify] mis-classifies [undefined] as a JSON object and
    crashes with "Cannot convert undefined or null to object" while enumerating its entries. *)
-type inner_with_option_field = { foo : int option [@option] [@drop_default] } [@@deriving to_json, jsonschema]
-let empty_inner_with_option_field : inner_with_option_field = { foo = None }
-type outer_default_record_with_option = { inner : inner_with_option_field [@default empty_inner_with_option_field] }
+type inner_with_option_field = {
+  foo : int option; [@option] [@drop_default]
+}
+[@@deriving to_json, jsonschema]
+
+let empty_inner_with_option_field : inner_with_option_field =
+  { foo = None }
+
+type outer_default_record_with_option = {
+  inner : inner_with_option_field; [@default empty_inner_with_option_field]
+}
 [@@deriving jsonschema]
-type compact_variants =
-  | A
-  | B
-  | C of int
+
+type compact_variants = A | B | C of int
 [@@deriving jsonschema] [@@jsonschema.compact_variants]
-type compact_poly_variants =
-  [ `Aaa
-  | `Bbb
-  | `Ccc of int
-  ]
+
+type compact_poly_variants = [ `Aaa | `Bbb | `Ccc of int ]
 [@@deriving jsonschema] [@@jsonschema.compact_variants]
 
 (* Regression test: PPX-generated code must not depend on user-scope [List]/[String]/[Array].
@@ -487,9 +512,7 @@ module Generated_code_must_qualify_stdlib = struct
   module String = struct end
   module Array = struct end
 
-  type plain_variant_with_shadowed_stdlib =
-    | A
-    | B [@name "b"]
+  type plain_variant_with_shadowed_stdlib = A | B [@name "b"]
   [@@deriving jsonschema]
 
   type 'a wrapper_with_shadowed_stdlib =
@@ -499,7 +522,9 @@ module Generated_code_must_qualify_stdlib = struct
 
   type rec_using_wrapper_with_shadowed_stdlib =
     | Leaf of int
-    | Node of rec_using_wrapper_with_shadowed_stdlib wrapper_with_shadowed_stdlib
+    | Node of
+        rec_using_wrapper_with_shadowed_stdlib
+        wrapper_with_shadowed_stdlib
   [@@deriving jsonschema]
 
   type record_with_default_with_shadowed_stdlib = {
@@ -511,14 +536,13 @@ module Generated_code_must_qualify_stdlib = struct
 
   (* Non-recursive top-level type using a parametric recursive type as an arg:
      exercises the [$id]-injection branch where the inner [$defs] gets a resource boundary. *)
-  type non_rec_using_wrapper_with_shadowed_stdlib = int wrapper_with_shadowed_stdlib [@@deriving jsonschema]
+  type non_rec_using_wrapper_with_shadowed_stdlib =
+    int wrapper_with_shadowed_stdlib
+  [@@deriving jsonschema]
 end
 
 module Nonrec_type_alias = struct
-  type foo =
-    | A
-    | B
-  [@@deriving jsonschema]
+  type foo = A | B [@@deriving jsonschema]
 
   module X = struct
     type nonrec foo = foo [@@deriving jsonschema]
@@ -529,22 +553,11 @@ module Recursive_shapes = struct
   type a = A of b
   and b = int [@@deriving jsonschema]
 
-  type t =
-    | N
-    | S of t
-  [@@deriving jsonschema]
+  type t = N | S of t [@@deriving jsonschema]
+  type 'a lst = Nil | Cons of 'a * 'a lst [@@deriving jsonschema]
 
-  type 'a lst =
-    | Nil
-    | Cons of 'a * 'a lst
-  [@@deriving jsonschema]
+  type 'a tree = Leaf of 'a | Node of 'a * 'a forest
 
-  type 'a tree =
-    | Leaf of 'a
-    | Node of 'a * 'a forest
-
-  and 'a forest =
-    | Empty
-    | Base of 'a tree * 'a forest
+  and 'a forest = Empty | Base of 'a tree * 'a forest
   [@@deriving jsonschema]
 end

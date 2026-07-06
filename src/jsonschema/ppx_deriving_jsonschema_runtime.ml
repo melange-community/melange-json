@@ -6,11 +6,7 @@ let classify = Ppx_deriving_jsonschema_runtime_classify.classify
 let declassify = Ppx_deriving_jsonschema_runtime_classify.declassify
 
 let json_schema ?id ?title ?description ?definitions types =
-  let fields =
-    match types with
-    | `Assoc fields -> fields
-    | _ -> []
-  in
+  let fields = match types with `Assoc fields -> fields | _ -> [] in
   let metadata =
     List.filter_map
       (fun x -> x)

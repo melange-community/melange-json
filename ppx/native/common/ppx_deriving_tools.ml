@@ -421,7 +421,8 @@ let rec get_variant_names ?(compact = false) ~loc c =
 let get_constructor_names ?(compact = false) cs =
   List.map cs ~f:(fun c ->
       let name =
-        Option.value ~default:c.pcd_name (Attribute.get attr_json_name_cd c)
+        Option.value ~default:c.pcd_name
+          (Attribute.get attr_json_name_cd c)
       in
       match c.pcd_args with
       | Pcstr_record _fs -> Printf.sprintf {|["%s", { _ }]|} name.txt
