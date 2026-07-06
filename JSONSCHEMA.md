@@ -80,14 +80,14 @@ Such a type will be turned into a JSON schema like this:
         "street": { "type": "string" }
       },
       "required": [ "zip", "city", "street" ],
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "email": { "type": "string" },
     "age": { "type": "integer" },
     "name": { "type": "string" }
   },
   "required": [ "address", "age", "name" ],
-  "additionalProperties": false
+  "additionalProperties": true
 }
 ```
 
@@ -368,7 +368,7 @@ type t = {
     },
   },
   "required": [ "name" ], 
-  "additionalProperties": false 
+  "additionalProperties": true 
 }
 ```
 
@@ -389,7 +389,7 @@ type t = {
     },
   },
   "required": [], 
-  "additionalProperties": false 
+  "additionalProperties": true 
 }
 ```
 #### Result
@@ -615,11 +615,13 @@ type t =
 
 #### Records
 
-Records are converted to `{ "type": "object", "properties": {...}, "required": [...], "additionalProperties": false }`.
+Records are converted to `{ "type": "object", "properties": {...}, "required": [...], "additionalProperties": true }`.
 
 The fields of type `option` are not included in the `required` list.
 
-By default, additionalProperties are not allowed in objects. To allow additionalProperties, use the `allow_extra_fields` attribute:
+By default, additional properties are allowed in objects, matching the JSON
+derivers which ignore unknown object keys. To reject unknown keys and generate
+a strict schema, use the `disallow_extra_fields` attribute:
 
 ```ocaml
 type company = {
@@ -627,22 +629,27 @@ type company = {
   employees : int;
 }
 [@@deriving jsonschema]
-[@@jsonschema.allow_extra_fields]
+[@@jsonschema.disallow_extra_fields]
 ```
 
-This annotation will generate a schema with `"additionalProperties": true`, allowing for additional fields not defined in the record:
+This annotation will generate a schema with `"additionalProperties": false`,
+rejecting fields not defined in the record:
 
 ```json
 {
   "type": "object",
   "properties": {
     "name": { "type": "string" },
-    "age": { "type": "integer" }
+    "employees": { "type": "integer" }
   },
-  "required": [ "name", "age" ],
-  "additionalProperties": true
+  "required": [ "name", "employees" ],
+  "additionalProperties": false
 }
 ```
+
+`[@@jsonschema.allow_extra_fields]` is still accepted for backwards
+compatibility but is now a no-op (allowing extra fields is the default);
+combining it with `disallow_extra_fields` on the same type is an error.
 
 When the JSON object keys differ from the ocaml field names, users can specify the corresponding JSON key implicitly using `[@key "field"]`, for example:
 
@@ -656,16 +663,16 @@ type t = {
 
 #### Inline Records in Variants
 
-You can use the `[@jsonschema.allow_extra_fields]` attribute on a constructor with an inline record to allow additional fields in that record:
+Inline records in variants also allow additional fields by default. Use the `[@jsonschema.disallow_extra_fields]` attribute on a constructor with an inline record to reject unknown keys for that record:
 
 ```ocaml
-type inline_record_with_extra_fields =
-  | User of { name : string; email : string } [@jsonschema.allow_extra_fields]
+type inline_record_with_strict_fields =
+  | User of { name : string; email : string } [@jsonschema.disallow_extra_fields]
   | Guest of { ip : string }
 [@@deriving jsonschema]
 ```
 
-This will generate a schema that allows additional fields for the `User` variant's record but not for the `Guest` variant:
+This will generate a schema that rejects additional fields for the `User` variant's record but allows them for the `Guest` variant:
 
 ```json
 {
@@ -681,7 +688,7 @@ This will generate a schema that allows additional fields for the `User` variant
             "name": { "type": "string" }
           },
           "required": [ "email", "name" ],
-          "additionalProperties": true
+          "additionalProperties": false
         }
       ],
       "unevaluatedItems": false,
@@ -696,7 +703,7 @@ This will generate a schema that allows additional fields for the `User` variant
           "type": "object",
           "properties": { "ip": { "type": "string" } },
           "required": [ "ip" ],
-          "additionalProperties": false
+          "additionalProperties": true
         }
       ],
       "unevaluatedItems": false,
@@ -803,7 +810,7 @@ type tree =
                 "value": { "type": "integer" }
               },
               "required": [ "right", "left", "value" ],
-              "additionalProperties": false
+              "additionalProperties": true
             }
           ],
           "unevaluatedItems": false,
@@ -894,7 +901,7 @@ This generates `expr_jsonschema` containing all definitions in `$defs`:
                 "cond": { "$ref": "#/$defs/expr" }
               },
               "required": [ "then_", "cond" ],
-              "additionalProperties": false
+              "additionalProperties": true
             }
           ],
           "unevaluatedItems": false,
@@ -941,7 +948,7 @@ type t = {
     "name": { "description": "The user's full name", "type": "string" }
   },
   "required": [ "name" ],
-  "additionalProperties": false
+  "additionalProperties": true
 }
 ```
 
@@ -962,7 +969,7 @@ type t = {
     "name": { "description": "The user's full name", "type": "string" }
   },
   "required": [ "name" ],
-  "additionalProperties": false
+  "additionalProperties": true
 }
 ```
 
@@ -983,7 +990,7 @@ type t = {
     "name": { "format": "date-time", "type": "string" }
   },
   "required": [ "name" ],
-  "additionalProperties": false
+  "additionalProperties": true
 }
 ```
 
@@ -1004,7 +1011,7 @@ type t = {
     "score": { "maximum": 100, "type": "integer" }
   },
   "required": [ "score" ],
-  "additionalProperties": false
+  "additionalProperties": true
 }
 ```
 
@@ -1025,7 +1032,7 @@ type t = {
     "score": { "minimum": 0, "type": "integer" }
   },
   "required": [ "score" ],
-  "additionalProperties": false
+  "additionalProperties": true
 }
 ```
 
@@ -1062,7 +1069,7 @@ type t = {
     "status":   { "default": [ "Active" ],  "anyOf": [ ... ] }
   },
   "required": [],
-  "additionalProperties": false
+  "additionalProperties": true
 }
 ```
 
@@ -1087,7 +1094,7 @@ type t = {
     "created_at": { "format": "date-time", "description": "Creation timestamp", "type": "string" }
   },
   "required": [ "score", "created_at" ],
-  "additionalProperties": false
+  "additionalProperties": true
 }
 ```
 
