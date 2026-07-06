@@ -95,7 +95,6 @@ let compact_variant =
   case "compact_variant"
     (schema_of compact_variant_jsonschema)
     [
-      `List [ `String "A" ];
       compact_variant_to_json A;
       compact_variant_to_json B;
       compact_variant_to_json (C 3);

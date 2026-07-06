@@ -23,6 +23,7 @@ jobs:
           - "4.14"
           - "5.1"
           - "5.2"
+          - "5.4"
 
     runs-on: ${{ matrix.os }}
 
@@ -40,5 +41,7 @@ jobs:
       - run: opam install . --deps-only --with-test --with-dev-setup
 
       - run: opam exec -- dune build
+
+      - run: pipx install check-jsonschema
 
       - run: opam exec -- dune runtest

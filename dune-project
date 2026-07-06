@@ -40,7 +40,7 @@
   (ocaml-lsp-server :with-dev-setup)
   (ocamlformat
    (and
-    (>= "0.27.0")
+    (= "0.28.1")
     :with-dev-setup))))
 
 (package
