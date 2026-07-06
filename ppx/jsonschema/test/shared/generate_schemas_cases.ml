@@ -65,6 +65,9 @@ let schemas =
     Ppx_deriving_jsonschema_runtime.json_schema t11_jsonschema;
     Ppx_deriving_jsonschema_runtime.json_schema nested_obj_jsonschema;
     Ppx_deriving_jsonschema_runtime.json_schema x_without_extra_jsonschema;
+    Ppx_deriving_jsonschema_runtime.json_schema strict_obj_jsonschema;
+    Ppx_deriving_jsonschema_runtime.json_schema
+      inline_record_disallow_extra_fields_jsonschema;
     Ppx_deriving_jsonschema_runtime.json_schema
       (generic_link_traffic_jsonschema string_jsonschema);
     Ppx_deriving_jsonschema_runtime.json_schema

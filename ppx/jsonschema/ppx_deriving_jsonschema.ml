@@ -220,9 +220,18 @@ and schema_of_poly_variant ~loc ~(config : Attrs.config)
   let v = Schema.variants ~loc ~compact_variants constrs in
   v, is_rec
 
+let resolve_additional_properties ~loc ~allow ~disallow =
+  match allow, disallow with
+  | true, true ->
+      Location.raise_errorf ~loc
+        "ppx_deriving_jsonschema: [@jsonschema.allow_extra_fields] and \
+         [@jsonschema.disallow_extra_fields] are mutually exclusive"
+  | _, true -> false
+  | _, false -> true
+
 (* Returns (schema_expression, is_recursive) *)
 let schema_of_record ~loc ~(config : Attrs.config) ?(recursive_types = [])
-    fields allow_extra_fields =
+    fields additional_properties =
   let fields, required, is_rec =
     List.fold_left
       (fun (fields, required, is_rec)
@@ -287,7 +296,8 @@ let schema_of_record ~loc ~(config : Attrs.config) ?(recursive_types = [])
           "type", `String "object";
           "properties", `Assoc [%e elist ~loc fields];
           "required", `List [%e elist ~loc required];
-          "additionalProperties", `Bool [%e ebool ~loc allow_extra_fields];
+          ( "additionalProperties",
+            `Bool [%e ebool ~loc additional_properties] );
         ]],
     is_rec )
 
@@ -310,13 +320,21 @@ let schema_of_variants ~loc ~(config : Attrs.config)
         in
         match pcd_args with
         | Pcstr_record label_declarations ->
-            let allow_extra_fields =
+            let allow =
               Attribute.get Attrs.jsonschema_cd_allow_extra_fields var
               |> Option.is_some
             in
+            let disallow =
+              Attribute.get Attrs.jsonschema_cd_disallow_extra_fields var
+              |> Option.is_some
+            in
+            let additional_properties =
+              resolve_additional_properties ~loc:var.pcd_loc ~allow
+                ~disallow
+            in
             let obj_schema, obj_rec =
               schema_of_record ~loc ~config ~recursive_types
-                label_declarations allow_extra_fields
+                label_declarations additional_properties
             in
             ( `Tag (name, [ obj_schema ], description_opt) :: variants,
               is_rec || obj_rec )
@@ -338,10 +356,6 @@ let schema_of_variants ~loc ~(config : Attrs.config)
 let schema_of_type_decl ~loc ~(config : Attrs.config) ~recursive_types
     type_decl =
   let type_name = type_decl.ptype_name.txt in
-  let allow_extra_fields =
-    Attribute.get Attrs.jsonschema_td_allow_extra_fields type_decl
-    |> Option.is_some
-  in
   let params =
     List.map
       (fun tp -> (get_type_param_name tp).txt)
@@ -358,9 +372,21 @@ let schema_of_type_decl ~loc ~(config : Attrs.config) ~recursive_types
       in
       type_name, schema, is_rec, params
   | Ptype_record label_declarations ->
+      let allow =
+        Attribute.get Attrs.jsonschema_td_allow_extra_fields type_decl
+        |> Option.is_some
+      in
+      let disallow =
+        Attribute.get Attrs.jsonschema_td_disallow_extra_fields type_decl
+        |> Option.is_some
+      in
+      let additional_properties =
+        resolve_additional_properties ~loc:type_decl.ptype_loc ~allow
+          ~disallow
+      in
       let schema, is_rec =
         schema_of_record ~loc ~config ~recursive_types label_declarations
-          allow_extra_fields
+          additional_properties
       in
       type_name, schema, is_rec, params
   | Ptype_abstract -> (

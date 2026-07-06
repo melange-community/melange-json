@@ -26,6 +26,12 @@ val jsonschema_td_allow_extra_fields :
 val jsonschema_cd_allow_extra_fields :
   (Ppxlib.constructor_declaration, unit -> unit) Ppxlib.Attribute.t
 
+val jsonschema_td_disallow_extra_fields :
+  (Ppxlib.type_declaration, unit -> unit) Ppxlib.Attribute.t
+
+val jsonschema_cd_disallow_extra_fields :
+  (Ppxlib.constructor_declaration, unit -> unit) Ppxlib.Attribute.t
+
 val jsonschema_option : Ppxlib.label_declaration Ppxlib.Attribute.flag
 
 val jsonschema_ld_description :
