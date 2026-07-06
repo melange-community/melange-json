@@ -10,17 +10,10 @@ let schemas =
     Ppx_deriving_jsonschema_runtime.json_schema Mod1.Mod2.m_2_jsonschema;
     Ppx_deriving_jsonschema_runtime.json_schema with_modules_jsonschema;
     Ppx_deriving_jsonschema_runtime.json_schema kind_jsonschema;
-    Ppx_deriving_jsonschema_runtime.json_schema kind_as_string_jsonschema;
     Ppx_deriving_jsonschema_runtime.json_schema poly_kind_jsonschema;
     Ppx_deriving_jsonschema_runtime.json_schema
-      poly_kind_as_string_jsonschema;
-    Ppx_deriving_jsonschema_runtime.json_schema
       poly_kind_with_payload_jsonschema;
-    Ppx_deriving_jsonschema_runtime.json_schema
-      poly_kind_with_payload_as_string_jsonschema;
     Ppx_deriving_jsonschema_runtime.json_schema poly_inherit_jsonschema;
-    Ppx_deriving_jsonschema_runtime.json_schema
-      poly_inherit_as_string_jsonschema;
     Ppx_deriving_jsonschema_runtime.json_schema event_jsonschema;
     Ppx_deriving_jsonschema_runtime.json_schema
       recursive_record_jsonschema;
@@ -46,8 +39,6 @@ let schemas =
     Ppx_deriving_jsonschema_runtime.json_schema opt_jsonschema;
     Ppx_deriving_jsonschema_runtime.json_schema using_m_jsonschema;
     Ppx_deriving_jsonschema_runtime.json_schema
-      (poly2_jsonschema int_jsonschema);
-    Ppx_deriving_jsonschema_runtime.json_schema
       tuple_with_variant_jsonschema;
     Ppx_deriving_jsonschema_runtime.json_schema
       ~id:"https://ahrefs.com/schemas/player_scores"
@@ -61,13 +52,8 @@ let schemas =
       tt_jsonschema;
     Ppx_deriving_jsonschema_runtime.json_schema c_jsonschema;
     Ppx_deriving_jsonschema_runtime.json_schema
-      variant_inline_record_jsonschema;
-    Ppx_deriving_jsonschema_runtime.json_schema
       inline_record_with_extra_fields_jsonschema;
-    Ppx_deriving_jsonschema_runtime.json_schema
-      variant_with_payload_jsonschema;
     Ppx_deriving_jsonschema_runtime.json_schema t1_jsonschema;
-    Ppx_deriving_jsonschema_runtime.json_schema t2_jsonschema;
     Ppx_deriving_jsonschema_runtime.json_schema t3_jsonschema;
     Ppx_deriving_jsonschema_runtime.json_schema t4_jsonschema;
     Ppx_deriving_jsonschema_runtime.json_schema t5_jsonschema;
@@ -93,8 +79,6 @@ let schemas =
       (either_jsonschema int_jsonschema string_jsonschema);
     Ppx_deriving_jsonschema_runtime.json_schema
       (either_alias_jsonschema int_jsonschema string_jsonschema);
-    Ppx_deriving_jsonschema_runtime.json_schema
-      (direction_jsonschema int_jsonschema string_jsonschema);
     Ppx_deriving_jsonschema_runtime.json_schema tool_params_jsonschema;
     Ppx_deriving_jsonschema_runtime.json_schema
       described_record_jsonschema;
@@ -104,8 +88,6 @@ let schemas =
       described_variant_jsonschema;
     Ppx_deriving_jsonschema_runtime.json_schema
       described_variant_inline_record_jsonschema;
-    Ppx_deriving_jsonschema_runtime.json_schema
-      described_variant_string_jsonschema;
     Ppx_deriving_jsonschema_runtime.json_schema
       doc_comment_record_jsonschema;
     Ppx_deriving_jsonschema_runtime.json_schema

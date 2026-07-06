@@ -68,8 +68,7 @@ let description ~loc description schema_expr =
     ("description", [%expr `String [%e estring ~loc description]])
     schema_expr
 
-let variants ~loc ?(as_string = false) ?(compact_variants = false) constrs
-    =
+let variants ~loc ?(compact_variants = false) constrs =
   let opt_description ~loc desc schema =
     match desc with Some d -> description ~loc d schema | None -> schema
   in
@@ -78,8 +77,7 @@ let variants ~loc ?(as_string = false) ?(compact_variants = false) constrs
        (function
          | `Tag (name, typs, desc) ->
              let schema =
-               if as_string then const ~loc name
-               else if compact_variants && typs = [] then const ~loc name
+               if compact_variants && typs = [] then const ~loc name
                else tuple ~loc (const ~loc name :: typs)
              in
              opt_description ~loc desc schema

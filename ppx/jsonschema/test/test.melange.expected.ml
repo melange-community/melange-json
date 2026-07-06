@@ -169,32 +169,6 @@ include
                     ppx_pairs))
            | other -> other)[@@warning "-32-39"]
   end[@@ocaml.doc "@inline"][@@merlin.hide ]
-type kind_as_string =
-  | Success 
-  | Error 
-  | Skipped [@name "skipped"][@@deriving jsonschema ~variant_as_string]
-include
-  struct
-    let kind_as_string_jsonschema =
-      let ppx_eds = ref [] in
-      let ppx_result =
-        `Assoc
-          [("anyOf",
-             (`List
-                [`Assoc [("const", (`String "Success"))];
-                `Assoc [("const", (`String "Error"))];
-                `Assoc [("const", (`String "skipped"))]]))] in
-      match !ppx_eds with
-      | [] -> ppx_result
-      | ppx_defs ->
-          (match ppx_result with
-           | `Assoc ppx_pairs ->
-               `Assoc (("$defs", (`Assoc ppx_defs)) ::
-                 (Stdlib.List.filter
-                    (fun (k, _) -> not (Stdlib.String.equal k "$defs"))
-                    ppx_pairs))
-           | other -> other)[@@warning "-32-39"]
-  end[@@ocaml.doc "@inline"][@@merlin.hide ]
 type poly_kind = [ `Aaa  | `Bbb  | `Ccc [@name "ccc"]][@@deriving jsonschema]
 include
   struct
@@ -225,31 +199,6 @@ include
                   ("unevaluatedItems", (`Bool false));
                   ("minItems", (`Int 1));
                   ("maxItems", (`Int 1))]]))] in
-      match !ppx_eds with
-      | [] -> ppx_result
-      | ppx_defs ->
-          (match ppx_result with
-           | `Assoc ppx_pairs ->
-               `Assoc (("$defs", (`Assoc ppx_defs)) ::
-                 (Stdlib.List.filter
-                    (fun (k, _) -> not (Stdlib.String.equal k "$defs"))
-                    ppx_pairs))
-           | other -> other)[@@warning "-32-39"]
-  end[@@ocaml.doc "@inline"][@@merlin.hide ]
-type poly_kind_as_string = [ `Aaa  | `Bbb  | `Ccc [@name "ccc"]][@@deriving
-                                                                  jsonschema
-                                                                    ~variant_as_string]
-include
-  struct
-    let poly_kind_as_string_jsonschema =
-      let ppx_eds = ref [] in
-      let ppx_result =
-        `Assoc
-          [("anyOf",
-             (`List
-                [`Assoc [("const", (`String "Aaa"))];
-                `Assoc [("const", (`String "Bbb"))];
-                `Assoc [("const", (`String "ccc"))]]))] in
       match !ppx_eds with
       | [] -> ppx_result
       | ppx_defs ->
@@ -308,32 +257,6 @@ include
                     ppx_pairs))
            | other -> other)[@@warning "-32-39"]
   end[@@ocaml.doc "@inline"][@@merlin.hide ]
-type poly_kind_with_payload_as_string =
-  [ `Aaa of int  | `Bbb  | `Ccc of (string * bool) [@name "ccc"]][@@deriving
-                                                                   jsonschema
-                                                                    ~variant_as_string]
-include
-  struct
-    let poly_kind_with_payload_as_string_jsonschema =
-      let ppx_eds = ref [] in
-      let ppx_result =
-        `Assoc
-          [("anyOf",
-             (`List
-                [`Assoc [("const", (`String "Aaa"))];
-                `Assoc [("const", (`String "Bbb"))];
-                `Assoc [("const", (`String "ccc"))]]))] in
-      match !ppx_eds with
-      | [] -> ppx_result
-      | ppx_defs ->
-          (match ppx_result with
-           | `Assoc ppx_pairs ->
-               `Assoc (("$defs", (`Assoc ppx_defs)) ::
-                 (Stdlib.List.filter
-                    (fun (k, _) -> not (Stdlib.String.equal k "$defs"))
-                    ppx_pairs))
-           | other -> other)[@@warning "-32-39"]
-  end[@@ocaml.doc "@inline"][@@merlin.hide ]
 type poly_inherit = [ `New_one  | `Second_one of int  | poly_kind][@@deriving
                                                                     jsonschema]
 include
@@ -362,40 +285,7 @@ include
                   ("maxItems", (`Int 2))];
                 (match poly_kind_jsonschema with
                  | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-                     `Assoc (("$id", (`String "file://shared/cases.ml:39"))
-                       ::
-                       (Stdlib.List.filter
-                          (fun (k, _) -> not (Stdlib.String.equal k "$id"))
-                          pairs))
-                 | other -> other)]))] in
-      match !ppx_eds with
-      | [] -> ppx_result
-      | ppx_defs ->
-          (match ppx_result with
-           | `Assoc ppx_pairs ->
-               `Assoc (("$defs", (`Assoc ppx_defs)) ::
-                 (Stdlib.List.filter
-                    (fun (k, _) -> not (Stdlib.String.equal k "$defs"))
-                    ppx_pairs))
-           | other -> other)[@@warning "-32-39"]
-  end[@@ocaml.doc "@inline"][@@merlin.hide ]
-type poly_inherit_as_string =
-  [ `New_one  | `Second_one of int  | poly_kind_as_string][@@deriving
-                                                            jsonschema
-                                                              ~variant_as_string]
-include
-  struct
-    let poly_inherit_as_string_jsonschema =
-      let ppx_eds = ref [] in
-      let ppx_result =
-        `Assoc
-          [("anyOf",
-             (`List
-                [`Assoc [("const", (`String "New_one"))];
-                `Assoc [("const", (`String "Second_one"))];
-                (match poly_kind_as_string_jsonschema with
-                 | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-                     `Assoc (("$id", (`String "file://shared/cases.ml:43"))
+                     `Assoc (("$id", (`String "file://shared/cases.ml:29"))
                        ::
                        (Stdlib.List.filter
                           (fun (k, _) -> not (Stdlib.String.equal k "$id"))
@@ -472,7 +362,7 @@ include
                ("kind_f",
                  ((match kind_jsonschema with
                    | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-                       `Assoc (("$id", (`String "file://shared/cases.ml:48"))
+                       `Assoc (("$id", (`String "file://shared/cases.ml:34"))
                          ::
                          (Stdlib.List.filter
                             (fun (k, _) -> not (Stdlib.String.equal k "$id"))
@@ -1125,7 +1015,7 @@ include
       let ppx_result =
         match tree_jsonschema with
         | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-            `Assoc (("$id", (`String "file://shared/cases.ml:97")) ::
+            `Assoc (("$id", (`String "file://shared/cases.ml:83")) ::
               (Stdlib.List.filter
                  (fun (k, _) -> not (Stdlib.String.equal k "$id")) pairs))
         | other -> other in
@@ -1149,7 +1039,7 @@ include
         list_jsonschema
           (match event_jsonschema with
            | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-               `Assoc (("$id", (`String "file://shared/cases.ml:98")) ::
+               `Assoc (("$id", (`String "file://shared/cases.ml:84")) ::
                  (Stdlib.List.filter
                     (fun (k, _) -> not (Stdlib.String.equal k "$id")) pairs))
            | other -> other) in
@@ -1174,7 +1064,7 @@ include
           (list_jsonschema
              (match event_jsonschema with
               | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-                  `Assoc (("$id", (`String "file://shared/cases.ml:99")) ::
+                  `Assoc (("$id", (`String "file://shared/cases.ml:85")) ::
                     (Stdlib.List.filter
                        (fun (k, _) -> not (Stdlib.String.equal k "$id"))
                        pairs))
@@ -1202,7 +1092,7 @@ include
             (`List
                [(match event_jsonschema with
                  | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-                     `Assoc (("$id", (`String "file://shared/cases.ml:100"))
+                     `Assoc (("$id", (`String "file://shared/cases.ml:86"))
                        ::
                        (Stdlib.List.filter
                           (fun (k, _) -> not (Stdlib.String.equal k "$id"))
@@ -1232,7 +1122,7 @@ include
         list_jsonschema
           (match event_comment_jsonschema with
            | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-               `Assoc (("$id", (`String "file://shared/cases.ml:101")) ::
+               `Assoc (("$id", (`String "file://shared/cases.ml:87")) ::
                  (Stdlib.List.filter
                     (fun (k, _) -> not (Stdlib.String.equal k "$id")) pairs))
            | other -> other) in
@@ -1262,7 +1152,7 @@ include
                     | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs
                         ->
                         `Assoc
-                          (("$id", (`String "file://shared/cases.ml:102")) ::
+                          (("$id", (`String "file://shared/cases.ml:88")) ::
                           (Stdlib.List.filter
                              (fun (k, _) -> not (Stdlib.String.equal k "$id"))
                              pairs))
@@ -1291,7 +1181,7 @@ include
         array_jsonschema
           (match events_jsonschema with
            | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-               `Assoc (("$id", (`String "file://shared/cases.ml:103")) ::
+               `Assoc (("$id", (`String "file://shared/cases.ml:89")) ::
                  (Stdlib.List.filter
                     (fun (k, _) -> not (Stdlib.String.equal k "$id")) pairs))
            | other -> other) in
@@ -1356,32 +1246,13 @@ include
                     | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs
                         ->
                         `Assoc
-                          (("$id", (`String "file://shared/cases.ml:106")) ::
+                          (("$id", (`String "file://shared/cases.ml:92")) ::
                           (Stdlib.List.filter
                              (fun (k, _) -> not (Stdlib.String.equal k "$id"))
                              pairs))
                     | other -> other)))]));
           ("required", (`List [`String "m"]));
           ("additionalProperties", (`Bool false))] in
-      match !ppx_eds with
-      | [] -> ppx_result
-      | ppx_defs ->
-          (match ppx_result with
-           | `Assoc ppx_pairs ->
-               `Assoc (("$defs", (`Assoc ppx_defs)) ::
-                 (Stdlib.List.filter
-                    (fun (k, _) -> not (Stdlib.String.equal k "$defs"))
-                    ppx_pairs))
-           | other -> other)[@@warning "-32-39"]
-  end[@@ocaml.doc "@inline"][@@merlin.hide ]
-type 'param2 poly2 =
-  | C of 'param2 [@@deriving jsonschema ~variant_as_string]
-include
-  struct
-    let poly2_jsonschema _param2 =
-      let ppx_eds = ref [] in
-      let ppx_result =
-        `Assoc [("anyOf", (`List [`Assoc [("const", (`String "C"))]]))] in
       match !ppx_eds with
       | [] -> ppx_result
       | ppx_defs ->
@@ -1515,7 +1386,7 @@ include
                     | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs
                         ->
                         `Assoc
-                          (("$id", (`String "file://shared/cases.ml:127")) ::
+                          (("$id", (`String "file://shared/cases.ml:110")) ::
                           (Stdlib.List.filter
                              (fun (k, _) -> not (Stdlib.String.equal k "$id"))
                              pairs))
@@ -1604,32 +1475,6 @@ include
                     ppx_pairs))
            | other -> other)[@@warning "-32-39"]
   end[@@ocaml.doc "@inline"][@@merlin.hide ]
-type variant_inline_record =
-  | A of {
-  a: int } 
-  | B of {
-  b: string } [@@deriving jsonschema ~variant_as_string]
-include
-  struct
-    let variant_inline_record_jsonschema =
-      let ppx_eds = ref [] in
-      let ppx_result =
-        `Assoc
-          [("anyOf",
-             (`List
-                [`Assoc [("const", (`String "A"))];
-                `Assoc [("const", (`String "B"))]]))] in
-      match !ppx_eds with
-      | [] -> ppx_result
-      | ppx_defs ->
-          (match ppx_result with
-           | `Assoc ppx_pairs ->
-               `Assoc (("$defs", (`Assoc ppx_defs)) ::
-                 (Stdlib.List.filter
-                    (fun (k, _) -> not (Stdlib.String.equal k "$defs"))
-                    ppx_pairs))
-           | other -> other)[@@warning "-32-39"]
-  end[@@ocaml.doc "@inline"][@@merlin.hide ]
 type inline_record_with_extra_fields =
   | User of {
   name: string ;
@@ -1685,34 +1530,6 @@ include
                     ppx_pairs))
            | other -> other)[@@warning "-32-39"]
   end[@@ocaml.doc "@inline"][@@merlin.hide ]
-type variant_with_payload =
-  | A of int 
-  | B 
-  | C of int * string 
-  | D of (int * string * bool) [@@deriving jsonschema ~variant_as_string]
-include
-  struct
-    let variant_with_payload_jsonschema =
-      let ppx_eds = ref [] in
-      let ppx_result =
-        `Assoc
-          [("anyOf",
-             (`List
-                [`Assoc [("const", (`String "A"))];
-                `Assoc [("const", (`String "B"))];
-                `Assoc [("const", (`String "C"))];
-                `Assoc [("const", (`String "D"))]]))] in
-      match !ppx_eds with
-      | [] -> ppx_result
-      | ppx_defs ->
-          (match ppx_result with
-           | `Assoc ppx_pairs ->
-               `Assoc (("$defs", (`Assoc ppx_defs)) ::
-                 (Stdlib.List.filter
-                    (fun (k, _) -> not (Stdlib.String.equal k "$defs"))
-                    ppx_pairs))
-           | other -> other)[@@warning "-32-39"]
-  end[@@ocaml.doc "@inline"][@@merlin.hide ]
 type t1 =
   | Typ 
   | Class of string [@@deriving jsonschema]
@@ -1740,30 +1557,6 @@ include
                   ("unevaluatedItems", (`Bool false));
                   ("minItems", (`Int 2));
                   ("maxItems", (`Int 2))]]))] in
-      match !ppx_eds with
-      | [] -> ppx_result
-      | ppx_defs ->
-          (match ppx_result with
-           | `Assoc ppx_pairs ->
-               `Assoc (("$defs", (`Assoc ppx_defs)) ::
-                 (Stdlib.List.filter
-                    (fun (k, _) -> not (Stdlib.String.equal k "$defs"))
-                    ppx_pairs))
-           | other -> other)[@@warning "-32-39"]
-  end[@@ocaml.doc "@inline"][@@merlin.hide ]
-type t2 =
-  | Typ 
-  | Class of string [@@deriving jsonschema ~variant_as_string]
-include
-  struct
-    let t2_jsonschema =
-      let ppx_eds = ref [] in
-      let ppx_result =
-        `Assoc
-          [("anyOf",
-             (`List
-                [`Assoc [("const", (`String "Typ"))];
-                `Assoc [("const", (`String "Class"))]]))] in
       match !ppx_eds with
       | [] -> ppx_result
       | ppx_defs ->
@@ -2127,7 +1920,7 @@ include
                     | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs
                         ->
                         `Assoc
-                          (("$id", (`String "file://shared/cases.ml:181")) ::
+                          (("$id", (`String "file://shared/cases.ml:151")) ::
                           (Stdlib.List.filter
                              (fun (k, _) -> not (Stdlib.String.equal k "$id"))
                              pairs))
@@ -2161,7 +1954,7 @@ include
                     | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs
                         ->
                         `Assoc
-                          (("$id", (`String "file://shared/cases.ml:183")) ::
+                          (("$id", (`String "file://shared/cases.ml:153")) ::
                           (Stdlib.List.filter
                              (fun (k, _) -> not (Stdlib.String.equal k "$id"))
                              pairs))
@@ -2262,7 +2055,7 @@ include
       let ppx_result =
         match generic_link_traffic_jsonschema string_jsonschema with
         | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-            `Assoc (("$id", (`String "file://shared/cases.ml:195")) ::
+            `Assoc (("$id", (`String "file://shared/cases.ml:165")) ::
               (Stdlib.List.filter
                  (fun (k, _) -> not (Stdlib.String.equal k "$id")) pairs))
         | other -> other in
@@ -2402,34 +2195,10 @@ include
       let ppx_result =
         match either_jsonschema a b with
         | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-            `Assoc (("$id", (`String "file://shared/cases.ml:205")) ::
+            `Assoc (("$id", (`String "file://shared/cases.ml:175")) ::
               (Stdlib.List.filter
                  (fun (k, _) -> not (Stdlib.String.equal k "$id")) pairs))
         | other -> other in
-      match !ppx_eds with
-      | [] -> ppx_result
-      | ppx_defs ->
-          (match ppx_result with
-           | `Assoc ppx_pairs ->
-               `Assoc (("$defs", (`Assoc ppx_defs)) ::
-                 (Stdlib.List.filter
-                    (fun (k, _) -> not (Stdlib.String.equal k "$defs"))
-                    ppx_pairs))
-           | other -> other)[@@warning "-32-39"]
-  end[@@ocaml.doc "@inline"][@@merlin.hide ]
-type ('a, 'b) direction =
-  | North 
-  | South [@@deriving jsonschema ~variant_as_string]
-include
-  struct
-    let direction_jsonschema _a _b =
-      let ppx_eds = ref [] in
-      let ppx_result =
-        `Assoc
-          [("anyOf",
-             (`List
-                [`Assoc [("const", (`String "North"))];
-                `Assoc [("const", (`String "South"))]]))] in
       match !ppx_eds with
       | [] -> ppx_result
       | ppx_defs ->
@@ -2659,36 +2428,6 @@ include
                    ("unevaluatedItems", (`Bool false));
                    ("minItems", (`Int 2));
                    ("maxItems", (`Int 2))]]))] in
-      match !ppx_eds with
-      | [] -> ppx_result
-      | ppx_defs ->
-          (match ppx_result with
-           | `Assoc ppx_pairs ->
-               `Assoc (("$defs", (`Assoc ppx_defs)) ::
-                 (Stdlib.List.filter
-                    (fun (k, _) -> not (Stdlib.String.equal k "$defs"))
-                    ppx_pairs))
-           | other -> other)[@@warning "-32-39"]
-  end[@@ocaml.doc "@inline"][@@merlin.hide ]
-type described_variant_string =
-  | A [@jsonschema.description "First choice"]
-  | B [@jsonschema.description "Second choice"][@@deriving
-                                                 jsonschema
-                                                   ~variant_as_string]
-include
-  struct
-    let described_variant_string_jsonschema =
-      let ppx_eds = ref [] in
-      let ppx_result =
-        `Assoc
-          [("anyOf",
-             (`List
-                [`Assoc
-                   [("description", (`String "First choice"));
-                   ("const", (`String "A"))];
-                `Assoc
-                  [("description", (`String "Second choice"));
-                  ("const", (`String "B"))]]))] in
       match !ppx_eds with
       | [] -> ppx_result
       | ppx_defs ->
@@ -3185,7 +2924,7 @@ include
                       | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs
                           ->
                           `Assoc
-                            (("$id", (`String "file://shared/cases.ml:345"))
+                            (("$id", (`String "file://shared/cases.ml:307"))
                             ::
                             (Stdlib.List.filter
                                (fun (k, _) ->
@@ -3398,7 +3137,7 @@ include
                     | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs
                         ->
                         `Assoc
-                          (("$id", (`String "file://shared/cases.ml:372")) ::
+                          (("$id", (`String "file://shared/cases.ml:334")) ::
                           (Stdlib.List.filter
                              (fun (k, _) -> not (Stdlib.String.equal k "$id"))
                              pairs))
@@ -3407,7 +3146,7 @@ include
                  ((match self_ref_jsonschema with
                    | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
                        `Assoc
-                         (("$id", (`String "file://shared/cases.ml:372")) ::
+                         (("$id", (`String "file://shared/cases.ml:334")) ::
                          (Stdlib.List.filter
                             (fun (k, _) -> not (Stdlib.String.equal k "$id"))
                             pairs))
@@ -3481,7 +3220,7 @@ include
                              Stdlib.List.mem_assoc "$defs" pairs ->
                              `Assoc
                                (("$id",
-                                  (`String "file://shared/cases.ml:381"))
+                                  (`String "file://shared/cases.ml:343"))
                                ::
                                (Stdlib.List.filter
                                   (fun (k, _) ->
@@ -4124,7 +3863,7 @@ include
                               Stdlib.List.mem_assoc "$defs" pairs ->
                               `Assoc
                                 (("$id",
-                                   (`String "file://shared/cases.ml:469"))
+                                   (`String "file://shared/cases.ml:431"))
                                 ::
                                 (Stdlib.List.filter
                                    (fun (k, _) ->
@@ -4164,7 +3903,7 @@ include
                              Stdlib.List.mem_assoc "$defs" pairs ->
                              `Assoc
                                (("$id",
-                                  (`String "file://shared/cases.ml:466"))
+                                  (`String "file://shared/cases.ml:428"))
                                ::
                                (Stdlib.List.filter
                                   (fun (k, _) ->
@@ -4184,7 +3923,7 @@ include
                              Stdlib.List.mem_assoc "$defs" pairs ->
                              `Assoc
                                (("$id",
-                                  (`String "file://shared/cases.ml:465"))
+                                  (`String "file://shared/cases.ml:427"))
                                ::
                                (Stdlib.List.filter
                                   (fun (k, _) ->
@@ -4340,7 +4079,7 @@ include
                               Stdlib.List.mem_assoc "$defs" pairs ->
                               `Assoc
                                 (("$id",
-                                   (`String "file://shared/cases.ml:478"))
+                                   (`String "file://shared/cases.ml:440"))
                                 ::
                                 (Stdlib.List.filter
                                    (fun (k, _) ->
@@ -4434,7 +4173,7 @@ include
                               Stdlib.List.mem_assoc "$defs" pairs ->
                               `Assoc
                                 (("$id",
-                                   (`String "file://shared/cases.ml:496"))
+                                   (`String "file://shared/cases.ml:458"))
                                 ::
                                 (Stdlib.List.filter
                                    (fun (k, _) ->
@@ -4737,7 +4476,7 @@ module Generated_code_must_qualify_stdlib =
           let ppx_result =
             match wrapper_with_shadowed_stdlib_jsonschema int_jsonschema with
             | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-                `Assoc (("$id", (`String "file://shared/cases.ml:540")) ::
+                `Assoc (("$id", (`String "file://shared/cases.ml:502")) ::
                   (Stdlib.List.filter
                      (fun (k, _) -> not (Stdlib.String.equal k "$id")) pairs))
             | other -> other in
@@ -4801,7 +4540,7 @@ module Nonrec_type_alias =
               let ppx_result =
                 match foo_jsonschema with
                 | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-                    `Assoc (("$id", (`String "file://shared/cases.ml:548"))
+                    `Assoc (("$id", (`String "file://shared/cases.ml:510"))
                       ::
                       (Stdlib.List.filter
                          (fun (k, _) -> not (Stdlib.String.equal k "$id"))
