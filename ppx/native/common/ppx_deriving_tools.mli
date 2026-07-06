@@ -120,14 +120,17 @@ module Conv : sig
       derive_of_core_type ->
       variant ->
       allow_any_constr:(expression -> expression) option ->
-      (expression -> expression) ->
+      (array:expression -> len:expression -> tag:expression -> expression) ->
       expression ->
       expression) ->
     derive_of_variant_case:
       (?is_compact_variants:bool ->
       tag:expression ->
+      array:expression ->
+      len:expression ->
       derive_of_core_type ->
-      (expression option -> expression) ->
+      ((array:expression -> len:expression -> expression) option ->
+      expression) ->
       variant_case ->
       allow_any_constr:(expression -> expression) option ->
       expression ->

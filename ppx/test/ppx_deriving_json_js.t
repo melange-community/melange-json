@@ -1532,19 +1532,11 @@
            else
              Melange_json.of_json_error ~json:x
                "expected a non empty JSON array"
-         else if Stdlib.( = ) (Js.typeof x) "string" then (
-           let array = (Obj.magic [||] : Js.Json.t array) in
-           let len = 0 in
-           ignore (array, len);
+         else if Stdlib.( = ) (Js.typeof x) "string" then
            if Stdlib.( = ) (Obj.magic x : string) "A" then A
-           else if Stdlib.( = ) (Obj.magic x : string) "B" then
-             if Stdlib.( <> ) len 2 then
-               Melange_json.of_json_error ~json:x
-                 "expected a JSON array of length 2"
-             else B (int_of_json (Js.Array.unsafe_get array 1))
            else
              Melange_json.of_json_error ~json:x
-               "expected [\"B\", _] or \"A\"")
+               "expected [\"B\", _] or \"A\""
          else
            Melange_json.of_json_error ~json:x
              "expected a non empty JSON array"

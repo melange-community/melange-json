@@ -531,14 +531,20 @@ module Conv = struct
          derive_of_core_type ->
          variant ->
          allow_any_constr:(expression -> expression) option ->
-         (expression -> expression) ->
+         (array:expression ->
+         len:expression ->
+         tag:expression ->
+         expression) ->
          expression ->
          expression)
       ~(derive_of_variant_case :
          ?is_compact_variants:bool ->
          tag:expression ->
+         array:expression ->
+         len:expression ->
          derive_of_core_type ->
-         (expression option -> expression) ->
+         ((array:expression -> len:expression -> expression) option ->
+         expression) ->
          variant_case ->
          allow_any_constr:(expression -> expression) option ->
          expression ->
@@ -589,20 +595,21 @@ module Conv = struct
              ~init:
                (match allow_any_constr with
                | Some allow_any_constr ->
-                   (fun _tag -> allow_any_constr x), []
+                   (fun ~array:_ ~len:_ ~tag:_ -> allow_any_constr x), []
                | None ->
                    let error_message =
                      Printf.sprintf "expected %s"
                        (get_constructor_names ~compact cs
                        |> String.concat ~sep:" or ")
                    in
-                   ( (fun _tag ->
+                   ( (fun ~array:_ ~len:_ ~tag:_ ->
                        [%expr
                          Melange_json.of_json_error ~json:[%e x]
                            [%e estring ~loc error_message]]),
                      [] ))
              ~f:(fun (next, cases) c ->
-               let make (n : label loc) arg =
+               let make ~array ~len (n : label loc) build =
+                 let arg = Option.map (fun b -> b ~array ~len) build in
                  pexp_construct (map_loc lident n) ~loc:n.loc arg
                in
                let ctx = Vcs_ctx_variant c in
@@ -615,10 +622,11 @@ module Conv = struct
                      in
                      Vcs_record (n, t)
                    in
-                   let next tag =
+                   let next ~array ~len ~tag =
                      derive_of_variant_case ~is_compact_variants:compact
-                       ~tag self#derive_of_core_type (make n) t
-                       ~allow_any_constr (next tag)
+                       ~tag ~array ~len self#derive_of_core_type
+                       (make ~array ~len n) t ~allow_any_constr
+                       (next ~array ~len ~tag)
                    in
                    next, t :: cases
                | Pcstr_tuple ts ->
@@ -628,10 +636,11 @@ module Conv = struct
                      in
                      Vcs_tuple (n, t)
                    in
-                   let next tag =
+                   let next ~array ~len ~tag =
                      derive_of_variant_case ~is_compact_variants:compact
-                       ~tag self#derive_of_core_type (make n) case
-                       ~allow_any_constr (next tag)
+                       ~tag ~array ~len self#derive_of_core_type
+                       (make ~array ~len n) case ~allow_any_constr
+                       (next ~array ~len ~tag)
                    in
                    next, case :: cases)
          in
@@ -673,7 +682,7 @@ module Conv = struct
              ~init:
                (match allow_any_constr with
                | Some allow_any_constr ->
-                   (fun _tag -> allow_any_constr x), []
+                   (fun ~array:_ ~len:_ ~tag:_ -> allow_any_constr x), []
                | None ->
                    let error_message =
                      Printf.sprintf "expected %s"
@@ -682,7 +691,7 @@ module Conv = struct
                             ~f:(get_variant_names ~compact ~loc)
                        |> String.concat ~sep:" or ")
                    in
-                   ( (fun _tag ->
+                   ( (fun ~array:_ ~len:_ ~tag:_ ->
                        [%expr
                          Melange_json.of_json_unexpected_variant ~json:x
                            [%e estring ~loc error_message]]),
@@ -691,17 +700,23 @@ module Conv = struct
                let ctx = Vcs_ctx_polyvariant c in
                match r with
                | `Rtag (n, ts) ->
-                   let make arg = pexp_variant ~loc:n.loc n.txt arg in
+                   let make ~array ~len build =
+                     let arg =
+                       Option.map (fun b -> b ~array ~len) build
+                     in
+                     pexp_variant ~loc:n.loc n.txt arg
+                   in
                    let case =
                      let t =
                        { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
                      in
                      Vcs_tuple (n, t)
                    in
-                   let next tag =
+                   let next ~array ~len ~tag =
                      derive_of_variant_case ~is_compact_variants:compact
-                       ~tag self#derive_of_core_type make case
-                       ~allow_any_constr (next tag)
+                       ~tag ~array ~len self#derive_of_core_type
+                       (make ~array ~len) case ~allow_any_constr
+                       (next ~array ~len ~tag)
                    in
                    next, case :: cases
                | `Rinherit (n, ts) ->
@@ -709,14 +724,14 @@ module Conv = struct
                      self#derive_type_ref ~loc self#name n ts x
                    in
                    let t = ptyp_variant ~loc cs Closed None in
-                   let next tag =
+                   let next ~array ~len ~tag =
                      [%expr
                        match [%e maybe_e] with
                        | e -> (e :> [%t t])
                        | exception
                            Melange_json.Of_json_error
                              (Melange_json.Unexpected_variant _) ->
-                           [%e next tag]]
+                           [%e next ~array ~len ~tag]]
                    in
                    next, cases)
          in

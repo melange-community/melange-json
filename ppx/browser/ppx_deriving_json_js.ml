@@ -100,18 +100,37 @@ module Of_json = struct
           [%e estring ~loc (sprintf "expected a JSON object")]]
 
   let ensure_json_array_len ~loc ~allow_any_constr ~else_ n len x =
-    [%expr
-      if Stdlib.( <> ) [%e len] [%e eint ~loc n] then
-        [%e
-          match allow_any_constr with
-          | Some allow_any_constr -> allow_any_constr x
-          | None ->
-              [%expr
-                Melange_json.of_json_error ~json:[%e x]
-                  [%e
-                    estring ~loc
-                      (sprintf "expected a JSON array of length %i" n)]]]
-      else [%e else_]]
+    let error =
+      match allow_any_constr with
+      | Some allow_any_constr -> allow_any_constr x
+      | None ->
+          [%expr
+            Melange_json.of_json_error ~json:[%e x]
+              [%e
+                estring ~loc
+                  (sprintf "expected a JSON array of length %i" n)]]
+    in
+    let runtime () =
+      [%expr
+        if Stdlib.( <> ) [%e len] [%e eint ~loc n] then [%e error]
+        else [%e else_]]
+    in
+    match len.pexp_desc with
+    | Pexp_constant (Pconst_integer (s, None)) -> (
+        match int_of_string_opt s with
+        | Some c -> if c <> n then error else else_
+        | None -> runtime ())
+    | _ -> runtime ()
+
+  (* True when [len] is a compile-time constant that cannot equal [n]. A
+     constructor needing an [n]-element array is then unreachable for this
+     input shape — e.g. the bare-string compact form passes a literal [0], so
+     no payload constructor can match and we can drop its tag check entirely. *)
+  let len_never n len =
+    match len.pexp_desc with
+    | Pexp_constant (Pconst_integer (s, None)) -> (
+        match int_of_string_opt s with Some c -> c <> n | None -> false)
+    | _ -> false
 
   let derive_of_tuple derive t x =
     let loc = t.tpl_loc in
@@ -170,12 +189,17 @@ module Of_json = struct
     in
     let string_branch =
       if is_compact_variants then
+        (* The string form is a bare compact-variant tag: there is no array
+           payload, so pass empty [array]/[len] literals straight to [body]
+           instead of binding them. An all-nullary variant simply never
+           references them (no dummy bindings, no [ignore] needed). *)
         [%expr
-          if Stdlib.( = ) (Js.typeof [%e x]) "string" then (
-            let array = (Obj.magic [||] : Js.Json.t array) in
-            let len = 0 in
-            ignore (array, len);
-            [%e body [%expr (Obj.magic [%e x] : string)]])
+          if Stdlib.( = ) (Js.typeof [%e x]) "string" then
+            [%e
+              body
+                ~array:[%expr (Obj.magic [||] : Js.Json.t array)]
+                ~len:[%expr 0]
+                ~tag:[%expr (Obj.magic [%e x] : string)]]
           else [%e not_array_error]]
       else not_array_error
     in
@@ -186,7 +210,9 @@ module Of_json = struct
         if Stdlib.( > ) len 0 then
           let tag = Js.Array.unsafe_get array 0 in
           if Stdlib.( = ) (Js.typeof tag) "string" then
-            [%e body [%expr (Obj.magic tag : string)]]
+            [%e
+              body ~array:[%expr array] ~len:[%expr len]
+                ~tag:[%expr (Obj.magic tag : string)]]
           else
             [%e
               match allow_any_constr with
@@ -203,7 +229,7 @@ module Of_json = struct
      [tag] / [len] / [array] vars (see [derive_of_variant]). Wire shapes:
      bare string ↔ payload=None; single-element array ↔ payload=Some[];
      n-element array ↔ payload=Some(rest). *)
-  let build_unknown_variant_case_record ~loc ~tag =
+  let build_unknown_variant_case_record ~loc ~tag ~array ~len =
     [%expr
       let tag_s = [%e tag] in
       let payload =
@@ -211,7 +237,7 @@ module Of_json = struct
         else if Stdlib.( = ) len 1 then Stdlib.Option.Some []
         else
           let rest =
-            Stdlib.Array.sub array 1 (Stdlib.( - ) len 1)
+            Stdlib.Array.sub [%e array] 1 (Stdlib.( - ) [%e len] 1)
             |> Stdlib.Array.to_list
             |> Stdlib.List.map (fun j -> (Obj.magic j : Melange_json.t))
           in
@@ -219,8 +245,8 @@ module Of_json = struct
       in
       ({ tag = tag_s; payload } : Melange_json.unknown_variant_case)]
 
-  let derive_of_variant_case ?(is_compact_variants = false) ~tag derive
-      make c ~allow_any_constr next =
+  let derive_of_variant_case ?(is_compact_variants = false) ~tag ~array
+      ~len derive make c ~allow_any_constr next =
     let _ = derive in
     let _ = allow_any_constr in
     match c with
@@ -248,21 +274,24 @@ module Of_json = struct
               "[@json.catch_all] inline record must have exactly two \
                fields named `tag` and `payload` (in that order), with \
                types `string` and `Melange_json.t list option`")
+    | Vcs_record (_, _) when len_never 2 len ->
+        (* Record variants need [["Name", {...}]] (length 2); unreachable for
+           the bare-string form, so skip straight to the next case. *)
+        next
     | Vcs_record (n, r) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name r.rcd_ctx) in
         let make ~loc fs =
           let fs = List.map fs ~f:(fun (n, v) -> map_loc lident n, v) in
-          make (Some (pexp_record ~loc fs None))
+          make (Some (fun ~array:_ ~len:_ -> pexp_record ~loc fs None))
         in
         [%expr
           if Stdlib.( = ) [%e tag] [%e estring ~loc:n.loc n.txt] then
             [%e
-              ensure_json_array_len ~loc ~allow_any_constr 2 [%expr len]
-                [%expr x]
+              ensure_json_array_len ~loc ~allow_any_constr 2 len [%expr x]
                 ~else_:
                   [%expr
-                    let fs = Js.Array.unsafe_get array 1 in
+                    let fs = Js.Array.unsafe_get [%e array] 1 in
                     [%e ensure_json_object ~loc [%expr fs]];
                     [%e
                       let allow_extra_fields =
@@ -282,19 +311,23 @@ module Of_json = struct
             if Stdlib.( = ) [%e tag] [%e estring ~loc:n.loc n.txt] then
               [%e make None]
             else [%e next]]
+        else if len_never (arity + 1) len then
+          (* Needs an [(arity + 1)]-element array; unreachable for the
+             bare-string form, so skip straight to the next case. *)
+          next
         else
           [%expr
             if Stdlib.( = ) [%e tag] [%e estring ~loc:n.loc n.txt] then
               [%e
                 ensure_json_array_len ~loc ~allow_any_constr (arity + 1)
-                  [%expr len] [%expr x]
+                  len [%expr x]
                   ~else_:
                     (if Stdlib.( = ) arity 0 then make None
                      else
                        make
                          (Some
-                            (build_tuple ~loc derive 1 t.tpl_types
-                               [%expr array])))]
+                            (fun ~array ~len:_ ->
+                              build_tuple ~loc derive 1 t.tpl_types array)))]
             else [%e next]]
 
   let is_allow_any_constr vcs =
