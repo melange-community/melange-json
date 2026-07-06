@@ -915,14 +915,14 @@ include
            | other -> other)[@@warning "-32-39"]
   end[@@ocaml.doc "@inline"][@@merlin.hide ]
 type node_a = {
-  b: node_b option ;
-  c: node_c option }
+  a: node_b option ;
+  b: node_c option }
 and node_b = {
-  a: node_a option ;
-  c: node_c option }
+  c: node_a option ;
+  d: node_c option }
 and node_c = {
-  a: node_a option ;
-  b: node_b option }[@@deriving jsonschema]
+  g: node_a option ;
+  f: node_b option }[@@deriving jsonschema]
 include
   struct
     let node_a_jsonschema =
@@ -932,39 +932,39 @@ include
           [("type", (`String "object"));
           ("properties",
             (`Assoc
-               [("c",
+               [("b",
                   (option_jsonschema
                      (`Assoc [("$ref", (`String "#/$defs/node_c"))])));
-               ("b",
+               ("a",
                  (option_jsonschema
                     (`Assoc [("$ref", (`String "#/$defs/node_b"))])))]));
-          ("required", (`List [`String "c"; `String "b"]));
+          ("required", (`List [`String "b"; `String "a"]));
           ("additionalProperties", (`Bool false))] in
       let ppx_body_node_b =
         `Assoc
           [("type", (`String "object"));
           ("properties",
             (`Assoc
-               [("c",
+               [("d",
                   (option_jsonschema
                      (`Assoc [("$ref", (`String "#/$defs/node_c"))])));
-               ("a",
+               ("c",
                  (option_jsonschema
                     (`Assoc [("$ref", (`String "#/$defs/node_a"))])))]));
-          ("required", (`List [`String "c"; `String "a"]));
+          ("required", (`List [`String "d"; `String "c"]));
           ("additionalProperties", (`Bool false))] in
       let ppx_body_node_c =
         `Assoc
           [("type", (`String "object"));
           ("properties",
             (`Assoc
-               [("b",
+               [("f",
                   (option_jsonschema
                      (`Assoc [("$ref", (`String "#/$defs/node_b"))])));
-               ("a",
+               ("g",
                  (option_jsonschema
                     (`Assoc [("$ref", (`String "#/$defs/node_a"))])))]));
-          ("required", (`List [`String "b"; `String "a"]));
+          ("required", (`List [`String "f"; `String "g"]));
           ("additionalProperties", (`Bool false))] in
       `Assoc
         [("$defs",
@@ -980,39 +980,39 @@ include
           [("type", (`String "object"));
           ("properties",
             (`Assoc
-               [("c",
+               [("b",
                   (option_jsonschema
                      (`Assoc [("$ref", (`String "#/$defs/node_c"))])));
-               ("b",
+               ("a",
                  (option_jsonschema
                     (`Assoc [("$ref", (`String "#/$defs/node_b"))])))]));
-          ("required", (`List [`String "c"; `String "b"]));
+          ("required", (`List [`String "b"; `String "a"]));
           ("additionalProperties", (`Bool false))] in
       let ppx_body_node_b =
         `Assoc
           [("type", (`String "object"));
           ("properties",
             (`Assoc
-               [("c",
+               [("d",
                   (option_jsonschema
                      (`Assoc [("$ref", (`String "#/$defs/node_c"))])));
-               ("a",
+               ("c",
                  (option_jsonschema
                     (`Assoc [("$ref", (`String "#/$defs/node_a"))])))]));
-          ("required", (`List [`String "c"; `String "a"]));
+          ("required", (`List [`String "d"; `String "c"]));
           ("additionalProperties", (`Bool false))] in
       let ppx_body_node_c =
         `Assoc
           [("type", (`String "object"));
           ("properties",
             (`Assoc
-               [("b",
+               [("f",
                   (option_jsonschema
                      (`Assoc [("$ref", (`String "#/$defs/node_b"))])));
-               ("a",
+               ("g",
                  (option_jsonschema
                     (`Assoc [("$ref", (`String "#/$defs/node_a"))])))]));
-          ("required", (`List [`String "b"; `String "a"]));
+          ("required", (`List [`String "f"; `String "g"]));
           ("additionalProperties", (`Bool false))] in
       `Assoc
         [("$defs",
@@ -1028,39 +1028,39 @@ include
           [("type", (`String "object"));
           ("properties",
             (`Assoc
-               [("c",
+               [("b",
                   (option_jsonschema
                      (`Assoc [("$ref", (`String "#/$defs/node_c"))])));
-               ("b",
+               ("a",
                  (option_jsonschema
                     (`Assoc [("$ref", (`String "#/$defs/node_b"))])))]));
-          ("required", (`List [`String "c"; `String "b"]));
+          ("required", (`List [`String "b"; `String "a"]));
           ("additionalProperties", (`Bool false))] in
       let ppx_body_node_b =
         `Assoc
           [("type", (`String "object"));
           ("properties",
             (`Assoc
-               [("c",
+               [("d",
                   (option_jsonschema
                      (`Assoc [("$ref", (`String "#/$defs/node_c"))])));
-               ("a",
+               ("c",
                  (option_jsonschema
                     (`Assoc [("$ref", (`String "#/$defs/node_a"))])))]));
-          ("required", (`List [`String "c"; `String "a"]));
+          ("required", (`List [`String "d"; `String "c"]));
           ("additionalProperties", (`Bool false))] in
       let ppx_body_node_c =
         `Assoc
           [("type", (`String "object"));
           ("properties",
             (`Assoc
-               [("b",
+               [("f",
                   (option_jsonschema
                      (`Assoc [("$ref", (`String "#/$defs/node_b"))])));
-               ("a",
+               ("g",
                  (option_jsonschema
                     (`Assoc [("$ref", (`String "#/$defs/node_a"))])))]));
-          ("required", (`List [`String "b"; `String "a"]));
+          ("required", (`List [`String "f"; `String "g"]));
           ("additionalProperties", (`Bool false))] in
       `Assoc
         [("$defs",

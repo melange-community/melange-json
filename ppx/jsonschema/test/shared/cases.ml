@@ -83,10 +83,10 @@ and stmt =
 type alpha = { x : int }
 and beta = { y : string } [@@deriving jsonschema]
 
-type node_a = { b : node_b option; c : node_c option }
-and node_b = { a : node_a option; c : node_c option }
+type node_a = { a : node_b option; b : node_c option }
+and node_b = { c : node_a option; d : node_c option }
 
-and node_c = { a : node_a option; b : node_b option }
+and node_c = { g : node_a option; f : node_b option }
 [@@deriving jsonschema]
 
 type recursive_tuple =
