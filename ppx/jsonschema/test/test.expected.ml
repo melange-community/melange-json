@@ -98,7 +98,7 @@ include
                     | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs
                         ->
                         `Assoc
-                          (("$id", (`String "file://shared/cases.ml:21")) ::
+                          (("$id", (`String "file://shared/cases.ml:16")) ::
                           (Stdlib.List.filter
                              (fun (k, _) -> not (Stdlib.String.equal k "$id"))
                              pairs))
@@ -106,7 +106,7 @@ include
                ("m",
                  ((match Mod1.m_1_jsonschema with
                    | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-                       `Assoc (("$id", (`String "file://shared/cases.ml:20"))
+                       `Assoc (("$id", (`String "file://shared/cases.ml:16"))
                          ::
                          (Stdlib.List.filter
                             (fun (k, _) -> not (Stdlib.String.equal k "$id"))
@@ -362,7 +362,7 @@ include
                   ("maxItems", (`Int 2))];
                 (match poly_kind_jsonschema with
                  | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-                     `Assoc (("$id", (`String "file://shared/cases.ml:61"))
+                     `Assoc (("$id", (`String "file://shared/cases.ml:39"))
                        ::
                        (Stdlib.List.filter
                           (fun (k, _) -> not (Stdlib.String.equal k "$id"))
@@ -395,7 +395,7 @@ include
                 `Assoc [("const", (`String "Second_one"))];
                 (match poly_kind_as_string_jsonschema with
                  | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-                     `Assoc (("$id", (`String "file://shared/cases.ml:67"))
+                     `Assoc (("$id", (`String "file://shared/cases.ml:43"))
                        ::
                        (Stdlib.List.filter
                           (fun (k, _) -> not (Stdlib.String.equal k "$id"))
@@ -472,7 +472,7 @@ include
                ("kind_f",
                  ((match kind_jsonschema with
                    | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-                       `Assoc (("$id", (`String "file://shared/cases.ml:72"))
+                       `Assoc (("$id", (`String "file://shared/cases.ml:48"))
                          ::
                          (Stdlib.List.filter
                             (fun (k, _) -> not (Stdlib.String.equal k "$id"))
@@ -1125,7 +1125,7 @@ include
       let ppx_result =
         match tree_jsonschema with
         | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-            `Assoc (("$id", (`String "file://shared/cases.ml:140")) ::
+            `Assoc (("$id", (`String "file://shared/cases.ml:97")) ::
               (Stdlib.List.filter
                  (fun (k, _) -> not (Stdlib.String.equal k "$id")) pairs))
         | other -> other in
@@ -1149,7 +1149,7 @@ include
         list_jsonschema
           (match event_jsonschema with
            | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-               `Assoc (("$id", (`String "file://shared/cases.ml:141")) ::
+               `Assoc (("$id", (`String "file://shared/cases.ml:98")) ::
                  (Stdlib.List.filter
                     (fun (k, _) -> not (Stdlib.String.equal k "$id")) pairs))
            | other -> other) in
@@ -1174,7 +1174,7 @@ include
           (list_jsonschema
              (match event_jsonschema with
               | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-                  `Assoc (("$id", (`String "file://shared/cases.ml:142")) ::
+                  `Assoc (("$id", (`String "file://shared/cases.ml:99")) ::
                     (Stdlib.List.filter
                        (fun (k, _) -> not (Stdlib.String.equal k "$id"))
                        pairs))
@@ -1202,7 +1202,7 @@ include
             (`List
                [(match event_jsonschema with
                  | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-                     `Assoc (("$id", (`String "file://shared/cases.ml:143"))
+                     `Assoc (("$id", (`String "file://shared/cases.ml:100"))
                        ::
                        (Stdlib.List.filter
                           (fun (k, _) -> not (Stdlib.String.equal k "$id"))
@@ -1232,7 +1232,7 @@ include
         list_jsonschema
           (match event_comment_jsonschema with
            | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-               `Assoc (("$id", (`String "file://shared/cases.ml:144")) ::
+               `Assoc (("$id", (`String "file://shared/cases.ml:101")) ::
                  (Stdlib.List.filter
                     (fun (k, _) -> not (Stdlib.String.equal k "$id")) pairs))
            | other -> other) in
@@ -1262,7 +1262,7 @@ include
                     | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs
                         ->
                         `Assoc
-                          (("$id", (`String "file://shared/cases.ml:145")) ::
+                          (("$id", (`String "file://shared/cases.ml:102")) ::
                           (Stdlib.List.filter
                              (fun (k, _) -> not (Stdlib.String.equal k "$id"))
                              pairs))
@@ -1291,7 +1291,7 @@ include
         array_jsonschema
           (match events_jsonschema with
            | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-               `Assoc (("$id", (`String "file://shared/cases.ml:146")) ::
+               `Assoc (("$id", (`String "file://shared/cases.ml:103")) ::
                  (Stdlib.List.filter
                     (fun (k, _) -> not (Stdlib.String.equal k "$id")) pairs))
            | other -> other) in
@@ -1356,7 +1356,7 @@ include
                     | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs
                         ->
                         `Assoc
-                          (("$id", (`String "file://shared/cases.ml:149")) ::
+                          (("$id", (`String "file://shared/cases.ml:106")) ::
                           (Stdlib.List.filter
                              (fun (k, _) -> not (Stdlib.String.equal k "$id"))
                              pairs))
@@ -1515,7 +1515,7 @@ include
                     | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs
                         ->
                         `Assoc
-                          (("$id", (`String "file://shared/cases.ml:167")) ::
+                          (("$id", (`String "file://shared/cases.ml:127")) ::
                           (Stdlib.List.filter
                              (fun (k, _) -> not (Stdlib.String.equal k "$id"))
                              pairs))
@@ -2127,7 +2127,7 @@ include
                     | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs
                         ->
                         `Assoc
-                          (("$id", (`String "file://shared/cases.ml:218")) ::
+                          (("$id", (`String "file://shared/cases.ml:181")) ::
                           (Stdlib.List.filter
                              (fun (k, _) -> not (Stdlib.String.equal k "$id"))
                              pairs))
@@ -2161,7 +2161,7 @@ include
                     | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs
                         ->
                         `Assoc
-                          (("$id", (`String "file://shared/cases.ml:219")) ::
+                          (("$id", (`String "file://shared/cases.ml:183")) ::
                           (Stdlib.List.filter
                              (fun (k, _) -> not (Stdlib.String.equal k "$id"))
                              pairs))
@@ -2262,7 +2262,7 @@ include
       let ppx_result =
         match generic_link_traffic_jsonschema string_jsonschema with
         | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-            `Assoc (("$id", (`String "file://shared/cases.ml:231")) ::
+            `Assoc (("$id", (`String "file://shared/cases.ml:195")) ::
               (Stdlib.List.filter
                  (fun (k, _) -> not (Stdlib.String.equal k "$id")) pairs))
         | other -> other in
@@ -2402,7 +2402,7 @@ include
       let ppx_result =
         match either_jsonschema a b with
         | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-            `Assoc (("$id", (`String "file://shared/cases.ml:247")) ::
+            `Assoc (("$id", (`String "file://shared/cases.ml:205")) ::
               (Stdlib.List.filter
                  (fun (k, _) -> not (Stdlib.String.equal k "$id")) pairs))
         | other -> other in
@@ -2703,8 +2703,8 @@ include
 type doc_comment_record =
   {
   name: string [@ocaml.doc " The user's full name "];
-  age: int [@ocaml.doc " The user's age "]}[@@ocaml.doc " A user object "]
-[@@deriving jsonschema ~ocaml_doc]
+  age: int [@ocaml.doc " The user's age "]}[@@deriving jsonschema ~ocaml_doc]
+[@@ocaml.doc " A user object "]
 include
   struct
     let doc_comment_record_jsonschema =
@@ -2743,9 +2743,8 @@ include
   end[@@ocaml.doc "@inline"][@@merlin.hide ]
 type doc_comment_disabled =
   {
-  name: string [@ocaml.doc " The user's full name "]}[@@ocaml.doc
-                                                       " A user object "]
-[@@deriving jsonschema]
+  name: string [@ocaml.doc " The user's full name "]}[@@deriving jsonschema]
+[@@ocaml.doc " A user object "]
 include
   struct
     let doc_comment_disabled_jsonschema =
@@ -3186,7 +3185,7 @@ include
                       | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs
                           ->
                           `Assoc
-                            (("$id", (`String "file://shared/cases.ml:361"))
+                            (("$id", (`String "file://shared/cases.ml:345"))
                             ::
                             (Stdlib.List.filter
                                (fun (k, _) ->
@@ -3399,7 +3398,7 @@ include
                     | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs
                         ->
                         `Assoc
-                          (("$id", (`String "file://shared/cases.ml:380")) ::
+                          (("$id", (`String "file://shared/cases.ml:372")) ::
                           (Stdlib.List.filter
                              (fun (k, _) -> not (Stdlib.String.equal k "$id"))
                              pairs))
@@ -3408,7 +3407,7 @@ include
                  ((match self_ref_jsonschema with
                    | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
                        `Assoc
-                         (("$id", (`String "file://shared/cases.ml:379")) ::
+                         (("$id", (`String "file://shared/cases.ml:372")) ::
                          (Stdlib.List.filter
                             (fun (k, _) -> not (Stdlib.String.equal k "$id"))
                             pairs))
@@ -3482,7 +3481,7 @@ include
                              Stdlib.List.mem_assoc "$defs" pairs ->
                              `Assoc
                                (("$id",
-                                  (`String "file://shared/cases.ml:388"))
+                                  (`String "file://shared/cases.ml:381"))
                                ::
                                (Stdlib.List.filter
                                   (fun (k, _) ->
@@ -4109,7 +4108,7 @@ include
                               Stdlib.List.mem_assoc "$defs" pairs ->
                               `Assoc
                                 (("$id",
-                                   (`String "file://shared/cases.ml:448"))
+                                   (`String "file://shared/cases.ml:469"))
                                 ::
                                 (Stdlib.List.filter
                                    (fun (k, _) ->
@@ -4149,7 +4148,7 @@ include
                              Stdlib.List.mem_assoc "$defs" pairs ->
                              `Assoc
                                (("$id",
-                                  (`String "file://shared/cases.ml:445"))
+                                  (`String "file://shared/cases.ml:466"))
                                ::
                                (Stdlib.List.filter
                                   (fun (k, _) ->
@@ -4169,7 +4168,7 @@ include
                              Stdlib.List.mem_assoc "$defs" pairs ->
                              `Assoc
                                (("$id",
-                                  (`String "file://shared/cases.ml:444"))
+                                  (`String "file://shared/cases.ml:465"))
                                ::
                                (Stdlib.List.filter
                                   (fun (k, _) ->
@@ -4322,7 +4321,7 @@ include
                               Stdlib.List.mem_assoc "$defs" pairs ->
                               `Assoc
                                 (("$id",
-                                   (`String "file://shared/cases.ml:458"))
+                                   (`String "file://shared/cases.ml:478"))
                                 ::
                                 (Stdlib.List.filter
                                    (fun (k, _) ->
@@ -4409,7 +4408,7 @@ include
                               Stdlib.List.mem_assoc "$defs" pairs ->
                               `Assoc
                                 (("$id",
-                                   (`String "file://shared/cases.ml:467"))
+                                   (`String "file://shared/cases.ml:496"))
                                 ::
                                 (Stdlib.List.filter
                                    (fun (k, _) ->
@@ -4712,7 +4711,7 @@ module Generated_code_must_qualify_stdlib =
           let ppx_result =
             match wrapper_with_shadowed_stdlib_jsonschema int_jsonschema with
             | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-                `Assoc (("$id", (`String "file://shared/cases.ml:514")) ::
+                `Assoc (("$id", (`String "file://shared/cases.ml:540")) ::
                   (Stdlib.List.filter
                      (fun (k, _) -> not (Stdlib.String.equal k "$id")) pairs))
             | other -> other in
@@ -4776,7 +4775,7 @@ module Nonrec_type_alias =
               let ppx_result =
                 match foo_jsonschema with
                 | `Assoc pairs when Stdlib.List.mem_assoc "$defs" pairs ->
-                    `Assoc (("$id", (`String "file://shared/cases.ml:524"))
+                    `Assoc (("$id", (`String "file://shared/cases.ml:548"))
                       ::
                       (Stdlib.List.filter
                          (fun (k, _) -> not (Stdlib.String.equal k "$id"))

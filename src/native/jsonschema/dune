@@ -1,6 +1,7 @@
 ; Native runtime for [@@deriving jsonschema] (part of the melange-json-native package).
 ; classify/declassify are native-specific (identity); the platform-neutral sources
 ; are shared from the Melange runtime in ../../jsonschema via copy_files.
+
 (library
  (name ppx_deriving_jsonschema_runtime)
  (public_name melange-json-native.jsonschema)

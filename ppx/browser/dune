@@ -35,5 +35,6 @@
 
 ; Shared jsonschema deriver sources (see ppx/native/dune for rationale). Compiled
 ; into melange-json.ppx so [@@deriving jsonschema] works on the Melange ppx too.
+
 (copy_files#
  (files ../jsonschema/{attrs,schema,ppx_deriving_jsonschema}.{ml,mli}))
