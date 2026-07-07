@@ -23,16 +23,6 @@ module Lid = struct
              ~init:(Lident hd) tl)
 end
 
-let td_attr_json_compact_variants =
-  Attribute.get
-    (Attribute.declare "json.compact_variants"
-       Attribute.Context.type_declaration
-       Ast_pattern.(pstr nil)
-       ())
-
-let is_compact_variants td =
-  Option.is_some (td_attr_json_compact_variants td)
-
 let not_supportedf ~loc fmt =
   ksprintf (Location.raise_errorf ~loc "%s are not supported") fmt
 
@@ -51,22 +41,6 @@ let gen_bindings ~loc prefix n =
          let patt = ppat_var ~loc { loc; txt = id } in
          let expr = pexp_ident ~loc { loc; txt = lident id } in
          patt, expr))
-
-let gen_tuple ~loc prefix n =
-  let ps, es = gen_bindings ~loc prefix n in
-  ps, pexp_tuple ~loc es
-
-let gen_record ~loc prefix fs =
-  let ps, es =
-    List.split
-      (List.map fs ~f:(fun (n, _attrs, _t) ->
-           let id = sprintf "%s_%s" prefix n.txt in
-           let patt = ppat_var ~loc { loc = n.loc; txt = id } in
-           let expr = pexp_ident ~loc { loc = n.loc; txt = lident id } in
-           (map_loc lident n, patt), expr))
-  in
-  let ns, ps = List.split ps in
-  ps, pexp_record ~loc (List.combine ns es) None
 
 let gen_pat_tuple ~loc prefix n =
   let patts, exprs = gen_bindings ~loc prefix n in
@@ -144,14 +118,18 @@ class virtual deriving =
 
 let register ?deps deriving =
   let args = Deriving.Args.empty in
+  let attributes = Json_attrs.attributes in
   let str_type_decl = deriving#str_type_decl in
   let sig_type_decl = deriving#sig_type_decl in
   Deriving.add deriving#name ~extension:deriving#extension
-    ~str_type_decl:(Deriving.Generator.V2.make ?deps args str_type_decl)
-    ~sig_type_decl:(Deriving.Generator.V2.make ?deps args sig_type_decl)
+    ~str_type_decl:
+      (Deriving.Generator.V2.make ?deps ~attributes args str_type_decl)
+    ~sig_type_decl:
+      (Deriving.Generator.V2.make ?deps ~attributes args sig_type_decl)
 
 let register_combined ?deps name derivings =
   let args = Deriving.Args.empty in
+  let attributes = Json_attrs.attributes in
   let str_type_decl ~ctxt bindings =
     List.fold_left derivings ~init:[] ~f:(fun str d ->
         d#str_type_decl ~ctxt bindings @ str)
@@ -161,8 +139,10 @@ let register_combined ?deps name derivings =
         d#sig_type_decl ~ctxt bindings @ str)
   in
   Deriving.add name
-    ~str_type_decl:(Deriving.Generator.V2.make ?deps args str_type_decl)
-    ~sig_type_decl:(Deriving.Generator.V2.make ?deps args sig_type_decl)
+    ~str_type_decl:
+      (Deriving.Generator.V2.make ?deps ~attributes args str_type_decl)
+    ~sig_type_decl:
+      (Deriving.Generator.V2.make ?deps ~attributes args sig_type_decl)
 
 module Schema = struct
   let repr_row_field field =
@@ -445,21 +425,12 @@ module Schema = struct
     end
 end
 
-let attr_json_name ctx =
-  Attribute.declare "json.name" ctx
-    Ast_pattern.(single_expr_payload (estring __'))
-    (fun x -> x)
-
-let attr_json_name_cd =
-  attr_json_name Attribute.Context.constructor_declaration
-
-let attr_json_name_rtag = attr_json_name Attribute.Context.rtag
-
 let rec get_variant_names ?(compact = false) ~loc c =
   match Schema.repr_row_field c with
   | `Rtag (name, ts) ->
       let name =
-        Option.value ~default:name (Attribute.get attr_json_name_rtag c)
+        Option.value ~default:name
+          (Attribute.get Json_attrs.attr_json_name_rtag c)
       in
       [
         (if compact && ts = [] then Printf.sprintf {|"%s"|} name.txt
@@ -477,7 +448,7 @@ let get_constructor_names ?(compact = false) cs =
   List.map cs ~f:(fun c ->
       let name =
         Option.value ~default:c.pcd_name
-          (Attribute.get attr_json_name_cd c)
+          (Attribute.get Json_attrs.attr_json_name_cd c)
       in
       match c.pcd_args with
       | Pcstr_record _fs -> Printf.sprintf {|["%s", { _ }]|} name.txt
@@ -589,7 +560,7 @@ module Conv = struct
              ~f:(fun cs -> not (is_allow_any_constr (Vcs_ctx_variant cs)))
              cs
          in
-         let compact = is_compact_variants td in
+         let compact = Json_attrs.is_compact_variants td in
          let body, cases =
            List.fold_left cs
              ~init:
@@ -657,7 +628,7 @@ module Conv = struct
        method! derive_of_polyvariant ?td t (cs : row_field list) x =
          let loc = t.ptyp_loc in
          let compact =
-           Option.fold ~none:false ~some:is_compact_variants td
+           Option.fold ~none:false ~some:Json_attrs.is_compact_variants td
          in
          let allow_any_constr =
            cs
@@ -779,7 +750,7 @@ module Conv = struct
 
        method! derive_of_variant td cs x =
          let loc = td.ptype_loc in
-         let compact = is_compact_variants td in
+         let compact = Json_attrs.is_compact_variants td in
          let error_message =
            Printf.sprintf "expected %s"
              (get_constructor_names ~compact cs
@@ -836,7 +807,7 @@ module Conv = struct
        method! derive_of_polyvariant ?td t (cs : row_field list) x =
          let loc = t.ptyp_loc in
          let compact =
-           Option.fold ~none:false ~some:is_compact_variants td
+           Option.fold ~none:false ~some:Json_attrs.is_compact_variants td
          in
          let cases = repr_polyvariant_cases cs in
          let cases =
@@ -943,7 +914,7 @@ module Conv = struct
 
        method! derive_of_variant td cs x =
          let loc = td.ptype_loc in
-         let compact = is_compact_variants td in
+         let compact = Json_attrs.is_compact_variants td in
          let ctor_pat (n : label loc) pat =
            ppat_construct ~loc:n.loc (map_loc lident n) pat
          in
@@ -982,7 +953,7 @@ module Conv = struct
        method! derive_of_polyvariant ?td t (cs : row_field list) x =
          let loc = t.ptyp_loc in
          let compact =
-           Option.fold ~none:false ~some:is_compact_variants td
+           Option.fold ~none:false ~some:Json_attrs.is_compact_variants td
          in
          let cases = repr_polyvariant_cases cs in
          let cases =

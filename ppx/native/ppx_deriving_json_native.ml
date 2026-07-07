@@ -54,7 +54,8 @@ module Of_json = struct
         List.fold_left (List.rev fs) ~init:[ fail_case ]
           ~f:(fun next ld ->
             let key =
-              Option.value ~default:ld.pld_name (ld_attr_json_key ld)
+              Option.value ~default:ld.pld_name
+                (Json_attrs.ld_attr_json_key ld)
             in
             pstring ~loc:key.loc key.txt
             --> [%expr
@@ -68,7 +69,8 @@ module Of_json = struct
       let fields =
         List.map fs ~f:(fun ld ->
             let key =
-              Option.value ~default:ld.pld_name (ld_attr_json_key ld)
+              Option.value ~default:ld.pld_name
+                (Json_attrs.ld_attr_json_key ld)
             in
             let default = ld_attr_default ld in
             ( ld.pld_name,
@@ -286,7 +288,8 @@ module To_json = struct
       List.combine t.rcd_fields es
       |> List.fold_left ~init:ebnds ~f:(fun acc (ld, x) ->
           let key =
-            Option.value ~default:ld.pld_name (ld_attr_json_key ld)
+            Option.value ~default:ld.pld_name
+              (Json_attrs.ld_attr_json_key ld)
           in
           let k = estring ~loc:key.loc key.txt in
           let v = derive ld.pld_type x in

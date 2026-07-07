@@ -7,84 +7,25 @@ let get_of_variant_case ?mark_as_seen ~variant ~polyvariant = function
   | Vcs_ctx_variant ctx -> Attribute.get ?mark_as_seen variant ctx
   | Vcs_ctx_polyvariant ctx -> Attribute.get ?mark_as_seen polyvariant ctx
 
-let get_of_variant ?mark_as_seen ~variant ~polyvariant = function
-  | Vrt_ctx_variant ctx -> Attribute.get ?mark_as_seen variant ctx
-  | Vrt_ctx_polyvariant ctx -> Attribute.get ?mark_as_seen polyvariant ctx
-
 let vcs_attr_json_name =
-  get_of_variant_case ~variant:Ppx_deriving_tools.attr_json_name_cd
-    ~polyvariant:Ppx_deriving_tools.attr_json_name_rtag
+  get_of_variant_case ~variant:Json_attrs.attr_json_name_cd
+    ~polyvariant:Json_attrs.attr_json_name_rtag
 
-let attr_json_allow_any ctx = Attribute.declare_flag "json.allow_any" ctx
+let vcs_attr_json_allow_any ?mark_as_seen ctx =
+  match
+    get_of_variant_case ~variant:Json_attrs.allow_any_cd
+      ~polyvariant:Json_attrs.allow_any_rtag ?mark_as_seen ctx
+  with
+  | None -> false
+  | Some () -> true
 
-let vcs_attr_json_allow_any =
-  let variant =
-    attr_json_allow_any Attribute.Context.constructor_declaration
-  in
-  let polyvariant = attr_json_allow_any Attribute.Context.rtag in
-  fun ?mark_as_seen ctx ->
-    match get_of_variant_case ~variant ~polyvariant ?mark_as_seen ctx with
-    | None -> false
-    | Some () -> true
-
-(* [@json.catch_all] marks a variant constructor as the catch-all for any
-   unrecognised string tag. The decoder routes both bare unknown strings and
-   unknown array variants ["future_tag", ...] to this constructor (in the
-   array case any payload is captured into the [payload] field for lossless
-   round-trip). The encoder writes the value back in the same wire shape.
-   Pairs naturally with [@@json.compact_variants] so the known cases are
-   also bare strings. *)
-let attr_json_catch_all ctx = Attribute.declare_flag "json.catch_all" ctx
-
-let vcs_attr_json_catch_all =
-  let variant =
-    attr_json_catch_all Attribute.Context.constructor_declaration
-  in
-  let polyvariant = attr_json_catch_all Attribute.Context.rtag in
-  fun ?mark_as_seen ctx ->
-    match get_of_variant_case ~variant ~polyvariant ?mark_as_seen ctx with
-    | None -> false
-    | Some () -> true
-
-let ld_attr_json_key =
-  Attribute.get
-    (Attribute.declare "json.key" Attribute.Context.label_declaration
-       Ast_pattern.(single_expr_payload (estring __'))
-       (fun x -> x))
-
-let ld_attr_json_option =
-  Attribute.get
-    (Attribute.declare "json.option" Attribute.Context.label_declaration
-       Ast_pattern.(pstr nil)
-       ())
-
-let attr_json_allow_extra_fields ctx =
-  Attribute.declare "json.allow_extra_fields" ctx
-    Ast_pattern.(pstr nil)
-    ()
-
-let td_attr_json_allow_extra_fields =
-  Attribute.get
-    (attr_json_allow_extra_fields Attribute.Context.type_declaration)
-
-let cd_attr_json_allow_extra_fields =
-  Attribute.get
-    (attr_json_allow_extra_fields
-       Attribute.Context.constructor_declaration)
-
-let attr_json_disallow_extra_fields ctx =
-  Attribute.declare "json.disallow_extra_fields" ctx
-    Ast_pattern.(pstr nil)
-    ()
-
-let td_attr_json_disallow_extra_fields =
-  Attribute.get
-    (attr_json_disallow_extra_fields Attribute.Context.type_declaration)
-
-let cd_attr_json_disallow_extra_fields =
-  Attribute.get
-    (attr_json_disallow_extra_fields
-       Attribute.Context.constructor_declaration)
+let vcs_attr_json_catch_all ?mark_as_seen ctx =
+  match
+    get_of_variant_case ~variant:Json_attrs.catch_all_cd
+      ~polyvariant:Json_attrs.catch_all_rtag ?mark_as_seen ctx
+  with
+  | None -> false
+  | Some () -> true
 
 let allow_extra_fields ~loc allow disallow =
   match allow, disallow with
@@ -97,40 +38,19 @@ let allow_extra_fields ~loc allow disallow =
 
 let td_allow_extra_fields td =
   allow_extra_fields ~loc:td.ptype_loc
-    (td_attr_json_allow_extra_fields td)
-    (td_attr_json_disallow_extra_fields td)
+    (Json_attrs.td_attr_json_allow_extra_fields td)
+    (Json_attrs.td_attr_json_disallow_extra_fields td)
 
 let cd_allow_extra_fields cd =
   allow_extra_fields ~loc:cd.pcd_loc
-    (cd_attr_json_allow_extra_fields cd)
-    (cd_attr_json_disallow_extra_fields cd)
-
-let ld_attr_json_default =
-  Attribute.get
-    (Attribute.declare "json.default" Attribute.Context.label_declaration
-       Ast_pattern.(single_expr_payload __)
-       (fun x -> x))
-
-let ld_attr_json_drop_default =
-  Attribute.get
-    (Attribute.declare "json.drop_default"
-       Attribute.Context.label_declaration
-       Ast_pattern.(
-         pstr (map0 ~f:None nil) (* flag form *)
-         ||| single_expr_payload (map1 ~f:Option.some __)
-         (* comparison function *))
-       (fun x -> x))
-
-let ld_attr_json_drop_default_if_json_equal =
-  Attribute.get
-    (Attribute.declare_flag "json.drop_default_if_json_equal"
-       Attribute.Context.label_declaration)
+    (Json_attrs.cd_attr_json_allow_extra_fields cd)
+    (Json_attrs.cd_attr_json_disallow_extra_fields cd)
 
 let ld_attr_default ld =
-  match ld_attr_json_default ld with
+  match Json_attrs.ld_attr_json_default ld with
   | Some e -> Some e
   | None -> (
-      match ld_attr_json_option ld with
+      match Json_attrs.ld_attr_json_option ld with
       | Some () ->
           let loc = ld.pld_loc in
           Some [%expr Stdlib.Option.None]
@@ -155,8 +75,10 @@ let rec equal_of_core_type ~loc ct =
 
 let ld_drop_default ld =
   let loc = ld.pld_loc in
-  let drop_default = ld_attr_json_drop_default ld in
-  let drop_json_equal = ld_attr_json_drop_default_if_json_equal ld in
+  let drop_default = Json_attrs.ld_attr_json_drop_default ld in
+  let drop_json_equal =
+    Json_attrs.ld_attr_json_drop_default_if_json_equal ld
+  in
   match drop_default, drop_json_equal with
   | Some _, Some () ->
       Location.raise_errorf ~loc
@@ -164,7 +86,10 @@ let ld_drop_default ld =
          exclusive"
   | None, None -> `No
   | None, Some () -> begin
-      match ld_attr_json_option ld, ld_attr_json_default ld with
+      match
+        ( Json_attrs.ld_attr_json_option ld,
+          Json_attrs.ld_attr_json_default ld )
+      with
       | None, Some def -> `Drop_default_if_json_equal def
       | Some (), None ->
           Location.raise_errorf ~loc
@@ -180,7 +105,10 @@ let ld_drop_default ld =
     end
   | Some None, None -> begin
       (* flag form: [@json.drop_default] *)
-      match ld_attr_json_option ld, ld_attr_json_default ld with
+      match
+        ( Json_attrs.ld_attr_json_option ld,
+          Json_attrs.ld_attr_json_default ld )
+      with
       | Some (), None -> `Drop_option
       | None, Some def ->
           let cmp = equal_of_core_type ~loc ld.pld_type in
@@ -195,7 +123,10 @@ let ld_drop_default ld =
     end
   | Some (Some cmp), None -> begin
       (* expression form: [@json.drop_default expr] *)
-      match ld_attr_json_option ld, ld_attr_json_default ld with
+      match
+        ( Json_attrs.ld_attr_json_option ld,
+          Json_attrs.ld_attr_json_default ld )
+      with
       | None, Some def -> `Drop_default (cmp, def)
       | Some (), _ ->
           Location.raise_errorf ~loc

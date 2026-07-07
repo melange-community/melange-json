@@ -31,6 +31,9 @@
    (run echo "let () = Ppxlib.Driver.standalone ()"))))
 
 (copy_files#
+ (files ./common/json_attrs.ml))
+
+(copy_files#
  (files ./common/ppx_deriving_json_common.ml))
 
 (copy_files#

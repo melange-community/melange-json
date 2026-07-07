@@ -167,29 +167,9 @@ module Conv : sig
       matching. *)
 end
 
-val attr_json_name_cd : (constructor_declaration, label loc) Attribute.t
-(** The [[@json.name "..."]] attribute on a variant constructor. *)
-
-val attr_json_name_rtag : (row_field, label loc) Attribute.t
-(** The [[@json.name "..."]] attribute on a polymorphic variant tag. *)
-
 val not_supported : loc:location -> string -> 'a
 (** [not_supported what] terminates ppx with an error message telling
     [what] unsupported. *)
-
-val gen_tuple : loc:location -> label -> int -> pattern list * expression
-(** [let patts, expr = gen_tuple label n in ...] creates a tuple
-    expression and a corresponding list of patterns. *)
-
-(** Auxiliary functions to generate record expressions and patterns. *)
-
-val gen_record :
-  loc:location ->
-  label ->
-  (label loc * attributes * 'a) list ->
-  pattern list * expression
-(** [let patts, expr = gen_tuple label n in ...] creates a record
-    expression and a corresponding list of patterns. *)
 
 val gen_pat_tuple :
   loc:location -> string -> int -> pattern * expression list

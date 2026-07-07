@@ -17,8 +17,6 @@ val enum :
   Ppxlib.expression list ->
   Ppxlib.expression
 
-val enum_string : loc:Warnings.loc -> string list -> Ppxlib.expression
-
 val annotation :
   loc:Warnings.loc ->
   string * Ppxlib.expression ->
