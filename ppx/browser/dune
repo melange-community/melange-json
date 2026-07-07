@@ -28,13 +28,22 @@
    (run echo "let () = Ppxlib.Driver.standalone ()"))))
 
 (copy_files#
+ (files ../native/common/source.ml))
+
+(copy_files#
+ (files ../native/common/ast_helpers.ml))
+
+(copy_files#
+ (files ../native/common/repr.ml))
+
+(copy_files#
  (files ../native/common/json_attrs.ml))
 
 (copy_files#
- (files ../native/common/ppx_deriving_json_common.ml))
+ (files ../native/common/json_string_deriver.ml))
 
 (copy_files#
- (files ../native/common/ppx_deriving_tools.{ml,mli}))
+ (files ../native/common/conv.ml))
 
 ; Shared jsonschema deriver sources (see ppx/native/dune for rationale). Compiled
 ; into melange-json.ppx so [@@deriving jsonschema] works on the Melange ppx too.

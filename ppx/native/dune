@@ -31,13 +31,22 @@
    (run echo "let () = Ppxlib.Driver.standalone ()"))))
 
 (copy_files#
+ (files ./common/source.ml))
+
+(copy_files#
+ (files ./common/ast_helpers.ml))
+
+(copy_files#
+ (files ./common/repr.ml))
+
+(copy_files#
  (files ./common/json_attrs.ml))
 
 (copy_files#
- (files ./common/ppx_deriving_json_common.ml))
+ (files ./common/json_string_deriver.ml))
 
 (copy_files#
- (files ./common/ppx_deriving_tools.{ml,mli}))
+ (files ./common/conv.ml))
 
 ; The jsonschema deriver is shared between the native and browser ppx (it is
 ; platform-agnostic: it only emits references to Ppx_deriving_jsonschema_runtime).

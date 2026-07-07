@@ -2,9 +2,10 @@ open Printf
 open StdLabels
 open Ppxlib
 open Ast_builder.Default
-open Ppx_deriving_tools
-open Ppx_deriving_tools.Conv
-open Ppx_deriving_json_common
+open Ast_helpers
+open Conv
+open Json_attrs
+open Json_string_deriver
 
 module Of_json = struct
   let build_tuple ~loc derive si (ts : core_type list) e =
@@ -296,8 +297,8 @@ module Of_json = struct
                     [%e
                       let allow_extra_fields =
                         match r.rcd_ctx with
-                        | Vcs_ctx_variant cd -> cd_allow_extra_fields cd
-                        | Vcs_ctx_polyvariant _ -> true
+                        | `Variant_ctx cd -> cd_allow_extra_fields cd
+                        | `Polyvariant_ctx _ -> true
                       in
                       build_record ~allow_extra_fields ~loc derive
                         r.rcd_fields [%expr fs] make]]]
@@ -330,10 +331,9 @@ module Of_json = struct
                               build_tuple ~loc derive 1 t.tpl_types array)))]
             else [%e next]]
 
-  let is_allow_any_constr vcs =
-    Ppx_deriving_json_common.vcs_attr_json_allow_any vcs
+  let is_allow_any_constr vcs = vcs_attr_json_allow_any vcs
 
-  let deriving : Ppx_deriving_tools.deriving =
+  let deriving : Conv.deriving =
     deriving_of () ~name:"of_json"
       ~of_t:(fun ~loc -> [%type: Js.Json.t])
       ~is_allow_any_constr ~derive_of_tuple ~derive_of_record
@@ -469,7 +469,7 @@ module To_json = struct
           let es = List.map2 t.tpl_types es ~f:derive in
           as_json ~loc (pexp_array ~loc (tag :: es))
 
-  let deriving : Ppx_deriving_tools.deriving =
+  let deriving : Conv.deriving =
     deriving_to () ~name:"to_json"
       ~t_to:(fun ~loc -> [%type: Js.Json.t])
       ~derive_of_tuple ~derive_of_labeled_tuple:derive_of_record
@@ -477,11 +477,10 @@ module To_json = struct
 end
 
 let () =
-  let of_json = Ppx_deriving_tools.register Of_json.deriving in
-  let to_json = Ppx_deriving_tools.register To_json.deriving in
+  let of_json = Conv.register Of_json.deriving in
+  let to_json = Conv.register To_json.deriving in
   let json =
-    Ppx_deriving_tools.register_combined "json"
-      [ To_json.deriving; Of_json.deriving ]
+    Conv.register_combined "json" [ To_json.deriving; Of_json.deriving ]
   in
   let (_ : Deriving.t) = Of_json_string.register ~of_json () in
   let (_ : Deriving.t) = To_json_string.register ~to_json () in
