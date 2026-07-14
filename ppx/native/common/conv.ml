@@ -335,8 +335,8 @@ module Variant = struct
     | Vcs_record { loc; attr = { catch_all = true; _ }; _ } ->
         Location.raise_errorf ~loc
           "[@json.catch_all] inline record must have exactly two fields \
-           named `tag` and `payload` (in that order), with types `string` \
-           and `Melange_json.t list option`"
+           named `tag` and `payload` (in that order), with types \
+           `string` and `Melange_json.t list option`"
     | Vcs_tuple _ | Vcs_record _ -> ()
 
   let case_name = function
@@ -356,7 +356,9 @@ module Variant = struct
         if compact && types = [] then Printf.sprintf {|"%s"|} name.txt
         else
           Printf.sprintf {|["%s"%s]|} name.txt
-            (types |> List.map ~f:(fun _ -> ", _") |> String.concat ~sep:"")
+            (types
+            |> List.map ~f:(fun _ -> ", _")
+            |> String.concat ~sep:"")
 
   type polyvariant_case =
     | Pvc_case of case
@@ -420,8 +422,8 @@ let deriving_to ~name ~t_to ~json_array ~json_string ~catch_all_encode
     json_array ~loc (List.map2 types es ~f:derive)
   in
   let derive_of_labeled_tuple = derive_of_record in
-  let derive_of_variant_case ?(is_compact_variants = false) derive case
-      es =
+  let derive_of_variant_case ?(is_compact_variants = false) derive case es
+      =
     match case with
     | Vcs_tuple { attr = { allow_any = true; _ }; _ } -> (
         match es with
@@ -475,7 +477,8 @@ let deriving_to ~name ~t_to ~json_array ~json_string ~catch_all_encode
          [
            p
            --> derive_of_record ~loc self#derive_of_core_type
-                 (Record.resolve_fields fs) es;
+                 (Record.resolve_fields fs)
+                 es;
          ]
 
      method! derive_of_labeled_tuple t ts x =

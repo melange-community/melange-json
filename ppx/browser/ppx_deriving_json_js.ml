@@ -280,8 +280,7 @@ module Of_json = struct
          fun ~array ~len ~tag ->
            derive_of_variant_case ~is_compact_variants:compact ~tag ~array
              ~len self#derive_of_core_type (construct ~array ~len) case
-             ~allow_any_constr
-             (next ~array ~len ~tag)
+             ~allow_any_constr (next ~array ~len ~tag)
 
        method! derive_of_tuple t ts x =
          let loc = t.ptyp_loc in
@@ -295,7 +294,8 @@ module Of_json = struct
                   [%e eint ~loc n])
            then
              let es = (Obj.magic [%e x] : Js.Json.t array) in
-             [%e build_tuple ~loc self#derive_of_core_type 0 ts [%expr es]]
+             [%e
+               build_tuple ~loc self#derive_of_core_type 0 ts [%expr es]]
            else
              Melange_json.of_json_error ~json:[%e x]
                [%e
@@ -327,8 +327,10 @@ module Of_json = struct
          [%expr
            [%e ensure_json_object ~loc x];
            [%e
-             build_record ~allow_extra_fields ~loc self#derive_of_core_type
-               (Record.resolve_fields fs) ~json:x build]]
+             build_record ~allow_extra_fields ~loc
+               self#derive_of_core_type
+               (Record.resolve_fields fs)
+               ~json:x build]]
 
        method! derive_of_variant td cs x =
          let loc = td.ptype_loc in
@@ -367,8 +369,8 @@ module Of_json = struct
                  let arg = Option.map (fun f -> f ~array ~len) payload in
                  pexp_construct (map_loc lident name) ~loc:name.loc arg
                in
-               self#variant_case_link ~compact ~allow_any_constr ~construct
-                 ~case next)
+               self#variant_case_link ~compact ~allow_any_constr
+                 ~construct ~case next)
          in
          dispatch_on_tag ~loc ~is_compact_variants:compact
            ~allow_any_constr body x

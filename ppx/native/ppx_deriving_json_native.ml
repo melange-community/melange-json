@@ -305,8 +305,7 @@ module Of_json = struct
                          [%e next]])
          in
          let cases =
-           List.fold_left ctors ~init:[ catch_all ]
-             ~f:(fun next case ->
+           List.fold_left ctors ~init:[ catch_all ] ~f:(fun next case ->
                let n = case_name case in
                let construct arg = pexp_variant ~loc:n.loc n.txt arg in
                derive_of_variant_case ~is_compact_variants:compact
