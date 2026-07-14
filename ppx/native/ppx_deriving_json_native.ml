@@ -2,9 +2,10 @@ open Printf
 open StdLabels
 open Ppxlib
 open Ast_builder.Default
-open Ppx_deriving_tools
-open Ppx_deriving_tools.Conv
-open Ppx_deriving_json_common
+open Ast_helpers
+open Conv
+open Json_attrs
+open Json_string_deriver
 
 module Of_json = struct
   let with_refs ~loc prefix fs inner =
@@ -54,7 +55,8 @@ module Of_json = struct
         List.fold_left (List.rev fs) ~init:[ fail_case ]
           ~f:(fun next ld ->
             let key =
-              Option.value ~default:ld.pld_name (ld_attr_json_key ld)
+              Option.value ~default:ld.pld_name
+                (Json_attrs.ld_attr_json_key ld)
             in
             pstring ~loc:key.loc key.txt
             --> [%expr
@@ -68,7 +70,8 @@ module Of_json = struct
       let fields =
         List.map fs ~f:(fun ld ->
             let key =
-              Option.value ~default:ld.pld_name (ld_attr_json_key ld)
+              Option.value ~default:ld.pld_name
+                (Json_attrs.ld_attr_json_key ld)
             in
             let default = ld_attr_default ld in
             ( ld.pld_name,
@@ -235,8 +238,8 @@ module Of_json = struct
         let n = Option.value ~default:n (vcs_attr_json_name t.rcd_ctx) in
         let allow_extra_fields =
           match t.rcd_ctx with
-          | Vcs_ctx_variant cd -> cd_allow_extra_fields cd
-          | Vcs_ctx_polyvariant _ -> true
+          | `Variant_ctx cd -> cd_allow_extra_fields cd
+          | `Polyvariant_ctx _ -> true
         in
         [%pat? `List [ `String [%p pstring ~loc:n.loc n.txt]; `Assoc fs ]]
         --> build_record ~allow_extra_fields ~loc derive t.rcd_fields
@@ -256,13 +259,13 @@ module Of_json = struct
    *)
   let cmp_sort_vcs vcs1 vcs2 =
     let key vcs =
-      if Ppx_deriving_json_common.vcs_attr_json_allow_any vcs then 0
-      else if Ppx_deriving_json_common.vcs_attr_json_catch_all vcs then 1
+      if vcs_attr_json_allow_any vcs then 0
+      else if vcs_attr_json_catch_all vcs then 1
       else 2
     in
     compare (key vcs1) (key vcs2)
 
-  let deriving : Ppx_deriving_tools.deriving =
+  let deriving : Conv.deriving =
     deriving_of_match () ~name:"of_json"
       ~of_t:(fun ~loc -> [%type: Yojson.Basic.t])
       ~cmp_sort_vcs ~derive_of_tuple ~derive_of_labeled_tuple
@@ -286,7 +289,8 @@ module To_json = struct
       List.combine t.rcd_fields es
       |> List.fold_left ~init:ebnds ~f:(fun acc (ld, x) ->
           let key =
-            Option.value ~default:ld.pld_name (ld_attr_json_key ld)
+            Option.value ~default:ld.pld_name
+              (Json_attrs.ld_attr_json_key ld)
           in
           let k = estring ~loc:key.loc key.txt in
           let v = derive ld.pld_type x in
@@ -379,7 +383,7 @@ module To_json = struct
             (`String [%e estring ~loc:n.loc n.txt]
             :: [ [%e derive_of_record derive t es] ])]
 
-  let deriving : Ppx_deriving_tools.deriving =
+  let deriving : Conv.deriving =
     deriving_to () ~name:"to_json"
       ~t_to:(fun ~loc -> [%type: Yojson.Basic.t])
       ~derive_of_tuple ~derive_of_labeled_tuple:derive_of_record
@@ -387,11 +391,10 @@ module To_json = struct
 end
 
 let () =
-  let of_json = Ppx_deriving_tools.register Of_json.deriving in
-  let to_json = Ppx_deriving_tools.register To_json.deriving in
+  let of_json = Conv.register Of_json.deriving in
+  let to_json = Conv.register To_json.deriving in
   let (json : Deriving.t) =
-    Ppx_deriving_tools.(
-      register_combined "json" [ To_json.deriving; Of_json.deriving ])
+    Conv.(register_combined "json" [ To_json.deriving; Of_json.deriving ])
   in
   let (_ : Deriving.t) = Of_json_string.register ~of_json () in
   let (_ : Deriving.t) = To_json_string.register ~to_json () in

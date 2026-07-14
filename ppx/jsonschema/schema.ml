@@ -39,12 +39,6 @@ let enum ~loc typ values =
           ]]
   | None -> [%expr `Assoc [ "enum", `List [%e elist ~loc values] ]]
 
-let enum_string ~loc values =
-  let values =
-    List.map (fun name -> [%expr `String [%e estring ~loc name]]) values
-  in
-  enum ~loc (Some "string") values
-
 let annotation ~loc (name, value) schema =
   match schema with
   | [%expr `Assoc [%e? fields]] ->

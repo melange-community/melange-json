@@ -2,9 +2,10 @@ open Printf
 open StdLabels
 open Ppxlib
 open Ast_builder.Default
-open Ppx_deriving_tools
-open Ppx_deriving_tools.Conv
-open Ppx_deriving_json_common
+open Ast_helpers
+open Conv
+open Json_attrs
+open Json_string_deriver
 
 module Of_json = struct
   let build_tuple ~loc derive si (ts : core_type list) e =
@@ -16,7 +17,7 @@ module Of_json = struct
   let build_js_type ~loc (fs : label_declaration list) =
     let f ld =
       let n = ld.pld_name in
-      let n = Option.value ~default:n (ld_attr_json_key ld) in
+      let n = Option.value ~default:n (Json_attrs.ld_attr_json_key ld) in
       let pof_desc = Otag (n, [%type: Js.Json.t Js.undefined]) in
       { pof_loc = loc; pof_attributes = []; pof_desc }
     in
@@ -27,7 +28,7 @@ module Of_json = struct
       (fs : label_declaration list) x make =
     let field_key ld =
       let n = ld.pld_name in
-      Option.value ~default:n (ld_attr_json_key ld)
+      Option.value ~default:n (Json_attrs.ld_attr_json_key ld)
     in
     let handle_field fs ld =
       ( ld.pld_name,
@@ -100,18 +101,37 @@ module Of_json = struct
           [%e estring ~loc (sprintf "expected a JSON object")]]
 
   let ensure_json_array_len ~loc ~allow_any_constr ~else_ n len x =
-    [%expr
-      if Stdlib.( <> ) [%e len] [%e eint ~loc n] then
-        [%e
-          match allow_any_constr with
-          | Some allow_any_constr -> allow_any_constr x
-          | None ->
-              [%expr
-                Melange_json.of_json_error ~json:[%e x]
-                  [%e
-                    estring ~loc
-                      (sprintf "expected a JSON array of length %i" n)]]]
-      else [%e else_]]
+    let error =
+      match allow_any_constr with
+      | Some allow_any_constr -> allow_any_constr x
+      | None ->
+          [%expr
+            Melange_json.of_json_error ~json:[%e x]
+              [%e
+                estring ~loc
+                  (sprintf "expected a JSON array of length %i" n)]]
+    in
+    let runtime () =
+      [%expr
+        if Stdlib.( <> ) [%e len] [%e eint ~loc n] then [%e error]
+        else [%e else_]]
+    in
+    match len.pexp_desc with
+    | Pexp_constant (Pconst_integer (s, None)) -> (
+        match int_of_string_opt s with
+        | Some c -> if c <> n then error else else_
+        | None -> runtime ())
+    | _ -> runtime ()
+
+  (* True when [len] is a compile-time constant that cannot equal [n]. A
+     constructor needing an [n]-element array is then unreachable for this
+     input shape — e.g. the bare-string compact form passes a literal [0], so
+     no payload constructor can match and we can drop its tag check entirely. *)
+  let len_never n len =
+    match len.pexp_desc with
+    | Pexp_constant (Pconst_integer (s, None)) -> (
+        match int_of_string_opt s with Some c -> c <> n | None -> false)
+    | _ -> false
 
   let derive_of_tuple derive t x =
     let loc = t.tpl_loc in
@@ -170,12 +190,17 @@ module Of_json = struct
     in
     let string_branch =
       if is_compact_variants then
+        (* The string form is a bare compact-variant tag: there is no array
+           payload, so pass empty [array]/[len] literals straight to [body]
+           instead of binding them. An all-nullary variant simply never
+           references them (no dummy bindings, no [ignore] needed). *)
         [%expr
-          if Stdlib.( = ) (Js.typeof [%e x]) "string" then (
-            let array = (Obj.magic [||] : Js.Json.t array) in
-            let len = 0 in
-            ignore (array, len);
-            [%e body [%expr (Obj.magic [%e x] : string)]])
+          if Stdlib.( = ) (Js.typeof [%e x]) "string" then
+            [%e
+              body
+                ~array:[%expr (Obj.magic [||] : Js.Json.t array)]
+                ~len:[%expr 0]
+                ~tag:[%expr (Obj.magic [%e x] : string)]]
           else [%e not_array_error]]
       else not_array_error
     in
@@ -186,7 +211,9 @@ module Of_json = struct
         if Stdlib.( > ) len 0 then
           let tag = Js.Array.unsafe_get array 0 in
           if Stdlib.( = ) (Js.typeof tag) "string" then
-            [%e body [%expr (Obj.magic tag : string)]]
+            [%e
+              body ~array:[%expr array] ~len:[%expr len]
+                ~tag:[%expr (Obj.magic tag : string)]]
           else
             [%e
               match allow_any_constr with
@@ -203,7 +230,7 @@ module Of_json = struct
      [tag] / [len] / [array] vars (see [derive_of_variant]). Wire shapes:
      bare string ↔ payload=None; single-element array ↔ payload=Some[];
      n-element array ↔ payload=Some(rest). *)
-  let build_unknown_variant_case_record ~loc ~tag =
+  let build_unknown_variant_case_record ~loc ~tag ~array ~len =
     [%expr
       let tag_s = [%e tag] in
       let payload =
@@ -211,7 +238,7 @@ module Of_json = struct
         else if Stdlib.( = ) len 1 then Stdlib.Option.Some []
         else
           let rest =
-            Stdlib.Array.sub array 1 (Stdlib.( - ) len 1)
+            Stdlib.Array.sub [%e array] 1 (Stdlib.( - ) [%e len] 1)
             |> Stdlib.Array.to_list
             |> Stdlib.List.map (fun j -> (Obj.magic j : Melange_json.t))
           in
@@ -219,8 +246,8 @@ module Of_json = struct
       in
       ({ tag = tag_s; payload } : Melange_json.unknown_variant_case)]
 
-  let derive_of_variant_case ?(is_compact_variants = false) ~tag derive
-      make c ~allow_any_constr next =
+  let derive_of_variant_case ?(is_compact_variants = false) ~tag ~array
+      ~len derive make c ~allow_any_constr next =
     let _ = derive in
     let _ = allow_any_constr in
     match c with
@@ -248,27 +275,30 @@ module Of_json = struct
               "[@json.catch_all] inline record must have exactly two \
                fields named `tag` and `payload` (in that order), with \
                types `string` and `Melange_json.t list option`")
+    | Vcs_record (_, _) when len_never 2 len ->
+        (* Record variants need [["Name", {...}]] (length 2); unreachable for
+           the bare-string form, so skip straight to the next case. *)
+        next
     | Vcs_record (n, r) ->
         let loc = n.loc in
         let n = Option.value ~default:n (vcs_attr_json_name r.rcd_ctx) in
         let make ~loc fs =
           let fs = List.map fs ~f:(fun (n, v) -> map_loc lident n, v) in
-          make (Some (pexp_record ~loc fs None))
+          make (Some (fun ~array:_ ~len:_ -> pexp_record ~loc fs None))
         in
         [%expr
           if Stdlib.( = ) [%e tag] [%e estring ~loc:n.loc n.txt] then
             [%e
-              ensure_json_array_len ~loc ~allow_any_constr 2 [%expr len]
-                [%expr x]
+              ensure_json_array_len ~loc ~allow_any_constr 2 len [%expr x]
                 ~else_:
                   [%expr
-                    let fs = Js.Array.unsafe_get array 1 in
+                    let fs = Js.Array.unsafe_get [%e array] 1 in
                     [%e ensure_json_object ~loc [%expr fs]];
                     [%e
                       let allow_extra_fields =
                         match r.rcd_ctx with
-                        | Vcs_ctx_variant cd -> cd_allow_extra_fields cd
-                        | Vcs_ctx_polyvariant _ -> true
+                        | `Variant_ctx cd -> cd_allow_extra_fields cd
+                        | `Polyvariant_ctx _ -> true
                       in
                       build_record ~allow_extra_fields ~loc derive
                         r.rcd_fields [%expr fs] make]]]
@@ -282,25 +312,28 @@ module Of_json = struct
             if Stdlib.( = ) [%e tag] [%e estring ~loc:n.loc n.txt] then
               [%e make None]
             else [%e next]]
+        else if len_never (arity + 1) len then
+          (* Needs an [(arity + 1)]-element array; unreachable for the
+             bare-string form, so skip straight to the next case. *)
+          next
         else
           [%expr
             if Stdlib.( = ) [%e tag] [%e estring ~loc:n.loc n.txt] then
               [%e
                 ensure_json_array_len ~loc ~allow_any_constr (arity + 1)
-                  [%expr len] [%expr x]
+                  len [%expr x]
                   ~else_:
                     (if Stdlib.( = ) arity 0 then make None
                      else
                        make
                          (Some
-                            (build_tuple ~loc derive 1 t.tpl_types
-                               [%expr array])))]
+                            (fun ~array ~len:_ ->
+                              build_tuple ~loc derive 1 t.tpl_types array)))]
             else [%e next]]
 
-  let is_allow_any_constr vcs =
-    Ppx_deriving_json_common.vcs_attr_json_allow_any vcs
+  let is_allow_any_constr vcs = vcs_attr_json_allow_any vcs
 
-  let deriving : Ppx_deriving_tools.deriving =
+  let deriving : Conv.deriving =
     deriving_of () ~name:"of_json"
       ~of_t:(fun ~loc -> [%type: Js.Json.t])
       ~is_allow_any_constr ~derive_of_tuple ~derive_of_record
@@ -320,7 +353,7 @@ module To_json = struct
       List.map2 t.rcd_fields es ~f:(fun ld x ->
           let k =
             let k = ld.pld_name in
-            Option.value ~default:k (ld_attr_json_key ld)
+            Option.value ~default:k (Json_attrs.ld_attr_json_key ld)
           in
           let v =
             let v = derive ld.pld_type x in
@@ -436,7 +469,7 @@ module To_json = struct
           let es = List.map2 t.tpl_types es ~f:derive in
           as_json ~loc (pexp_array ~loc (tag :: es))
 
-  let deriving : Ppx_deriving_tools.deriving =
+  let deriving : Conv.deriving =
     deriving_to () ~name:"to_json"
       ~t_to:(fun ~loc -> [%type: Js.Json.t])
       ~derive_of_tuple ~derive_of_labeled_tuple:derive_of_record
@@ -444,11 +477,10 @@ module To_json = struct
 end
 
 let () =
-  let of_json = Ppx_deriving_tools.register Of_json.deriving in
-  let to_json = Ppx_deriving_tools.register To_json.deriving in
+  let of_json = Conv.register Of_json.deriving in
+  let to_json = Conv.register To_json.deriving in
   let json =
-    Ppx_deriving_tools.register_combined "json"
-      [ To_json.deriving; Of_json.deriving ]
+    Conv.register_combined "json" [ To_json.deriving; Of_json.deriving ]
   in
   let (_ : Deriving.t) = Of_json_string.register ~of_json () in
   let (_ : Deriving.t) = To_json_string.register ~to_json () in
