@@ -403,14 +403,59 @@ open Variant
 
 type derive_of_core_type = core_type -> expression -> expression
 
-let deriving_to ~name ~t_to ~derive_of_tuple ~derive_of_labeled_tuple
-    ~derive_of_record
-    ~(derive_of_variant_case :
-       ?is_compact_variants:bool ->
+(* Build a to_json deriver from the backend's JSON emitters: [json_array]
+   and [json_string] emit a JSON array/string expression,
+   [catch_all_encode] re-emits a [@json.catch_all] payload in its
+   original wire shape, and [derive_of_record] emits a JSON object from
+   resolved record fields. Everything else — tuple, variant and
+   labeled-tuple encoding — is shared here. *)
+let deriving_to ~name ~t_to ~json_array ~json_string ~catch_all_encode
+    ~(derive_of_record :
+       loc:location ->
        derive_of_core_type ->
-       Variant.case ->
+       Record.field list ->
        expression list ->
        expression) () =
+  let derive_of_tuple ~loc derive types es =
+    json_array ~loc (List.map2 types es ~f:derive)
+  in
+  let derive_of_labeled_tuple = derive_of_record in
+  let derive_of_variant_case ?(is_compact_variants = false) derive case
+      es =
+    match case with
+    | Vcs_tuple { attr = { allow_any = true; _ }; _ } -> (
+        match es with
+        | [ x ] -> x
+        | es ->
+            failwith
+              (Printf.sprintf "expected a tuple of length 1, got %i"
+                 (List.length es)))
+    | Vcs_tuple { name; attr = { catch_all = true; _ }; _ } -> (
+        let loc = name.loc in
+        match es with
+        | [ arg_e ] ->
+            catch_all_encode ~loc ~tag:[%expr [%e arg_e].tag]
+              ~payload:[%expr [%e arg_e].payload]
+        | _ -> assert false)
+    | Vcs_record { name; attr = { catch_all = true; _ }; _ } -> (
+        match es with
+        | [ tag_e; payload_e ] ->
+            catch_all_encode ~loc:name.loc ~tag:tag_e ~payload:payload_e
+        | _ -> assert false)
+    | Vcs_record { name; fields; attr; _ } ->
+        let loc = name.loc in
+        let n = Option.value ~default:name attr.json_name in
+        json_array ~loc
+          [ json_string ~loc n; derive_of_record ~loc derive fields es ]
+    | Vcs_tuple { name; types; attr; _ } ->
+        let loc = name.loc in
+        let n = Option.value ~default:name attr.json_name in
+        if is_compact_variants && List.length types = 0 then
+          json_string ~loc n
+        else
+          json_array ~loc
+            (json_string ~loc n :: List.map2 types es ~f:derive)
+  in
   (object (self)
      inherit deriving1
      method name = name

@@ -323,9 +323,16 @@ module To_json = struct
     let n = gen_symbol ~prefix () in
     evar ~loc n, pvar ~loc n
 
-  let derive_of_tuple ~loc derive types es =
-    let es = List.map2 types es ~f:derive in
-    [%expr `List [%e elist ~loc es]]
+  let json_array ~loc es = [%expr `List [%e elist ~loc es]]
+
+  let json_string ~loc (n : label loc) =
+    [%expr `String [%e estring ~loc:n.loc n.txt]]
+
+  let catch_all_encode ~loc ~tag ~payload =
+    [%expr
+      match [%e payload] with
+      | Stdlib.Option.None -> `String [%e tag]
+      | Stdlib.Option.Some xs -> `List (`String [%e tag] :: xs)]
 
   let derive_of_record ~loc derive fields es =
     let ebnds, pbnds = gen_exp_pat ~loc "bnds" in
@@ -362,58 +369,10 @@ module To_json = struct
         (let [%p pbnds] = [] in
          [%e e])]
 
-  let derive_of_variant_case ?(is_compact_variants = false) derive vcs es
-      =
-    match vcs with
-    | Vcs_tuple { attr = { allow_any = true; _ }; _ } -> (
-        match es with
-        | [ x ] -> x
-        | es ->
-            failwith
-              (sprintf "expected a tuple of length 1, got %i"
-                 (List.length es)))
-    | Vcs_tuple { name; attr = { catch_all = true; _ }; _ } -> (
-        let loc = name.loc in
-        match es with
-        | [ arg_e ] ->
-            [%expr
-              match [%e arg_e].payload with
-              | Stdlib.Option.None -> `String [%e arg_e].tag
-              | Stdlib.Option.Some xs ->
-                  `List (`String [%e arg_e].tag :: xs)]
-        | _ -> assert false)
-    | Vcs_record { name; attr = { catch_all = true; _ }; _ } -> (
-        let loc = name.loc in
-        match es with
-        | [ tag_e; payload_e ] ->
-            [%expr
-              match [%e payload_e] with
-              | Stdlib.Option.None -> `String [%e tag_e]
-              | Stdlib.Option.Some xs -> `List (`String [%e tag_e] :: xs)]
-        | _ -> assert false)
-    | Vcs_tuple { name; types; attr; _ } ->
-        let loc = name.loc in
-        let n = Option.value ~default:name attr.json_name in
-        let arity = List.length types in
-        if is_compact_variants && arity = 0 then
-          [%expr `String [%e estring ~loc:n.loc n.txt]]
-        else
-          [%expr
-            `List
-              (`String [%e estring ~loc:n.loc n.txt]
-              :: [%e elist ~loc (List.map2 types es ~f:derive)])]
-    | Vcs_record { name; loc; fields; attr; _ } ->
-        let n = Option.value ~default:name attr.json_name in
-        [%expr
-          `List
-            (`String [%e estring ~loc:n.loc n.txt]
-            :: [ [%e derive_of_record ~loc derive fields es] ])]
-
   let deriving : Conv.deriving =
     deriving_to () ~name:"to_json"
       ~t_to:(fun ~loc -> [%type: Yojson.Basic.t])
-      ~derive_of_tuple ~derive_of_labeled_tuple:derive_of_record
-      ~derive_of_record ~derive_of_variant_case
+      ~json_array ~json_string ~catch_all_encode ~derive_of_record
 end
 
 let () =

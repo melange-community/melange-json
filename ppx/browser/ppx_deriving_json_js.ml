@@ -455,9 +455,25 @@ end
 
 module To_json = struct
   let as_json ~loc x = [%expr (Obj.magic [%e x] : Js.Json.t)]
+  let json_array ~loc es = as_json ~loc (pexp_array ~loc es)
 
-  let derive_of_tuple ~loc derive types es =
-    as_json ~loc (pexp_array ~loc (List.map2 types es ~f:derive))
+  let json_string ~loc (n : label loc) =
+    as_json ~loc (estring ~loc:n.loc n.txt)
+
+  let catch_all_encode ~loc ~tag ~payload =
+    [%expr
+      match [%e payload] with
+      | Stdlib.Option.None -> (Obj.magic ([%e tag] : string) : Js.Json.t)
+      | Stdlib.Option.Some xs ->
+          let head = (Obj.magic ([%e tag] : string) : Js.Json.t) in
+          let rest =
+            Stdlib.List.map
+              (fun (j : Melange_json.t) -> (Obj.magic j : Js.Json.t))
+              xs
+          in
+          (Obj.magic
+             (Stdlib.Array.of_list (head :: rest) : Js.Json.t array)
+            : Js.Json.t)]
 
   let derive_of_record ~loc derive fields es =
     let fs =
@@ -487,86 +503,10 @@ module To_json = struct
     let record = pexp_record ~loc fs None in
     as_json ~loc [%expr [%mel.obj [%e record]]]
 
-  let derive_of_variant_case ?(is_compact_variants = false) derive c es =
-    match c with
-    | Vcs_tuple { name; attr = { catch_all = true; _ }; _ } -> (
-        let loc = name.loc in
-        match es with
-        | [ arg_e ] ->
-            [%expr
-              match [%e arg_e].payload with
-              | Stdlib.Option.None ->
-                  (Obj.magic ([%e arg_e].tag : string) : Js.Json.t)
-              | Stdlib.Option.Some xs ->
-                  let head =
-                    (Obj.magic ([%e arg_e].tag : string) : Js.Json.t)
-                  in
-                  let rest =
-                    Stdlib.List.map
-                      (fun (j : Melange_json.t) ->
-                        (Obj.magic j : Js.Json.t))
-                      xs
-                  in
-                  (Obj.magic
-                     (Stdlib.Array.of_list (head :: rest)
-                       : Js.Json.t array)
-                    : Js.Json.t)]
-        | _ -> assert false)
-    | Vcs_record { name; attr = { catch_all = true; _ }; _ } -> (
-        let loc = name.loc in
-        match es with
-        | [ tag_e; payload_e ] ->
-            [%expr
-              match [%e payload_e] with
-              | Stdlib.Option.None ->
-                  (Obj.magic ([%e tag_e] : string) : Js.Json.t)
-              | Stdlib.Option.Some xs ->
-                  let head =
-                    (Obj.magic ([%e tag_e] : string) : Js.Json.t)
-                  in
-                  let rest =
-                    Stdlib.List.map
-                      (fun (j : Melange_json.t) ->
-                        (Obj.magic j : Js.Json.t))
-                      xs
-                  in
-                  (Obj.magic
-                     (Stdlib.Array.of_list (head :: rest)
-                       : Js.Json.t array)
-                    : Js.Json.t)]
-        | _ -> assert false)
-    | Vcs_record { name; loc; fields; attr; _ } ->
-        let n = Option.value ~default:name attr.json_name in
-        let tag =
-          [%expr (Obj.magic [%e estring ~loc:n.loc n.txt] : Js.Json.t)]
-        in
-        let es = [ derive_of_record ~loc derive fields es ] in
-        as_json ~loc:name.loc (pexp_array ~loc:name.loc (tag :: es))
-    | Vcs_tuple { attr = { allow_any = true; _ }; _ } -> (
-        match es with
-        | [ x ] -> x
-        | es ->
-            failwith
-              (sprintf "expected a tuple of length 1, got %i"
-                 (List.length es)))
-    | Vcs_tuple { name; types; attr; _ } ->
-        let loc = name.loc in
-        let n = Option.value ~default:name attr.json_name in
-        let arity = List.length types in
-        if is_compact_variants && arity = 0 then
-          as_json ~loc (estring ~loc:n.loc n.txt)
-        else
-          let tag =
-            [%expr (Obj.magic [%e estring ~loc:n.loc n.txt] : Js.Json.t)]
-          in
-          let es = List.map2 types es ~f:derive in
-          as_json ~loc (pexp_array ~loc (tag :: es))
-
   let deriving : Conv.deriving =
     deriving_to () ~name:"to_json"
       ~t_to:(fun ~loc -> [%type: Js.Json.t])
-      ~derive_of_tuple ~derive_of_labeled_tuple:derive_of_record
-      ~derive_of_record ~derive_of_variant_case
+      ~json_array ~json_string ~catch_all_encode ~derive_of_record
 end
 
 let () =
