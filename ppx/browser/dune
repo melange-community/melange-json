@@ -37,7 +37,7 @@
  (files ../native/common/repr.ml))
 
 (copy_files#
- (files ../native/common/json_attrs.ml))
+ (files ../native/common/attrs.{ml,mli}))
 
 (copy_files#
  (files ../native/common/json_string_deriver.ml))
@@ -49,4 +49,4 @@
 ; into melange-json.ppx so [@@deriving jsonschema] works on the Melange ppx too.
 
 (copy_files#
- (files ../jsonschema/{attrs,schema,ppx_deriving_jsonschema}.{ml,mli}))
+ (files ../jsonschema/{schema,ppx_deriving_jsonschema}.{ml,mli}))

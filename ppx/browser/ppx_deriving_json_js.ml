@@ -4,7 +4,7 @@ open Ppxlib
 open Ast_builder.Default
 open Ast_helpers
 open Conv
-open Json_attrs
+open Attrs.Json
 open Json_string_deriver
 
 module Of_json = struct
@@ -17,7 +17,7 @@ module Of_json = struct
   let build_js_type ~loc (fs : label_declaration list) =
     let f ld =
       let n = ld.pld_name in
-      let n = Option.value ~default:n (Json_attrs.ld_attr_json_key ld) in
+      let n = Option.value ~default:n (Attrs.Json.ld_attr_json_key ld) in
       let pof_desc = Otag (n, [%type: Js.Json.t Js.undefined]) in
       { pof_loc = loc; pof_attributes = []; pof_desc }
     in
@@ -28,7 +28,7 @@ module Of_json = struct
       (fs : label_declaration list) x make =
     let field_key ld =
       let n = ld.pld_name in
-      Option.value ~default:n (Json_attrs.ld_attr_json_key ld)
+      Option.value ~default:n (Attrs.Json.ld_attr_json_key ld)
     in
     let handle_field fs ld =
       ( ld.pld_name,
@@ -353,7 +353,7 @@ module To_json = struct
       List.map2 t.rcd_fields es ~f:(fun ld x ->
           let k =
             let k = ld.pld_name in
-            Option.value ~default:k (Json_attrs.ld_attr_json_key ld)
+            Option.value ~default:k (Attrs.Json.ld_attr_json_key ld)
           in
           let v =
             let v = derive ld.pld_type x in

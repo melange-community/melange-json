@@ -1,6 +1,10 @@
 open Ppxlib
 open Ast_builder.Default
 
+(* All jsonschema attributes now live under [Attrs.Jsonschema]; narrow the
+   file-wide [Attrs] reference to that submodule. *)
+module Attrs = Attrs.Jsonschema
+
 let deriver_name = "jsonschema"
 
 let value_name_pattern ~loc type_name =
@@ -144,16 +148,16 @@ let rec schema_of_core_type ~(config : Attrs.config)
     |> Schema.Annotation.add_description ~loc
          (Attrs.ct_description ~ocaml_doc:config.Attrs.ocaml_doc core_type)
     |> Schema.Annotation.add_format ~loc
-         (Attrs.jsonschema_ct_format, core_type)
+         (Attrs.ct_format, core_type)
          core_type
     |> Schema.Annotation.add_maximum ~loc
-         (Attrs.jsonschema_ct_maximum, core_type)
+         (Attrs.ct_maximum, core_type)
          core_type
     |> Schema.Annotation.add_minimum ~loc
-         (Attrs.jsonschema_ct_minimum, core_type)
+         (Attrs.ct_minimum, core_type)
          core_type
     |> Schema.Annotation.add_annotations ~loc ~core_type
-         (Attribute.get Attrs.jsonschema_ct_attrs core_type)
+         (Attribute.get Attrs.ct_attrs core_type)
   in
   schema, is_rec
 
@@ -172,8 +176,7 @@ and schema_of_poly_variant ~loc ~(config : Attrs.config)
         | Rtag (name, true, []) ->
             let name =
               match
-                Attribute.get Attrs.jsonschema_polymorphic_variant_name
-                  row_field
+                Attribute.get Attrs.polymorphic_variant_name row_field
               with
               | Some name -> name.txt
               | None -> name.txt
@@ -182,8 +185,7 @@ and schema_of_poly_variant ~loc ~(config : Attrs.config)
         | Rtag (name, false, [ typ ]) ->
             let name =
               match
-                Attribute.get Attrs.jsonschema_polymorphic_variant_name
-                  row_field
+                Attribute.get Attrs.polymorphic_variant_name row_field
               with
               | Some name -> name.txt
               | None -> name.txt
@@ -237,17 +239,16 @@ let schema_of_record ~loc ~(config : Attrs.config) ?(recursive_types = [])
       (fun (fields, required, is_rec)
            ({ pld_name; pld_type; pld_loc = _loc; _ } as field) ->
         let name =
-          match Attribute.get Attrs.jsonschema_key field with
+          match Attribute.get Attrs.key field with
           | Some name -> name.txt
           | None -> pld_name.txt
         in
         let drop_required =
-          Attribute.has_flag Attrs.jsonschema_option field
-          || Attribute.get Attrs.jsonschema_ld_default field
-             |> Option.is_some
+          Attribute.has_flag Attrs.option field
+          || Attribute.get Attrs.ld_default field |> Option.is_some
         in
         let type_def, field_rec =
-          match Attribute.get Attrs.jsonschema_ref field with
+          match Attribute.get Attrs.ref field with
           | Some def -> Schema.type_ref ~loc def.txt, false
           | None -> (
               match pld_type with
@@ -264,20 +265,19 @@ let schema_of_record ~loc ~(config : Attrs.config) ?(recursive_types = [])
           |> Schema.Annotation.add_description ~loc
                (Attrs.ld_description ~ocaml_doc:config.Attrs.ocaml_doc
                   field)
-          |> Schema.Annotation.add_format ~loc
-               (Attrs.jsonschema_ld_format, field)
+          |> Schema.Annotation.add_format ~loc (Attrs.ld_format, field)
                pld_type
           |> Schema.Annotation.add_maximum ~loc
-               (Attrs.jsonschema_ld_maximum, field)
+               (Attrs.ld_maximum, field)
                pld_type
           |> Schema.Annotation.add_minimum ~loc
-               (Attrs.jsonschema_ld_minimum, field)
+               (Attrs.ld_minimum, field)
                pld_type
           |> Schema.Annotation.add_default ~loc
-               (Attrs.jsonschema_ld_default, field)
+               (Attrs.ld_default, field)
                pld_type
           |> Schema.Annotation.add_annotations ~loc ~core_type:pld_type
-               (Attribute.get Attrs.jsonschema_ld_attrs field)
+               (Attribute.get Attrs.ld_attrs field)
         in
         ( [%expr [%e estring ~loc name], [%e type_def]] :: fields,
           (if drop_required then required
@@ -309,7 +309,7 @@ let schema_of_variants ~loc ~(config : Attrs.config)
       (fun (variants, is_rec)
            ({ pcd_args; pcd_name = { txt = name; _ }; _ } as var) ->
         let name =
-          match Attribute.get Attrs.jsonschema_variant_name var with
+          match Attribute.get Attrs.variant_name var with
           | Some name -> name.txt
           | None -> name
         in
@@ -321,11 +321,11 @@ let schema_of_variants ~loc ~(config : Attrs.config)
         match pcd_args with
         | Pcstr_record label_declarations ->
             let allow =
-              Attribute.get Attrs.jsonschema_cd_allow_extra_fields var
+              Attribute.get Attrs.cd_allow_extra_fields var
               |> Option.is_some
             in
             let disallow =
-              Attribute.get Attrs.jsonschema_cd_disallow_extra_fields var
+              Attribute.get Attrs.cd_disallow_extra_fields var
               |> Option.is_some
             in
             let additional_properties =
@@ -364,7 +364,7 @@ let schema_of_type_decl ~loc ~(config : Attrs.config) ~recursive_types
   match type_decl.ptype_kind with
   | Ptype_variant variants ->
       let compact_variants =
-        Attribute.has_flag Attrs.jsonschema_td_compact_variants type_decl
+        Attribute.has_flag Attrs.td_compact_variants type_decl
       in
       let schema, is_rec =
         schema_of_variants ~loc ~config ~recursive_types ~compact_variants
@@ -373,11 +373,11 @@ let schema_of_type_decl ~loc ~(config : Attrs.config) ~recursive_types
       type_name, schema, is_rec, params
   | Ptype_record label_declarations ->
       let allow =
-        Attribute.get Attrs.jsonschema_td_allow_extra_fields type_decl
+        Attribute.get Attrs.td_allow_extra_fields type_decl
         |> Option.is_some
       in
       let disallow =
-        Attribute.get Attrs.jsonschema_td_disallow_extra_fields type_decl
+        Attribute.get Attrs.td_disallow_extra_fields type_decl
         |> Option.is_some
       in
       let additional_properties =
@@ -393,8 +393,7 @@ let schema_of_type_decl ~loc ~(config : Attrs.config) ~recursive_types
       match type_decl.ptype_manifest with
       | Some core_type ->
           let compact_variants =
-            Attribute.has_flag Attrs.jsonschema_td_compact_variants
-              type_decl
+            Attribute.has_flag Attrs.td_compact_variants type_decl
           in
           let schema, is_rec =
             schema_of_core_type ~config ~recursive_types ~compact_variants
@@ -484,19 +483,19 @@ let str_type_decl ~ctxt ast flag_polymorphic_variant_tuple flag_ocaml_doc
              (Attrs.td_description ~ocaml_doc:config.Attrs.ocaml_doc
                 type_decl)
         |> Schema.Annotation.add_annotations ~loc
-             (Attribute.get Attrs.jsonschema_td_attrs type_decl)
+             (Attribute.get Attrs.td_attrs type_decl)
       in
       let raw_schema =
         Option.fold ~none:raw_schema
           ~some:(fun core_type ->
             Schema.Annotation.add_format ~loc
-              (Attrs.jsonschema_td_format, type_decl)
+              (Attrs.td_format, type_decl)
               core_type raw_schema
             |> Schema.Annotation.add_maximum ~loc
-                 (Attrs.jsonschema_td_maximum, type_decl)
+                 (Attrs.td_maximum, type_decl)
                  core_type
             |> Schema.Annotation.add_minimum ~loc
-                 (Attrs.jsonschema_td_minimum, type_decl)
+                 (Attrs.td_minimum, type_decl)
                  core_type)
           type_decl.ptype_manifest
       in
@@ -544,15 +543,12 @@ let str_type_decl ~ctxt ast flag_polymorphic_variant_tuple flag_ocaml_doc
             let raw =
               Option.fold ~none:raw
                 ~some:(fun core_type ->
-                  Schema.Annotation.add_format ~loc
-                    (Attrs.jsonschema_td_format, td)
+                  Schema.Annotation.add_format ~loc (Attrs.td_format, td)
                     core_type raw
                   |> Schema.Annotation.add_maximum ~loc
-                       (Attrs.jsonschema_td_maximum, td)
-                       core_type
+                       (Attrs.td_maximum, td) core_type
                   |> Schema.Annotation.add_minimum ~loc
-                       (Attrs.jsonschema_td_minimum, td)
-                       core_type)
+                       (Attrs.td_minimum, td) core_type)
                 td.ptype_manifest
             in
             let defs =

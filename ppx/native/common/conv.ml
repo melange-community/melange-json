@@ -24,7 +24,7 @@ class virtual deriving =
 
 let register ?deps deriving =
   let args = Deriving.Args.empty in
-  let attributes = Json_attrs.attributes in
+  let attributes = Attrs.Json.attributes in
   let str_type_decl = deriving#str_type_decl in
   let sig_type_decl = deriving#sig_type_decl in
   Deriving.add deriving#name ~extension:deriving#extension
@@ -35,7 +35,7 @@ let register ?deps deriving =
 
 let register_combined ?deps name derivings =
   let args = Deriving.Args.empty in
-  let attributes = Json_attrs.attributes in
+  let attributes = Attrs.Json.attributes in
   let str_type_decl ~ctxt bindings =
     List.fold_left derivings ~init:[] ~f:(fun str d ->
         d#str_type_decl ~ctxt bindings @ str)
@@ -226,7 +226,7 @@ let rec get_variant_names ?(compact = false) ~loc c =
   | `Rtag (name, ts) ->
       let name =
         Option.value ~default:name
-          (Attribute.get Json_attrs.attr_json_name_rtag c)
+          (Attribute.get Attrs.Json.attr_json_name_rtag c)
       in
       [
         (if compact && ts = [] then Printf.sprintf {|"%s"|} name.txt
@@ -244,7 +244,7 @@ let get_constructor_names ?(compact = false) cs =
   List.map cs ~f:(fun c ->
       let name =
         Option.value ~default:c.pcd_name
-          (Attribute.get Json_attrs.attr_json_name_cd c)
+          (Attribute.get Attrs.Json.attr_json_name_cd c)
       in
       match c.pcd_args with
       | Pcstr_record _fs -> Printf.sprintf {|["%s", { _ }]|} name.txt
@@ -344,7 +344,7 @@ let deriving_of ~name ~of_t ~is_allow_any_constr ~derive_of_tuple
            ~f:(fun cs -> not (is_allow_any_constr (`Variant_ctx cs)))
            cs
        in
-       let compact = Json_attrs.is_compact_variants td in
+       let compact = Attrs.Json.is_compact_variants td in
        let body, cases =
          List.fold_left cs
            ~init:
@@ -406,7 +406,7 @@ let deriving_of ~name ~of_t ~is_allow_any_constr ~derive_of_tuple
      method! derive_of_polyvariant ?td t (cs : row_field list) x =
        let loc = t.ptyp_loc in
        let compact =
-         Option.fold ~none:false ~some:Json_attrs.is_compact_variants td
+         Option.fold ~none:false ~some:Attrs.Json.is_compact_variants td
        in
        let allow_any_constr =
          cs
@@ -517,7 +517,7 @@ let deriving_of_match ~name ~of_t ~cmp_sort_vcs ~derive_of_tuple
 
      method! derive_of_variant td cs x =
        let loc = td.ptype_loc in
-       let compact = Json_attrs.is_compact_variants td in
+       let compact = Attrs.Json.is_compact_variants td in
        let error_message =
          Printf.sprintf "expected %s"
            (get_constructor_names ~compact cs |> String.concat ~sep:" or ")
@@ -572,7 +572,7 @@ let deriving_of_match ~name ~of_t ~cmp_sort_vcs ~derive_of_tuple
      method! derive_of_polyvariant ?td t (cs : row_field list) x =
        let loc = t.ptyp_loc in
        let compact =
-         Option.fold ~none:false ~some:Json_attrs.is_compact_variants td
+         Option.fold ~none:false ~some:Attrs.Json.is_compact_variants td
        in
        let cases = repr_polyvariant_cases cs in
        let cases =
@@ -675,7 +675,7 @@ let deriving_to ~name ~t_to ~derive_of_tuple ~derive_of_labeled_tuple
 
      method! derive_of_variant td cs x =
        let loc = td.ptype_loc in
-       let compact = Json_attrs.is_compact_variants td in
+       let compact = Attrs.Json.is_compact_variants td in
        let ctor_pat (n : label loc) pat =
          ppat_construct ~loc:n.loc (map_loc lident n) pat
        in
@@ -712,7 +712,7 @@ let deriving_to ~name ~t_to ~derive_of_tuple ~derive_of_labeled_tuple
      method! derive_of_polyvariant ?td t (cs : row_field list) x =
        let loc = t.ptyp_loc in
        let compact =
-         Option.fold ~none:false ~some:Json_attrs.is_compact_variants td
+         Option.fold ~none:false ~some:Attrs.Json.is_compact_variants td
        in
        let cases = repr_polyvariant_cases cs in
        let cases =
