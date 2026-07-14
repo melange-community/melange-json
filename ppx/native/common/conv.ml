@@ -240,405 +240,224 @@ let rec get_variant_names ?(compact = false) ~loc c =
           List.concat_map fields ~f:(get_variant_names ~compact ~loc)
       | _ -> [])
 
-let get_constructor_names ?(compact = false) cs =
-  List.map cs ~f:(fun c ->
-      let name =
-        Option.value ~default:c.pcd_name
-          (Attribute.get Json_attrs.attr_json_name_cd c)
-      in
-      match c.pcd_args with
-      | Pcstr_record _fs -> Printf.sprintf {|["%s", { _ }]|} name.txt
-      | Pcstr_tuple [] when compact -> Printf.sprintf {|"%s"|} name.txt
-      | Pcstr_tuple li ->
+module Record = struct
+  (* A record field with its [@json.*] attributes resolved to plain data:
+     [key] is the JSON object key ([@json.key], falling back to the OCaml
+     field name) and [default] the fallback expression for a missing field
+     ([@json.default] / [@json.option]). [ld] carries the raw declaration
+     for the drop-default resolution, which only the to_json direction
+     performs (resolving it eagerly would reject attribute combinations
+     that of_json-only derivations accept today). *)
+  type field = {
+    name : label loc;
+    key : label loc;
+    type_ : core_type;
+    default : expression option;
+    ld : label_declaration;
+  }
+
+  let resolve_field (ld : label_declaration) =
+    {
+      name = ld.pld_name;
+      key =
+        Option.value ~default:ld.pld_name (Json_attrs.ld_attr_json_key ld);
+      type_ = ld.pld_type;
+      default = Json_attrs.ld_attr_default ld;
+      ld;
+    }
+
+  let resolve_fields lds = List.map lds ~f:resolve_field
+
+  (* Labeled-tuple components convert like record fields without attributes. *)
+  let fields_of_labeled_tuple ts =
+    List.map ts ~f:(fun (name, type_) ->
+        resolve_field
+          (label_declaration ~loc:type_.ptyp_loc ~name ~type_
+             ~mutable_:Immutable))
+end
+
+module Variant = struct
+  type case_attr = {
+    allow_any : bool;
+    catch_all : bool;
+    json_name : label loc option;
+  }
+
+  type case_ctx =
+    [ `Variant_ctx of constructor_declaration
+    | `Polyvariant_ctx of row_field ]
+
+  type case =
+    | Vcs_tuple of {
+        name : label loc;
+        loc : location;
+        types : core_type list;
+        attr : case_attr;
+      }
+    | Vcs_record of {
+        name : label loc;
+        loc : location;
+        fields : Record.field list;
+        attr : case_attr;
+        allow_extra_fields : bool;
+      }
+
+  let resolve_attr ctx : case_attr =
+    {
+      allow_any = Json_attrs.vcs_attr_json_allow_any ctx;
+      catch_all = Json_attrs.vcs_attr_json_catch_all ctx;
+      json_name = Json_attrs.vcs_attr_json_name ctx;
+    }
+
+  (* A [@json.catch_all] case must be able to hold the unknown tag and its
+     payload: either a single argument (typically
+     [Melange_json.unknown_variant_case]) or an inline record with exactly
+     the fields [tag] and [payload]. Validated once here so the backends
+     can assume the shape. *)
+  let validate_case = function
+    | Vcs_tuple { attr = { catch_all = true; _ }; types = [ _ ]; _ } -> ()
+    | Vcs_tuple { name; attr = { catch_all = true; _ }; _ } ->
+        Location.raise_errorf ~loc:name.loc
+          "[@json.catch_all] requires exactly one argument: a record \
+           type with fields `tag : string` and `payload : Melange_json.t \
+           list option` (typically [Melange_json.unknown_variant_case])"
+    | Vcs_record
+        {
+          attr = { catch_all = true; _ };
+          fields =
+            [
+              { name = { txt = "tag"; _ }; _ };
+              { name = { txt = "payload"; _ }; _ };
+            ];
+          _;
+        } ->
+        ()
+    | Vcs_record { loc; attr = { catch_all = true; _ }; _ } ->
+        Location.raise_errorf ~loc
+          "[@json.catch_all] inline record must have exactly two fields \
+           named `tag` and `payload` (in that order), with types \
+           `string` and `Melange_json.t list option`"
+    | Vcs_tuple _ | Vcs_record _ -> ()
+
+  let case_name = function
+    | Vcs_tuple { name; _ } | Vcs_record { name; _ } -> name
+
+  let case_attr = function
+    | Vcs_tuple { attr; _ } | Vcs_record { attr; _ } -> attr
+
+  (* Wire shape of a case, as shown in "expected ..." decode errors. *)
+  let case_wire_shape ~compact case =
+    match case with
+    | Vcs_record { name; attr; _ } ->
+        let name = Option.value ~default:name attr.json_name in
+        Printf.sprintf {|["%s", { _ }]|} name.txt
+    | Vcs_tuple { name; types; attr; _ } ->
+        let name = Option.value ~default:name attr.json_name in
+        if compact && types = [] then Printf.sprintf {|"%s"|} name.txt
+        else
           Printf.sprintf {|["%s"%s]|} name.txt
-            (li |> List.map ~f:(fun _ -> ", _") |> String.concat ~sep:""))
+            (types
+            |> List.map ~f:(fun _ -> ", _")
+            |> String.concat ~sep:"")
 
-type 'ctx tuple = {
-  tpl_loc : location;
-  tpl_types : core_type list;
-  tpl_ctx : 'ctx;
-}
+  type polyvariant_case =
+    | Pvc_case of case
+    | Pvc_inherit of longident loc * core_type list
 
-type 'ctx record = {
-  rcd_loc : location;
-  rcd_fields : label_declaration list;
-  rcd_ctx : 'ctx;
-}
+  (* Resolve variant constructors / polymorphic-variant rows into plain
+     [case] data (attributes resolved, shapes validated), in declaration
+     order. *)
+  let resolve_variant_cases ~loc cs =
+    List.map cs ~f:(fun (c : constructor_declaration) ->
+        let attr = resolve_attr (`Variant_ctx c) in
+        let case =
+          match c.pcd_args with
+          | Pcstr_record fields ->
+              Vcs_record
+                {
+                  name = c.pcd_name;
+                  loc;
+                  fields = Record.resolve_fields fields;
+                  attr;
+                  allow_extra_fields = Json_attrs.cd_allow_extra_fields c;
+                }
+          | Pcstr_tuple types ->
+              Vcs_tuple { name = c.pcd_name; loc; types; attr }
+        in
+        validate_case case;
+        case)
 
-type variant_case_ctx =
-  [ `Variant_ctx of constructor_declaration
-  | `Polyvariant_ctx of row_field ]
+  let resolve_polyvariant_cases ~loc cs =
+    List.map cs ~f:(fun c ->
+        let attr = resolve_attr (`Polyvariant_ctx c) in
+        match repr_row_field c with
+        | `Rtag (n, ts) ->
+            let case = Vcs_tuple { name = n; loc; types = ts; attr } in
+            validate_case case;
+            Pvc_case case
+        | `Rinherit (n, ts) ->
+            if attr.allow_any then
+              failwith "[@allow_any] placed on inherit clause";
+            Pvc_inherit (n, ts))
+end
 
-type variant_case =
-  | Vcs_tuple of label loc * variant_case_ctx tuple
-  | Vcs_record of label loc * variant_case_ctx record
+open Variant
 
-type variant = { vrt_loc : location; vrt_cases : variant_case list }
 type derive_of_core_type = core_type -> expression -> expression
 
-let repr_polyvariant_cases cs =
-  List.rev cs |> List.map ~f:(fun c -> c, repr_row_field c)
-
-let repr_variant_cases cs = List.rev cs
-
-let deriving_of ~name ~of_t ~is_allow_any_constr ~derive_of_tuple
-    ~derive_of_labeled_tuple ~derive_of_record
-    ~(derive_of_variant :
-       ?is_compact_variants:bool ->
+(* Build a to_json deriver from the backend's JSON emitters: [json_array]
+   and [json_string] emit a JSON array/string expression,
+   [catch_all_encode] re-emits a [@json.catch_all] payload in its
+   original wire shape, and [derive_of_record] emits a JSON object from
+   resolved record fields. Everything else — tuple, variant and
+   labeled-tuple encoding — is shared here. *)
+let deriving_to ~name ~t_to ~json_array ~json_string ~catch_all_encode
+    ~(derive_of_record :
+       loc:location ->
        derive_of_core_type ->
-       variant ->
-       allow_any_constr:(expression -> expression) option ->
-       (array:expression ->
-       len:expression ->
-       tag:expression ->
-       expression) ->
-       expression ->
-       expression)
-    ~(derive_of_variant_case :
-       ?is_compact_variants:bool ->
-       tag:expression ->
-       array:expression ->
-       len:expression ->
-       derive_of_core_type ->
-       ((array:expression -> len:expression -> expression) option ->
-       expression) ->
-       variant_case ->
-       allow_any_constr:(expression -> expression) option ->
-       expression ->
-       expression) () =
-  (object (self)
-     inherit deriving1
-     method name = name
-     method t ~loc _name t = [%type: [%t of_t ~loc] -> [%t t]]
-
-     method! derive_of_tuple t ts x =
-       let t = { tpl_loc = t.ptyp_loc; tpl_types = ts; tpl_ctx = t } in
-       derive_of_tuple self#derive_of_core_type t x
-
-     method! derive_of_labeled_tuple t ts x =
-       let fs =
-         List.map ts ~f:(fun (name, type_) ->
-             let loc = type_.ptyp_loc in
-             label_declaration ~loc ~name ~type_ ~mutable_:Immutable)
-       in
-       let t = { rcd_loc = t.ptyp_loc; rcd_fields = fs; rcd_ctx = () } in
-       derive_of_labeled_tuple self#derive_of_core_type t x
-
-     method! derive_of_record td fs x =
-       let t =
-         { rcd_loc = td.ptype_loc; rcd_fields = fs; rcd_ctx = td }
-       in
-       derive_of_record self#derive_of_core_type t x
-
-     method! derive_of_variant td cs x =
-       let loc = td.ptype_loc in
-       let cs = repr_variant_cases cs in
-       let allow_any_constr =
-         cs
-         |> List.find_opt ~f:(fun cs ->
-             is_allow_any_constr (`Variant_ctx cs))
-         |> Option.map (fun cs e -> econstruct cs (Some e))
-       in
-       let cs =
-         List.filter
-           ~f:(fun cs -> not (is_allow_any_constr (`Variant_ctx cs)))
-           cs
-       in
-       let compact = Json_attrs.is_compact_variants td in
-       let body, cases =
-         List.fold_left cs
-           ~init:
-             (match allow_any_constr with
-             | Some allow_any_constr ->
-                 (fun ~array:_ ~len:_ ~tag:_ -> allow_any_constr x), []
-             | None ->
-                 let error_message =
-                   Printf.sprintf "expected %s"
-                     (get_constructor_names ~compact cs
-                     |> String.concat ~sep:" or ")
-                 in
-                 ( (fun ~array:_ ~len:_ ~tag:_ ->
-                     [%expr
-                       Melange_json.of_json_error ~json:[%e x]
-                         [%e estring ~loc error_message]]),
-                   [] ))
-           ~f:(fun (next, cases) c ->
-             let make ~array ~len (n : label loc) build =
-               let arg = Option.map (fun b -> b ~array ~len) build in
-               pexp_construct (map_loc lident n) ~loc:n.loc arg
-             in
-             let ctx = `Variant_ctx c in
-             let n = c.pcd_name in
-             match c.pcd_args with
-             | Pcstr_record fs ->
-                 let t =
-                   let t =
-                     { rcd_loc = loc; rcd_fields = fs; rcd_ctx = ctx }
-                   in
-                   Vcs_record (n, t)
-                 in
-                 let next ~array ~len ~tag =
-                   derive_of_variant_case ~is_compact_variants:compact
-                     ~tag ~array ~len self#derive_of_core_type
-                     (make ~array ~len n) t ~allow_any_constr
-                     (next ~array ~len ~tag)
-                 in
-                 next, t :: cases
-             | Pcstr_tuple ts ->
-                 let case =
-                   let t =
-                     { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
-                   in
-                   Vcs_tuple (n, t)
-                 in
-                 let next ~array ~len ~tag =
-                   derive_of_variant_case ~is_compact_variants:compact
-                     ~tag ~array ~len self#derive_of_core_type
-                     (make ~array ~len n) case ~allow_any_constr
-                     (next ~array ~len ~tag)
-                 in
-                 next, case :: cases)
-       in
-       let t = { vrt_loc = loc; vrt_cases = cases } in
-       derive_of_variant ~is_compact_variants:compact
-         self#derive_of_core_type t ~allow_any_constr body x
-
-     method! derive_of_polyvariant ?td t (cs : row_field list) x =
-       let loc = t.ptyp_loc in
-       let compact =
-         Option.fold ~none:false ~some:Json_attrs.is_compact_variants td
-       in
-       let allow_any_constr =
-         cs
-         |> List.find_opt ~f:(fun cs ->
-             is_allow_any_constr (`Polyvariant_ctx cs))
-         |> Option.map (fun cs ->
-             match cs.prf_desc with
-             | Rinherit _ ->
-                 failwith "[@allow_any] placed on inherit clause"
-             | Rtag (n, _, _) ->
-                 fun e -> pexp_variant ~loc:n.loc n.txt (Some e))
-       in
-       let cs =
-         List.filter
-           ~f:(fun cs -> not (is_allow_any_constr (`Polyvariant_ctx cs)))
-           cs
-       in
-       let cases = repr_polyvariant_cases cs in
-       let body, cases =
-         List.fold_left cases
-           ~init:
-             (match allow_any_constr with
-             | Some allow_any_constr ->
-                 (fun ~array:_ ~len:_ ~tag:_ -> allow_any_constr x), []
-             | None ->
-                 let error_message =
-                   Printf.sprintf "expected %s"
-                     (cs
-                     |> List.concat_map
-                          ~f:(get_variant_names ~compact ~loc)
-                     |> String.concat ~sep:" or ")
-                 in
-                 ( (fun ~array:_ ~len:_ ~tag:_ ->
-                     [%expr
-                       Melange_json.of_json_unexpected_variant ~json:x
-                         [%e estring ~loc error_message]]),
-                   [] ))
-           ~f:(fun (next, cases) (c, r) ->
-             let ctx = `Polyvariant_ctx c in
-             match r with
-             | `Rtag (n, ts) ->
-                 let make ~array ~len build =
-                   let arg = Option.map (fun b -> b ~array ~len) build in
-                   pexp_variant ~loc:n.loc n.txt arg
-                 in
-                 let case =
-                   let t =
-                     { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
-                   in
-                   Vcs_tuple (n, t)
-                 in
-                 let next ~array ~len ~tag =
-                   derive_of_variant_case ~is_compact_variants:compact
-                     ~tag ~array ~len self#derive_of_core_type
-                     (make ~array ~len) case ~allow_any_constr
-                     (next ~array ~len ~tag)
-                 in
-                 next, case :: cases
-             | `Rinherit (n, ts) ->
-                 let maybe_e =
-                   self#derive_type_ref ~loc self#name n ts x
-                 in
-                 let t = ptyp_variant ~loc cs Closed None in
-                 let next ~array ~len ~tag =
-                   [%expr
-                     match [%e maybe_e] with
-                     | e -> (e :> [%t t])
-                     | exception
-                         Melange_json.Of_json_error
-                           (Melange_json.Unexpected_variant _) ->
-                         [%e next ~array ~len ~tag]]
-                 in
-                 next, cases)
-       in
-       let t = { vrt_loc = loc; vrt_cases = cases } in
-       derive_of_variant ~is_compact_variants:compact
-         self#derive_of_core_type t ~allow_any_constr body x
-   end
-    :> deriving)
-
-let deriving_of_match ~name ~of_t ~cmp_sort_vcs ~derive_of_tuple
-    ~derive_of_labeled_tuple ~derive_of_record
-    ~(derive_of_variant_case :
-       ?is_compact_variants:bool -> _ -> _ -> _ -> _) () =
-  (object (self)
-     inherit deriving1
-     method name = name
-     method t ~loc _name t = [%type: [%t of_t ~loc] -> [%t t]]
-
-     method! derive_of_tuple t ts x =
-       let t = { tpl_loc = t.ptyp_loc; tpl_types = ts; tpl_ctx = t } in
-       derive_of_tuple self#derive_of_core_type t x
-
-     method! derive_of_labeled_tuple t ts x =
-       let fs =
-         List.map ts ~f:(fun (name, type_) ->
-             let loc = type_.ptyp_loc in
-             label_declaration ~loc ~name ~type_ ~mutable_:Immutable)
-       in
-       let t = { rcd_loc = t.ptyp_loc; rcd_fields = fs; rcd_ctx = () } in
-       derive_of_labeled_tuple self#derive_of_core_type t x
-
-     method! derive_of_record td fs x =
-       let t =
-         { rcd_loc = td.ptype_loc; rcd_fields = fs; rcd_ctx = td }
-       in
-       derive_of_record self#derive_of_core_type t x
-
-     method! derive_of_variant td cs x =
-       let loc = td.ptype_loc in
-       let compact = Json_attrs.is_compact_variants td in
-       let error_message =
-         Printf.sprintf "expected %s"
-           (get_constructor_names ~compact cs |> String.concat ~sep:" or ")
-       in
-       let cs = repr_variant_cases cs in
-       let cs =
-         List.stable_sort
-           ~cmp:(fun cs1 cs2 ->
-             let vcs1 = `Variant_ctx cs1 and vcs2 = `Variant_ctx cs2 in
-             cmp_sort_vcs vcs1 vcs2)
-           cs
-       in
-       let cases =
-         List.fold_left cs
-           ~init:
-             [
-               [%pat? _]
-               --> [%expr
-                     Melange_json.of_json_error ~json:x
-                       [%e estring ~loc error_message]];
-             ]
-           ~f:(fun next (c : constructor_declaration) ->
-             let ctx = `Variant_ctx c in
-             let make (n : label loc) arg =
-               pexp_construct (map_loc lident n) ~loc:n.loc arg
-             in
-             let n = c.pcd_name in
-             match c.pcd_args with
-             | Pcstr_record fs ->
-                 let t =
-                   let r =
-                     { rcd_loc = loc; rcd_fields = fs; rcd_ctx = ctx }
-                   in
-                   Vcs_record (n, r)
-                 in
-                 derive_of_variant_case self#derive_of_core_type
-                   ~is_compact_variants:compact (make n) t
-                 :: next
-             | Pcstr_tuple ts ->
-                 let t =
-                   let t =
-                     { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
-                   in
-                   Vcs_tuple (n, t)
-                 in
-                 derive_of_variant_case self#derive_of_core_type
-                   ~is_compact_variants:compact (make n) t
-                 :: next)
-       in
-       pexp_match ~loc x cases
-
-     method! derive_of_polyvariant ?td t (cs : row_field list) x =
-       let loc = t.ptyp_loc in
-       let compact =
-         Option.fold ~none:false ~some:Json_attrs.is_compact_variants td
-       in
-       let cases = repr_polyvariant_cases cs in
-       let cases =
-         List.stable_sort
-           ~cmp:(fun (cs1, _) (cs2, _) ->
-             let vcs1 = `Polyvariant_ctx cs1
-             and vcs2 = `Polyvariant_ctx cs2 in
-             cmp_sort_vcs vcs1 vcs2)
-           cases
-       in
-       let ctors, inherits =
-         List.partition_map cases ~f:(fun (c, r) ->
-             let ctx = `Polyvariant_ctx c in
-             match r with
-             | `Rtag (n, ts) ->
-                 let t =
-                   { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
-                 in
-                 Left (n, Vcs_tuple (n, t))
-             | `Rinherit (n, ts) -> Right (n, ts))
-       in
-       let catch_all =
-         [%pat? x]
-         --> List.fold_left (List.rev inherits)
-               ~init:
-                 (let error_message =
-                    Printf.sprintf "expected %s"
-                      (cs
-                      |> List.concat_map
-                           ~f:(get_variant_names ~compact ~loc)
-                      |> String.concat ~sep:" or ")
-                  in
-                  [%expr
-                    Melange_json.of_json_unexpected_variant ~json:x
-                      [%e estring ~loc error_message]])
-               ~f:(fun next (n, ts) ->
-                 let maybe = self#derive_type_ref ~loc self#name n ts x in
-                 let t = ptyp_variant ~loc cs Closed None in
-                 [%expr
-                   match [%e maybe] with
-                   | x -> (x :> [%t t])
-                   | exception
-                       Melange_json.Of_json_error
-                         (Melange_json.Unexpected_variant _) ->
-                       [%e next]])
-       in
-       let cases =
-         List.fold_left ctors ~init:[ catch_all ]
-           ~f:(fun next ((n : label loc), t) ->
-             let make arg = pexp_variant ~loc:n.loc n.txt arg in
-             derive_of_variant_case ~is_compact_variants:compact
-               self#derive_of_core_type make t
-             :: next)
-       in
-       pexp_match ~loc x cases
-   end
-    :> deriving)
-
-let deriving_to ~name ~t_to ~derive_of_tuple ~derive_of_labeled_tuple
-    ~derive_of_record
-    ~(derive_of_variant_case :
-       ?is_compact_variants:bool ->
-       derive_of_core_type ->
-       variant_case ->
+       Record.field list ->
        expression list ->
        expression) () =
+  let derive_of_tuple ~loc derive types es =
+    json_array ~loc (List.map2 types es ~f:derive)
+  in
+  let derive_of_labeled_tuple = derive_of_record in
+  let derive_of_variant_case ?(is_compact_variants = false) derive case es
+      =
+    match case with
+    | Vcs_tuple { attr = { allow_any = true; _ }; _ } -> (
+        match es with
+        | [ x ] -> x
+        | es ->
+            failwith
+              (Printf.sprintf "expected a tuple of length 1, got %i"
+                 (List.length es)))
+    | Vcs_tuple { name; attr = { catch_all = true; _ }; _ } -> (
+        let loc = name.loc in
+        match es with
+        | [ arg_e ] ->
+            catch_all_encode ~loc ~tag:[%expr [%e arg_e].tag]
+              ~payload:[%expr [%e arg_e].payload]
+        | _ -> assert false)
+    | Vcs_record { name; attr = { catch_all = true; _ }; _ } -> (
+        match es with
+        | [ tag_e; payload_e ] ->
+            catch_all_encode ~loc:name.loc ~tag:tag_e ~payload:payload_e
+        | _ -> assert false)
+    | Vcs_record { name; fields; attr; _ } ->
+        let loc = name.loc in
+        let n = Option.value ~default:name attr.json_name in
+        json_array ~loc
+          [ json_string ~loc n; derive_of_record ~loc derive fields es ]
+    | Vcs_tuple { name; types; attr; _ } ->
+        let loc = name.loc in
+        let n = Option.value ~default:name attr.json_name in
+        if is_compact_variants && List.length types = 0 then
+          json_string ~loc n
+        else
+          json_array ~loc
+            (json_string ~loc n :: List.map2 types es ~f:derive)
+  in
   (object (self)
      inherit deriving1
      method name = name
@@ -646,32 +465,31 @@ let deriving_to ~name ~t_to ~derive_of_tuple ~derive_of_labeled_tuple
 
      method! derive_of_tuple t ts x =
        let loc = t.ptyp_loc in
-       let t = { tpl_loc = loc; tpl_types = ts; tpl_ctx = t } in
        let n = List.length ts in
        let p, es = gen_pat_tuple ~loc "x" n in
        pexp_match ~loc x
-         [ p --> derive_of_tuple self#derive_of_core_type t es ]
+         [ p --> derive_of_tuple ~loc self#derive_of_core_type ts es ]
 
      method! derive_of_record td fs x =
-       let t =
-         { rcd_loc = td.ptype_loc; rcd_fields = fs; rcd_ctx = td }
-       in
        let loc = td.ptype_loc in
        let p, es = gen_pat_record ~loc "x" fs in
        pexp_match ~loc x
-         [ p --> derive_of_record self#derive_of_core_type t es ]
+         [
+           p
+           --> derive_of_record ~loc self#derive_of_core_type
+                 (Record.resolve_fields fs)
+                 es;
+         ]
 
      method! derive_of_labeled_tuple t ts x =
-       let fs =
-         List.map ts ~f:(fun (name, type_) ->
-             let loc = type_.ptyp_loc in
-             label_declaration ~loc ~name ~type_ ~mutable_:Immutable)
-       in
        let loc = t.ptyp_loc in
-       let t = { rcd_loc = t.ptyp_loc; rcd_fields = fs; rcd_ctx = () } in
+       let fs = Record.fields_of_labeled_tuple ts in
        let p, es = gen_pat_labeled_tuple ~loc "x" ts in
        pexp_match ~loc x
-         [ p --> derive_of_labeled_tuple self#derive_of_core_type t es ]
+         [
+           p
+           --> derive_of_labeled_tuple ~loc self#derive_of_core_type fs es;
+         ]
 
      method! derive_of_variant td cs x =
        let loc = td.ptype_loc in
@@ -679,72 +497,50 @@ let deriving_to ~name ~t_to ~derive_of_tuple ~derive_of_labeled_tuple
        let ctor_pat (n : label loc) pat =
          ppat_construct ~loc:n.loc (map_loc lident n) pat
        in
-       let cs = repr_variant_cases cs in
        pexp_match ~loc x
-         (List.rev_map cs ~f:(fun c ->
-              let n = c.pcd_name in
-              let ctx = `Variant_ctx c in
-              match c.pcd_args with
-              | Pcstr_record fs ->
-                  let p, es = gen_pat_record ~loc "x" fs in
-                  let t =
-                    let t =
-                      { rcd_loc = loc; rcd_fields = fs; rcd_ctx = ctx }
-                    in
-                    Vcs_record (n, t)
+         (List.map (resolve_variant_cases ~loc cs) ~f:(fun case ->
+              match case with
+              | Vcs_record { name = n; fields; _ } ->
+                  let p, es =
+                    gen_pat_record ~loc "x"
+                      (List.map fields ~f:(fun (f : Record.field) -> f.ld))
                   in
                   ctor_pat n (Some p)
                   --> derive_of_variant_case ~is_compact_variants:compact
-                        self#derive_of_core_type t es
-              | Pcstr_tuple ts ->
-                  let arity = List.length ts in
-                  let t =
-                    let t =
-                      { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
-                    in
-                    Vcs_tuple (n, t)
-                  in
+                        self#derive_of_core_type case es
+              | Vcs_tuple { name = n; types; _ } ->
+                  let arity = List.length types in
                   let p, es = gen_pat_tuple ~loc "x" arity in
                   ctor_pat n (if arity = 0 then None else Some p)
                   --> derive_of_variant_case ~is_compact_variants:compact
-                        self#derive_of_core_type t es))
+                        self#derive_of_core_type case es))
 
      method! derive_of_polyvariant ?td t (cs : row_field list) x =
        let loc = t.ptyp_loc in
        let compact =
          Option.fold ~none:false ~some:Json_attrs.is_compact_variants td
        in
-       let cases = repr_polyvariant_cases cs in
-       let cases =
-         List.rev_map cases ~f:(fun (c, r) ->
-             let ctx = `Polyvariant_ctx c in
-             match r with
-             | `Rtag (n, []) ->
-                 let t =
-                   let t =
-                     { tpl_loc = loc; tpl_types = []; tpl_ctx = ctx }
-                   in
-                   Vcs_tuple (n, t)
-                 in
-                 ppat_variant ~loc n.txt None
-                 --> derive_of_variant_case ~is_compact_variants:compact
-                       self#derive_of_core_type t []
-             | `Rtag (n, ts) ->
-                 let t =
-                   { tpl_loc = loc; tpl_types = ts; tpl_ctx = ctx }
-                 in
-                 let ps, es = gen_pat_tuple ~loc "x" (List.length ts) in
-                 ppat_variant ~loc n.txt (Some ps)
-                 --> derive_of_variant_case ~is_compact_variants:compact
-                       self#derive_of_core_type
-                       (Vcs_tuple (n, t))
-                       es
-             | `Rinherit (n, ts) ->
-                 [%pat? [%p ppat_type ~loc n] as x]
-                 --> self#derive_of_core_type
-                       (ptyp_constr ~loc:n.loc n ts)
-                       [%expr x])
-       in
-       pexp_match ~loc x cases
+       pexp_match ~loc x
+         (List.map (resolve_polyvariant_cases ~loc cs) ~f:(fun pvc ->
+              match pvc with
+              | Pvc_case (Vcs_tuple { name = n; types = []; _ } as case)
+                ->
+                  ppat_variant ~loc n.txt None
+                  --> derive_of_variant_case ~is_compact_variants:compact
+                        self#derive_of_core_type case []
+              | Pvc_case (Vcs_tuple { name = n; types = ts; _ } as case)
+                ->
+                  let ps, es = gen_pat_tuple ~loc "x" (List.length ts) in
+                  ppat_variant ~loc n.txt (Some ps)
+                  --> derive_of_variant_case ~is_compact_variants:compact
+                        self#derive_of_core_type case es
+              | Pvc_case (Vcs_record _) ->
+                  (* polymorphic-variant tags carry no inline records *)
+                  assert false
+              | Pvc_inherit (n, ts) ->
+                  [%pat? [%p ppat_type ~loc n] as x]
+                  --> self#derive_of_core_type
+                        (ptyp_constr ~loc:n.loc n ts)
+                        [%expr x]))
    end
     :> deriving)
