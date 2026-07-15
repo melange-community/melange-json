@@ -1,8 +1,8 @@
 (dirs :standard __tests__)
 
 (library
- (name melange_json)
- (public_name melange-json)
+ (name jsonkit)
+ (public_name jsonkit)
  (modes melange)
  (preprocess
   (pps melange.ppx)))

@@ -1,5 +1,8 @@
 ## Unreleased
 
+
+- **[breaking]** change the name of the project from `melange-json` to `jsonkit` to reflect the fact that it is now a general-purpose JSON library, not
+  tied to Melange/Native. The PPX is now in a separate package `ppx_deriving_jsonkit`. ([#107](https://github.com/melange-community/melange-json/pull/107))
 - jsonschema: Remove the `~variant_as_string` flag; use
   `[@@jsonschema.compact_variants]` to render payload-free constructors as
   plain string constants.
