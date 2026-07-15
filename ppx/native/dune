@@ -40,7 +40,7 @@
  (files ./common/repr.ml))
 
 (copy_files#
- (files ./common/json_attrs.ml))
+ (files ./common/attrs.{ml,mli}))
 
 (copy_files#
  (files ./common/json_string_deriver.ml))
@@ -54,7 +54,7 @@
 ; a library, so the deriver ships inside melange-json-native.ppx with no extra package.
 
 (copy_files#
- (files ../jsonschema/{attrs,schema,ppx_deriving_jsonschema}.{ml,mli}))
+ (files ../jsonschema/{schema,ppx_deriving_jsonschema}.{ml,mli}))
 
 ; include_subdirs triggers a dependency cycle
 ; $ dune runtest

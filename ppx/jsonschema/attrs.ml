@@ -20,99 +20,95 @@ let expr_attr name ctx =
     Ast_pattern.(single_expr_payload __)
     (fun x -> x)
 
-let jsonschema_key =
-  string_attr "jsonschema.key" Attribute.Context.label_declaration
+let key = string_attr "jsonschema.key" Attribute.Context.label_declaration
+let ref = string_attr "jsonschema.ref" Attribute.Context.label_declaration
 
-let jsonschema_ref =
-  string_attr "jsonschema.ref" Attribute.Context.label_declaration
-
-let jsonschema_variant_name =
+let variant_name =
   string_attr "jsonschema.name" Attribute.Context.constructor_declaration
 
-let jsonschema_polymorphic_variant_name =
+let polymorphic_variant_name =
   string_attr "jsonschema.name" Attribute.Context.rtag
 
-let jsonschema_td_allow_extra_fields =
+let td_allow_extra_fields =
   Attribute.declare "jsonschema.allow_extra_fields"
     Attribute.Context.type_declaration
     Ast_pattern.(pstr nil)
     (fun () -> ())
 
-let jsonschema_cd_allow_extra_fields =
+let cd_allow_extra_fields =
   Attribute.declare "jsonschema.allow_extra_fields"
     Attribute.Context.constructor_declaration
     Ast_pattern.(pstr nil)
     (fun () -> ())
 
-let jsonschema_td_disallow_extra_fields =
+let td_disallow_extra_fields =
   Attribute.declare "jsonschema.disallow_extra_fields"
     Attribute.Context.type_declaration
     Ast_pattern.(pstr nil)
     (fun () -> ())
 
-let jsonschema_cd_disallow_extra_fields =
+let cd_disallow_extra_fields =
   Attribute.declare "jsonschema.disallow_extra_fields"
     Attribute.Context.constructor_declaration
     Ast_pattern.(pstr nil)
     (fun () -> ())
 
-let jsonschema_option =
+let option =
   Attribute.declare_flag "jsonschema.option"
     Attribute.Context.label_declaration
 
-let jsonschema_ld_description =
+let ld_description =
   string_attr "jsonschema.description" Attribute.Context.label_declaration
 
-let jsonschema_td_description =
+let td_description =
   string_attr "jsonschema.description" Attribute.Context.type_declaration
 
-let jsonschema_cd_description =
+let cd_description =
   string_attr "jsonschema.description"
     Attribute.Context.constructor_declaration
 
-let jsonschema_ct_description =
+let ct_description =
   string_attr "jsonschema.description" Attribute.Context.core_type
 
-let jsonschema_rtag_description =
+let rtag_description =
   string_attr "jsonschema.description" Attribute.Context.rtag
 
-let jsonschema_td_format =
+let td_format =
   string_attr "jsonschema.format" Attribute.Context.type_declaration
 
-let jsonschema_ld_format =
+let ld_format =
   string_attr "jsonschema.format" Attribute.Context.label_declaration
 
-let jsonschema_ct_format =
+let ct_format =
   string_attr "jsonschema.format" Attribute.Context.core_type
 
-let jsonschema_td_maximum =
+let td_maximum =
   expr_attr "jsonschema.maximum" Attribute.Context.type_declaration
 
-let jsonschema_ld_maximum =
+let ld_maximum =
   expr_attr "jsonschema.maximum" Attribute.Context.label_declaration
 
-let jsonschema_ct_maximum =
+let ct_maximum =
   expr_attr "jsonschema.maximum" Attribute.Context.core_type
 
-let jsonschema_td_minimum =
+let td_minimum =
   expr_attr "jsonschema.minimum" Attribute.Context.type_declaration
 
-let jsonschema_ld_minimum =
+let ld_minimum =
   expr_attr "jsonschema.minimum" Attribute.Context.label_declaration
 
-let jsonschema_ct_minimum =
+let ct_minimum =
   expr_attr "jsonschema.minimum" Attribute.Context.core_type
 
-let jsonschema_ct_attrs =
-  expr_attr "jsonschema.attrs" Attribute.Context.core_type
+let ct_attrs = expr_attr "jsonschema.attrs" Attribute.Context.core_type
 
-let jsonschema_td_attrs =
+let td_attrs =
   expr_attr "jsonschema.attrs" Attribute.Context.type_declaration
 
-let jsonschema_ld_attrs =
+let ld_attrs =
   expr_attr "jsonschema.attrs" Attribute.Context.label_declaration
 
-let jsonschema_ld_default =
+let ld_default =
   expr_attr "jsonschema.default" Attribute.Context.label_declaration
 
 (* We intentionally do not use [Attribute.get] for [ocaml.doc]/[doc]. These are
@@ -150,66 +146,61 @@ let find_doc_attr attrs =
           loc = first.loc;
         }
 
+let td_compact_variants =
+  Attribute.declare_flag "jsonschema.compact_variants"
+    Attribute.Context.type_declaration
+
+let attributes =
+  [
+    Attribute.T key;
+    Attribute.T ref;
+    Attribute.T variant_name;
+    Attribute.T polymorphic_variant_name;
+    Attribute.T td_allow_extra_fields;
+    Attribute.T cd_allow_extra_fields;
+    Attribute.T td_disallow_extra_fields;
+    Attribute.T cd_disallow_extra_fields;
+    Attribute.T option;
+    Attribute.T ld_description;
+    Attribute.T td_description;
+    Attribute.T cd_description;
+    Attribute.T ct_description;
+    Attribute.T rtag_description;
+    Attribute.T td_format;
+    Attribute.T ld_format;
+    Attribute.T ct_format;
+    Attribute.T td_maximum;
+    Attribute.T ld_maximum;
+    Attribute.T ct_maximum;
+    Attribute.T td_minimum;
+    Attribute.T ld_minimum;
+    Attribute.T ct_minimum;
+    Attribute.T ct_attrs;
+    Attribute.T td_attrs;
+    Attribute.T ld_attrs;
+    Attribute.T ld_default;
+    Attribute.T td_compact_variants;
+  ]
+
 let fallback_description ~ocaml_doc explicit_desc attrs node =
   match Attribute.get explicit_desc node with
   | Some _ as x -> x
   | None -> if ocaml_doc then find_doc_attr attrs else None
 
 let ld_description ~ocaml_doc (ld : label_declaration) =
-  fallback_description ~ocaml_doc jsonschema_ld_description
-    ld.pld_attributes ld
+  fallback_description ~ocaml_doc ld_description ld.pld_attributes ld
 
 let td_description ~ocaml_doc (td : type_declaration) =
-  fallback_description ~ocaml_doc jsonschema_td_description
-    td.ptype_attributes td
+  fallback_description ~ocaml_doc td_description td.ptype_attributes td
 
 let cd_description ~ocaml_doc (cd : constructor_declaration) =
-  fallback_description ~ocaml_doc jsonschema_cd_description
-    cd.pcd_attributes cd
+  fallback_description ~ocaml_doc cd_description cd.pcd_attributes cd
 
 let ct_description ~ocaml_doc (ct : core_type) =
-  fallback_description ~ocaml_doc jsonschema_ct_description
-    ct.ptyp_attributes ct
+  fallback_description ~ocaml_doc ct_description ct.ptyp_attributes ct
 
 let rtag_description ~ocaml_doc (rf : row_field) =
-  fallback_description ~ocaml_doc jsonschema_rtag_description
-    rf.prf_attributes rf
-
-let jsonschema_td_compact_variants =
-  Attribute.declare_flag "jsonschema.compact_variants"
-    Attribute.Context.type_declaration
-
-let attributes =
-  [
-    Attribute.T jsonschema_key;
-    Attribute.T jsonschema_ref;
-    Attribute.T jsonschema_variant_name;
-    Attribute.T jsonschema_polymorphic_variant_name;
-    Attribute.T jsonschema_td_allow_extra_fields;
-    Attribute.T jsonschema_cd_allow_extra_fields;
-    Attribute.T jsonschema_td_disallow_extra_fields;
-    Attribute.T jsonschema_cd_disallow_extra_fields;
-    Attribute.T jsonschema_option;
-    Attribute.T jsonschema_ld_description;
-    Attribute.T jsonschema_td_description;
-    Attribute.T jsonschema_cd_description;
-    Attribute.T jsonschema_ct_description;
-    Attribute.T jsonschema_rtag_description;
-    Attribute.T jsonschema_td_format;
-    Attribute.T jsonschema_ld_format;
-    Attribute.T jsonschema_ct_format;
-    Attribute.T jsonschema_td_maximum;
-    Attribute.T jsonschema_ld_maximum;
-    Attribute.T jsonschema_ct_maximum;
-    Attribute.T jsonschema_td_minimum;
-    Attribute.T jsonschema_ld_minimum;
-    Attribute.T jsonschema_ct_minimum;
-    Attribute.T jsonschema_ct_attrs;
-    Attribute.T jsonschema_td_attrs;
-    Attribute.T jsonschema_ld_attrs;
-    Attribute.T jsonschema_ld_default;
-    Attribute.T jsonschema_td_compact_variants;
-  ]
+  fallback_description ~ocaml_doc rtag_description rf.prf_attributes rf
 
 let args () =
   Deriving.Args.(
