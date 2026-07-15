@@ -13,9 +13,9 @@ echo '
  (name lib)
  (modes melange)
  (modules main_js)
- (libraries melange-json)
- (flags :standard -w -20-37-69 -open Melange_json.Primitives)
- (preprocess (pps melange.ppx melange-json.ppx)))
+ (libraries jsonkit)
+ (flags :standard -w -20-37-69 -open Jsonkit.Primitives)
+ (preprocess (pps melange.ppx jsonkit.ppx)))
 (melange.emit
  (alias js)
  (target output)
@@ -25,8 +25,8 @@ echo '
 (executable
   (name main)
   (modules main)
-  (flags :standard -w -37-69 -open Melange_json.Primitives)
-  (preprocess (pps melange-json-native.ppx)))
+  (flags :standard -w -37-69 -open Jsonkit.Primitives)
+  (preprocess (pps jsonkit-native.ppx)))
 ' > dune
 
 echo '=== ppx output:native ==='
